@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Habit Tracker</title>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+      background: #0e0e11;
+      color: #fff;
+      margin: 0;
+      padding: 24px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .habit {
+      background: #1c1c22;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .habit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .habit-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    button {
+      background: #2dd4bf;
+      border: none;
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .progress {
+      margin-top: 10px;
+      background: #2a2a32;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #22c55e;
+      width: 0%;
+      transition: width .3s;
+    }
+
+    .info {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #aaa;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>📊 Meus Hábitos</h1>
+
+<div id="habits"></div>
+
+<script>
+  const habits = [
+    { name: "Treino", goal: 5, done: 0 },
+    { name: "Inglês", goal: 5, done: 0 },
+    { name: "Leitura", goal: 5, done: 0 },
+    { name: "Devocional", goal: 7, done: 0 }
+  ];
+
+  const container = document.getElementById("habits");
+
+  habits.forEach((habit, index) => {
+    const div = document.createElement("div");
+    div.className = "habit";
+
+    div.innerHTML = `
+      <div class="habit-header">
+        <div class="habit-name">${habit.name}</div>
+        <button onclick="add(${index})">+1</button>
+      </div>
+      <div class="progress">
+        <div class="progress-bar" id="bar-${index}"></div>
+      </div>
+      <div class="info" id="info-${index}"></div>
+    `;
+
+    container.appendChild(div);
+    update(index);
+  });
+
+  function add(i) {
+    if (habits[i].done < habits[i].goal) {
+      habits[i].done++;
+      update(i);
+    }
+  }
+
+  function update(i) {
+    const percent = (habits[i].done / habits[i].goal) * 100;
+    document.getElementById(`bar-${i}`).style.width = percent + "%";
+    document.getElementById(`info-${i}`).innerText =
+      `${habits[i].done}/${habits[i].goal} (${Math.round(percent)}%)`;
+  }
+</script>
+
+</body>
+</html>
