@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador Visual de Metas</title>
+    <title>Habit Game Pro - Controle de Hábitos Gamificado</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
-            --primary: #3b82f6;
-            --primary-dark: #1d4ed8;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
             --secondary: #10b981;
             --secondary-dark: #059669;
-            --accent: #8b5cf6;
             --danger: #ef4444;
             --warning: #f59e0b;
             --dark: #0f172a;
@@ -21,7 +20,7 @@
             --card-bg: #1e293b;
             --light: #f8fafc;
             --gray: #94a3b8;
-            --border-radius: 12px;
+            --border-radius: 16px;
             --transition: all 0.3s ease;
         }
 
@@ -41,7 +40,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
@@ -58,27 +57,74 @@
 
         h1 {
             font-size: 2.8rem;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
 
         .subtitle {
             color: var(--gray);
             font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
-        .dashboard {
+        .stats-bar {
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 30px;
             margin-bottom: 30px;
         }
 
-        @media (max-width: 1200px) {
-            .dashboard {
+        @media (max-width: 900px) {
+            .main-content {
                 grid-template-columns: 1fr;
             }
         }
@@ -89,7 +135,6 @@
             padding: 25px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            margin-bottom: 20px;
         }
 
         .card-header {
@@ -106,6 +151,64 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .habits-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .habit-item {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+            border-left: 4px solid var(--primary);
+        }
+
+        .habit-item:hover {
+            background: rgba(30, 41, 59, 0.9);
+            transform: translateX(5px);
+        }
+
+        .habit-info {
+            flex-grow: 1;
+        }
+
+        .habit-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .habit-goal {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .habit-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .habit-progress {
+            width: 120px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
         }
 
         .btn {
@@ -171,287 +274,45 @@
             justify-content: center;
         }
 
-        /* Year Goals */
-        .year-goals {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .year-goal {
-            background: rgba(30, 41, 59, 0.7);
-            border-radius: 10px;
-            padding: 20px;
-            border-left: 4px solid var(--accent);
-            transition: var(--transition);
-        }
-
-        .year-goal:hover {
-            transform: translateY(-3px);
-            background: rgba(30, 41, 59, 0.9);
-        }
-
-        .goal-progress {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.5s ease;
-        }
-
-        /* Current Month */
-        .month-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .current-month {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--light);
-        }
-
-        .month-nav {
-            display: flex;
-            gap: 10px;
-        }
-
-        .month-goals {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .month-goal {
-            background: rgba(30, 41, 59, 0.7);
-            border-radius: 10px;
-            padding: 20px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .goal-stats {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: var(--gray);
-        }
-
-        /* Weekly View */
-        .weekly-view {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        @media (max-width: 900px) {
-            .weekly-view {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 600px) {
-            .weekly-view {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .day-card {
-            background: rgba(30, 41, 59, 0.7);
-            border-radius: 10px;
-            padding: 20px;
-            min-height: 300px;
-            transition: var(--transition);
-        }
-
-        .day-card:hover {
-            background: rgba(30, 41, 59, 0.9);
-        }
-
-        .day-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .day-name {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .day-date {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-
-        .priority-a {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid var(--danger);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-
-        .priority-f {
-            background: rgba(245, 158, 11, 0.2);
-            border: 1px solid var(--warning);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-
-        .priority-label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .task-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-
-        .task-time {
-            background: var(--primary);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .habits-list {
-            margin-top: 15px;
-        }
-
-        .habit-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .habit-checkbox {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            border: 2px solid var(--gray);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .habit-checkbox.checked {
-            background: var(--secondary);
-            border-color: var(--secondary);
-        }
-
-        .habit-checkbox.checked::after {
-            content: "✓";
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        /* Calendar */
-        .calendar {
-            margin-top: 20px;
-        }
-
-        .calendar-header {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: var(--gray);
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-        }
-
-        .calendar-day {
-            background: rgba(30, 41, 59, 0.7);
-            border-radius: 8px;
-            padding: 10px;
-            min-height: 80px;
-            font-size: 0.9rem;
-        }
-
-        .calendar-day.empty {
-            background: transparent;
-        }
-
-        .calendar-day.current {
-            background: rgba(59, 130, 246, 0.3);
-            border: 1px solid var(--primary);
-        }
-
-        .calendar-day-number {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .calendar-day-tasks {
-            font-size: 0.7rem;
-            color: var(--gray);
-            margin-top: 5px;
-        }
-
-        /* Insights */
         .insights-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
             margin-top: 20px;
         }
 
         .insight-card {
             background: rgba(30, 41, 59, 0.7);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
         }
 
+        .insight-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
         .insight-value {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             margin: 10px 0;
         }
 
-        .insight-label {
+        .insight-text {
             color: var(--gray);
             font-size: 0.9rem;
         }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -498,7 +359,7 @@
             font-weight: 600;
         }
 
-        input, textarea, select {
+        input, select {
             width: 100%;
             padding: 12px 15px;
             background: rgba(255, 255, 255, 0.1);
@@ -508,12 +369,7 @@
             font-size: 1rem;
         }
 
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        input:focus, textarea:focus, select:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: var(--primary);
         }
@@ -525,7 +381,6 @@
             margin-top: 30px;
         }
 
-        /* Tabs */
         .tabs {
             display: flex;
             gap: 10px;
@@ -558,26 +413,60 @@
             display: block;
         }
 
-        /* Pomodoro Timer */
-        .pomodoro-timer {
-            background: rgba(30, 41, 59, 0.7);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
         }
 
-        .timer-display {
-            font-size: 3rem;
+        .level-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
             font-weight: 700;
-            margin: 20px 0;
-            font-family: monospace;
+            font-size: 0.9rem;
+            margin-left: 10px;
         }
 
-        .timer-controls {
+        .level-1 { background: #7c3aed; color: white; }
+        .level-2 { background: #06b6d4; color: white; }
+        .level-3 { background: #10b981; color: white; }
+        .level-4 { background: #f59e0b; color: white; }
+        .level-5 { background: #ef4444; color: white; }
+
+        .comparison {
             display: flex;
-            justify-content: center;
-            gap: 15px;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-item {
+            text-align: center;
+        }
+
+        .comparison-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .comparison-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .positive { color: var(--secondary); }
+        .negative { color: var(--danger); }
+        .neutral { color: var(--gray); }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--gray);
+            font-size: 0.9rem;
         }
 
         .empty-state {
@@ -591,784 +480,490 @@
             margin-bottom: 20px;
             opacity: 0.5;
         }
-
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-
-        .badge-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .badge-success {
-            background: var(--secondary);
-            color: white;
-        }
-
-        .badge-warning {
-            background: var(--warning);
-            color: white;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-bullseye"></i> Planejador Visual de Metas</h1>
-            <p class="subtitle">Controle anual, mensal e diário de metas, hábitos e tarefas</p>
+            <h1><i class="fas fa-gamepad"></i> Habit Game Pro</h1>
+            <p class="subtitle">Transforme sua rotina em um jogo. Acompanhe, melhore e gamifique seus hábitos diários.</p>
         </header>
 
-        <div class="dashboard">
-            <div class="main-content">
-                <!-- Visão Anual -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><i class="fas fa-calendar-alt"></i> Meta do Ano: 2026</h2>
-                        <button class="btn btn-primary" id="addYearGoalBtn">
-                            <i class="fas fa-plus"></i> Adicionar Meta
-                        </button>
-                    </div>
-                    <div class="year-goals" id="yearGoalsContainer">
-                        <!-- Metas anuais serão inseridas aqui -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <i class="fas fa-trophy"></i>
+                <div class="stat-value" id="globalScore">0%</div>
+                <div class="stat-label">Pontuação Global</div>
+                <div id="levelBadge" class="level-badge level-1">Nível 1</div>
+            </div>
+            
+            <div class="stat-card">
+                <i class="fas fa-calendar-week"></i>
+                <div class="stat-value" id="weekScore">0%</div>
+                <div class="stat-label">Esta Semana</div>
+                <div id="weekComparison" class="comparison-label"></div>
+            </div>
+            
+            <div class="stat-card">
+                <i class="fas fa-calendar-alt"></i>
+                <div class="stat-value" id="monthScore">0%</div>
+                <div class="stat-label">Este Mês</div>
+                <div id="monthComparison" class="comparison-label"></div>
+            </div>
+            
+            <div class="stat-card">
+                <i class="fas fa-fire"></i>
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Sequência Atual</div>
+                <div class="comparison-label">Dias seguidos</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-tasks"></i> Meus Hábitos</h2>
+                    <button class="btn btn-primary" id="addHabitBtn">
+                        <i class="fas fa-plus"></i> Novo Hábito
+                    </button>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab active" data-tab="habits-list">Lista</div>
+                    <div class="tab" data-tab="habits-stats">Estatísticas</div>
+                </div>
+                
+                <div class="tab-content active" id="habits-list">
+                    <div class="habits-container" id="habitsContainer">
+                        <!-- Hábitos serão inseridos aqui via JavaScript -->
                     </div>
                 </div>
-
-                <!-- Visão Mensal -->
-                <div class="card">
-                    <div class="month-header">
-                        <div>
-                            <h2 class="card-title"><i class="fas fa-calendar"></i> Meta do Mês</h2>
-                            <div class="current-month" id="currentMonth">JANEIRO 2026</div>
-                        </div>
-                        <div class="month-nav">
-                            <button class="btn btn-outline btn-sm" id="prevMonthBtn"><i class="fas fa-chevron-left"></i></button>
-                            <button class="btn btn-outline btn-sm" id="nextMonthBtn"><i class="fas fa-chevron-right"></i></button>
-                        </div>
-                    </div>
-                    <div class="month-goals" id="monthGoalsContainer">
-                        <!-- Metas mensais serão inseridas aqui -->
-                    </div>
-                </div>
-
-                <!-- Visão Semanal -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><i class="fas fa-calendar-week"></i> Planejamento Semanal</h2>
-                        <button class="btn btn-success" id="addWeekTaskBtn">
-                            <i class="fas fa-plus"></i> Adicionar Tarefa
-                        </button>
-                    </div>
-                    
-                    <div class="tabs">
-                        <div class="tab active" data-tab="week-view">Visão Semanal</div>
-                        <div class="tab" data-tab="pomodoro">Pomodoro Timer</div>
-                    </div>
-                    
-                    <div class="tab-content active" id="week-view">
-                        <div class="weekly-view" id="weeklyView">
-                            <!-- Dias da semana serão inseridos aqui -->
-                        </div>
-                    </div>
-                    
-                    <div class="tab-content" id="pomodoro">
-                        <div class="pomodoro-timer">
-                            <h3><i class="fas fa-clock"></i> Pomodoro Timer</h3>
-                            <div class="timer-display" id="timerDisplay">25:00</div>
-                            <div class="timer-controls">
-                                <button class="btn btn-success" id="startTimerBtn">Iniciar</button>
-                                <button class="btn btn-danger" id="stopTimerBtn">Parar</button>
-                                <button class="btn btn-outline" id="resetTimerBtn">Resetar</button>
-                            </div>
-                            <p style="margin-top: 15px; color: var(--gray);">Trabalhe por 25 minutos, descanse por 5 minutos</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Calendário Mensal -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><i class="fas fa-calendar-days"></i> Calendário do Mês</h2>
-                    </div>
-                    <div class="calendar" id="calendarContainer">
-                        <!-- Calendário será gerado aqui -->
+                
+                <div class="tab-content" id="habits-stats">
+                    <div class="chart-container">
+                        <canvas id="habitsChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="sidebar">
-                <!-- Insights e Estatísticas -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><i class="fas fa-chart-line"></i> Insights</h2>
-                    </div>
-                    <div class="insights-grid">
-                        <div class="insight-card">
-                            <div class="insight-value" id="completionRate">0%</div>
-                            <div class="insight-label">Taxa de Conclusão</div>
-                        </div>
-                        <div class="insight-card">
-                            <div class="insight-value" id="tasksCompleted">0</div>
-                            <div class="insight-label">Tarefas Concluídas</div>
-                        </div>
-                        <div class="insight-card">
-                            <div class="insight-value" id="pomodorosToday">0</div>
-                            <div class="insight-label">Pomodoros Hoje</div>
-                        </div>
-                        <div class="insight-card">
-                            <div class="insight-value" id="habitsStreak">0</div>
-                            <div class="insight-label">Sequência Hábitos</div>
-                        </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-chart-line"></i> Desempenho</h2>
+                    <div>
+                        <button class="btn btn-outline btn-sm" id="viewWeekly">Semanal</button>
+                        <button class="btn btn-outline btn-sm" id="viewMonthly">Mensal</button>
                     </div>
                 </div>
-
-                <!-- Hábitos Diários -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><i class="fas fa-check-circle"></i> Hábitos Diários</h2>
-                        <button class="btn btn-outline btn-sm" id="addHabitBtn">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                    <div class="habits-list" id="habitsList">
-                        <!-- Hábitos serão inseridos aqui -->
-                    </div>
+                
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
                 </div>
-
-                <!-- Progresso Mensal -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><i class="fas fa-trophy"></i> Progresso do Mês</h2>
+                
+                <div class="comparison">
+                    <div class="comparison-item">
+                        <div class="comparison-value" id="comparisonWeek">0%</div>
+                        <div class="comparison-label">vs. Semana Passada</div>
                     </div>
-                    <div id="monthProgress">
-                        <!-- Barras de progresso serão inseridas aqui -->
+                    <div class="comparison-item">
+                        <div class="comparison-value" id="comparisonMonth">0%</div>
+                        <div class="comparison-label">vs. Mês Passado</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modal para adicionar/editar metas -->
-        <div class="modal" id="goalModal">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-lightbulb"></i> Insights</h2>
+            </div>
+            
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-icon" style="background: rgba(99, 102, 241, 0.2); color: var(--primary);">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="insight-value" id="bestHabit">-</div>
+                    <div class="insight-text">Melhor hábito esta semana</div>
+                </div>
+                
+                <div class="insight-card">
+                    <div class="insight-icon" style="background: rgba(239, 68, 68, 0.2); color: var(--danger);">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="insight-value" id="worstHabit">-</div>
+                    <div class="insight-text">Hábito a melhorar</div>
+                </div>
+                
+                <div class="insight-card">
+                    <div class="insight-icon" style="background: rgba(16, 185, 129, 0.2); color: var(--secondary);">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="insight-value" id="completionRate">0%</div>
+                    <div class="insight-text">Taxa de conclusão</div>
+                </div>
+                
+                <div class="insight-card">
+                    <div class="insight-icon" style="background: rgba(245, 158, 11, 0.2); color: var(--warning);">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <div class="insight-value" id="nextLevel">0%</div>
+                    <div class="insight-text">Progresso para próximo nível</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para adicionar/editar hábito -->
+        <div class="modal" id="habitModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 id="modalTitle">Adicionar Nova Meta</h2>
+                    <h2 id="modalTitle">Adicionar Novo Hábito</h2>
                     <button class="btn btn-icon btn-outline" id="closeModal">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 
-                <form id="goalForm">
-                    <input type="hidden" id="goalId">
-                    <input type="hidden" id="goalType">
+                <form id="habitForm">
+                    <input type="hidden" id="habitId">
                     
                     <div class="form-group">
-                        <label for="goalTitle">Título da Meta</label>
-                        <input type="text" id="goalTitle" required placeholder="Ex: RODAR CAS, Pesar 79,5kg">
+                        <label for="habitName">Nome do Hábito</label>
+                        <input type="text" id="habitName" required placeholder="Ex: Exercício, Leitura, Meditação">
                     </div>
                     
                     <div class="form-group">
-                        <label for="goalDescription">Descrição (Opcional)</label>
-                        <textarea id="goalDescription" placeholder="Detalhes da meta..."></textarea>
+                        <label for="habitGoal">Meta Semanal (vezes por semana)</label>
+                        <input type="number" id="habitGoal" min="1" max="14" value="5" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="goalTarget">Objetivo (Opcional)</label>
-                        <input type="text" id="goalTarget" placeholder="Ex: BF 20%(-2% MÊS), Virilizar uma 1MDL">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="goalProgress">Progresso Atual (%)</label>
-                        <input type="range" id="goalProgress" min="0" max="100" value="0">
-                        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
-                            <span>0%</span>
-                            <span id="progressValue">0%</span>
-                            <span>100%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="goalColor">Cor da Meta</label>
-                        <select id="goalColor">
-                            <option value="#3b82f6">Azul</option>
+                        <label for="habitColor">Cor do Hábito</label>
+                        <select id="habitColor">
+                            <option value="#6366f1">Roxo</option>
                             <option value="#10b981">Verde</option>
-                            <option value="#8b5cf6">Roxo</option>
                             <option value="#f59e0b">Amarelo</option>
                             <option value="#ef4444">Vermelho</option>
+                            <option value="#06b6d4">Ciano</option>
+                            <option value="#8b5cf6">Violeta</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="habitIcon">Ícone</label>
+                        <select id="habitIcon">
+                            <option value="dumbbell">🏋️ Exercício</option>
+                            <option value="book">📚 Leitura</option>
+                            <option value="brain">🧠 Estudo</option>
+                            <option value="apple">🍎 Alimentação</option>
+                            <option value="moon">😴 Sono</option>
+                            <option value="water">💧 Água</option>
+                            <option value="pray">🙏 Meditação</option>
+                            <option value="code">💻 Programação</option>
                         </select>
                     </div>
                     
                     <div class="form-actions">
                         <button type="button" class="btn btn-outline" id="cancelBtn">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar Meta</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal para adicionar/editar tarefas -->
-        <div class="modal" id="taskModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="taskModalTitle">Adicionar Nova Tarefa</h2>
-                    <button class="btn btn-icon btn-outline" id="closeTaskModal">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                
-                <form id="taskForm">
-                    <input type="hidden" id="taskId">
-                    
-                    <div class="form-group">
-                        <label for="taskTitle">Título da Tarefa</label>
-                        <input type="text" id="taskTitle" required placeholder="Ex: GRAVAR VIDEO DO BUG, PROVA SOCIAL">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="taskDay">Dia da Semana</label>
-                        <select id="taskDay" required>
-                            <option value="segunda">Segunda-feira</option>
-                            <option value="terca">Terça-feira</option>
-                            <option value="quarta">Quarta-feira</option>
-                            <option value="quinta">Quinta-feira</option>
-                            <option value="sexta">Sexta-feira</option>
-                            <option value="sabado">Sábado</option>
-                            <option value="domingo">Domingo</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="taskPriority">Prioridade</label>
-                        <select id="taskPriority" required>
-                            <option value="A">A - Prioridade Máxima</option>
-                            <option value="F1">F1 - Secundária 1</option>
-                            <option value="F2">F2 - Secundária 2</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="taskDuration">Duração (Pomodoros)</label>
-                        <select id="taskDuration">
-                            <option value="25">25 min (1 Pomodoro)</option>
-                            <option value="50">50 min (2 Pomodoros)</option>
-                            <option value="75">75 min (3 Pomodoros)</option>
-                            <option value="100">100 min (4 Pomodoros)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="taskCategory">Categoria</label>
-                        <select id="taskCategory">
-                            <option value="Minhas Coisas">Minhas Coisas</option>
-                            <option value="HABITS">HABITS</option>
-                            <option value="Trabalho">Trabalho</option>
-                            <option value="Pessoal">Pessoal</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-outline" id="cancelTaskBtn">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar Tarefa</button>
+                        <button type="submit" class="btn btn-primary">Salvar Hábito</button>
                     </div>
                 </form>
             </div>
         </div>
 
         <footer>
-            <p>Planejador Visual de Metas &copy; 2026 | Mantenha o foco e alcance seus objetivos!</p>
+            <p>Habit Game Pro &copy; 2023 | Transforme seus hábitos em um jogo viciante!</p>
             <p>Dados armazenados localmente no seu navegador</p>
         </footer>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        // Dados iniciais
-        const DEFAULT_YEAR_GOALS = [
-            { id: 1, title: "RODAR CAS", description: "Implementar e rodar sistema CAS", progress: 30, color: "#3b82f6" },
-            { id: 2, title: "Pesar 79,5kg BF 20%", description: "Reduzir 2% de gordura corporal por mês", progress: 40, color: "#10b981" },
-            { id: 3, title: "Virilizar uma 1MDL", description: "Alcançar 1 milhão de downloads", progress: 15, color: "#8b5cf6" },
-            { id: 4, title: "Ler 12 livros", description: "Um livro por mês", progress: 25, color: "#f59e0b" }
-        ];
-
-        const DEFAULT_MONTH_GOALS = [
-            { id: 1, title: "RODAR CAS", target: "Implementar primeira versão", progress: 30, color: "#3b82f6" },
-            { id: 2, title: "Pesar 79,5kg BF 20%", target: "Perder 2% de gordura", progress: 40, color: "#10b981" },
-            { id: 3, title: "Virilizar uma 1MDL", target: "Lançar versão beta", progress: 15, color: "#8b5cf6" }
-        ];
-
+        // Configurações iniciais
         const DEFAULT_HABITS = [
-            { id: 1, name: "LER 10 PÁGINAS", completed: true },
-            { id: 2, name: "TREINO / EXERCÍCIO", completed: false },
-            { id: 3, name: "INGLÊS 50min", completed: false },
-            { id: 4, name: "DEVOCIONAL", completed: true }
+            { id: 1, name: "Treino", goal: 5, color: "#10b981", icon: "dumbbell", counts: {} },
+            { id: 2, name: "Inglês", goal: 5, color: "#6366f1", icon: "brain", counts: {} },
+            { id: 3, name: "Leitura", goal: 5, color: "#f59e0b", icon: "book", counts: {} },
+            { id: 4, name: "Devocional", goal: 7, color: "#8b5cf6", icon: "pray", counts: {} }
         ];
 
-        const WEEK_DAYS = [
-            { id: "segunda", name: "Segunda", short: "SEG" },
-            { id: "terca", name: "Terça", short: "TER" },
-            { id: "quarta", name: "Quarta", short: "QUA" },
-            { id: "quinta", name: "Quinta", short: "QUI" },
-            { id: "sexta", name: "Sexta", short: "SEX" },
-            { id: "sabado", name: "Sábado", short: "SAB" },
-            { id: "domingo", name: "Domingo", short: "DOM" }
+        const LEVELS = [
+            { minScore: 0, name: "Iniciante", badgeClass: "level-1" },
+            { minScore: 20, name: "Aprendiz", badgeClass: "level-2" },
+            { minScore: 40, name: "Intermediário", badgeClass: "level-3" },
+            { minScore: 60, name: "Avançado", badgeClass: "level-4" },
+            { minScore: 80, name: "Mestre", badgeClass: "level-5" }
         ];
 
-        // Estado da aplicação
-        let currentMonth = 0; // 0 = Janeiro, 1 = Fevereiro, etc.
-        let currentYear = 2026;
-        let yearGoals = [];
-        let monthGoals = [];
-        let habits = [];
-        let tasks = [];
-        let selectedDay = null;
-        let pomodoroTimer = null;
-        let pomodoroTimeLeft = 25 * 60; // 25 minutos em segundos
-        let pomodoroRunning = false;
-        let pomodorosToday = 0;
+        // Obter data atual e calcular semana/mês
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        const currentDate = now.getDate();
+        
+        // Função para obter número da semana no ano
+        Date.prototype.getWeek = function() {
+            const date = new Date(this.getTime());
+            date.setHours(0, 0, 0, 0);
+            date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+            const week1 = new Date(date.getFullYear(), 0, 4);
+            return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+        };
+        
+        const currentWeek = now.getWeek();
+        const currentWeekKey = `${currentYear}-W${currentWeek}`;
+        const currentMonthKey = `${currentYear}-${currentMonth}`;
 
-        // Inicializar dados
-        function initData() {
-            // Carregar dados do localStorage ou usar padrões
-            yearGoals = JSON.parse(localStorage.getItem("yearGoals")) || DEFAULT_YEAR_GOALS;
-            monthGoals = JSON.parse(localStorage.getItem("monthGoals")) || DEFAULT_MONTH_GOALS;
-            habits = JSON.parse(localStorage.getItem("habits")) || DEFAULT_HABITS;
-            tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-            pomodorosToday = parseInt(localStorage.getItem("pomodorosToday")) || 0;
-            
-            // Salvar dados iniciais se for a primeira vez
-            saveData();
-        }
+        // Carregar dados do localStorage
+        let habits = JSON.parse(localStorage.getItem("habitGamePro")) || DEFAULT_HABITS;
+        let appData = JSON.parse(localStorage.getItem("habitGameProData")) || {
+            history: {},
+            streak: 0,
+            lastUpdate: now.toISOString().split('T')[0]
+        };
 
-        // Salvar dados no localStorage
-        function saveData() {
-            localStorage.setItem("yearGoals", JSON.stringify(yearGoals));
-            localStorage.setItem("monthGoals", JSON.stringify(monthGoals));
-            localStorage.setItem("habits", JSON.stringify(habits));
-            localStorage.setItem("tasks", JSON.stringify(tasks));
-            localStorage.setItem("pomodorosToday", pomodorosToday.toString());
+        // Inicializar contagens da semana atual se não existirem
+        habits.forEach(habit => {
+            if (!habit.counts) habit.counts = {};
+            if (!habit.counts[currentWeekKey]) habit.counts[currentWeekKey] = 0;
+        });
+
+        // Atualizar último acesso e sequência
+        const today = now.toISOString().split('T')[0];
+        const lastUpdate = appData.lastUpdate;
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        
+        if (lastUpdate === yesterdayStr) {
+            appData.streak += 1;
+        } else if (lastUpdate !== today) {
+            appData.streak = 1;
         }
+        
+        appData.lastUpdate = today;
+
+        // Salvar dados atualizados
+        saveData();
 
         // Elementos DOM
-        const yearGoalsContainer = document.getElementById('yearGoalsContainer');
-        const monthGoalsContainer = document.getElementById('monthGoalsContainer');
-        const weeklyView = document.getElementById('weeklyView');
-        const calendarContainer = document.getElementById('calendarContainer');
-        const habitsList = document.getElementById('habitsList');
-        const monthProgress = document.getElementById('monthProgress');
-        
-        // Elementos de insights
-        const completionRateEl = document.getElementById('completionRate');
-        const tasksCompletedEl = document.getElementById('tasksCompleted');
-        const pomodorosTodayEl = document.getElementById('pomodorosToday');
-        const habitsStreakEl = document.getElementById('habitsStreak');
-        
-        // Modais
-        const goalModal = document.getElementById('goalModal');
-        const taskModal = document.getElementById('taskModal');
-        const goalForm = document.getElementById('goalForm');
-        const taskForm = document.getElementById('taskForm');
-        
-        // Botões
-        const addYearGoalBtn = document.getElementById('addYearGoalBtn');
-        const addWeekTaskBtn = document.getElementById('addWeekTaskBtn');
+        const habitsContainer = document.getElementById('habitsContainer');
+        const habitModal = document.getElementById('habitModal');
+        const habitForm = document.getElementById('habitForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const habitIdInput = document.getElementById('habitId');
+        const habitNameInput = document.getElementById('habitName');
+        const habitGoalInput = document.getElementById('habitGoal');
+        const habitColorInput = document.getElementById('habitColor');
+        const habitIconInput = document.getElementById('habitIcon');
+        const closeModalBtn = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
         const addHabitBtn = document.getElementById('addHabitBtn');
-        const prevMonthBtn = document.getElementById('prevMonthBtn');
-        const nextMonthBtn = document.getElementById('nextMonthBtn');
-        
-        // Timer Pomodoro
-        const timerDisplay = document.getElementById('timerDisplay');
-        const startTimerBtn = document.getElementById('startTimerBtn');
-        const stopTimerBtn = document.getElementById('stopTimerBtn');
-        const resetTimerBtn = document.getElementById('resetTimerBtn');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const viewWeeklyBtn = document.getElementById('viewWeekly');
+        const viewMonthlyBtn = document.getElementById('viewMonthly');
+
+        // Gráficos
+        let habitsChart = null;
+        let performanceChart = null;
 
         // Inicializar a aplicação
         function initApp() {
-            initData();
-            renderYearGoals();
-            renderMonthGoals();
-            renderWeekView();
-            renderCalendar();
             renderHabits();
-            renderMonthProgress();
-            updateInsights();
+            updateStats();
+            renderCharts();
             setupEventListeners();
-            
-            // Inicializar tabs
-            initTabs();
-            
-            // Atualizar timer display
-            updateTimerDisplay();
         }
 
-        // Renderizar metas anuais
-        function renderYearGoals() {
-            yearGoalsContainer.innerHTML = '';
-            
-            if (yearGoals.length === 0) {
-                yearGoalsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-bullseye"></i>
-                        <h3>Nenhuma meta anual definida</h3>
-                        <p>Adicione suas metas para o ano de ${currentYear}</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            yearGoals.forEach(goal => {
-                const goalEl = document.createElement('div');
-                goalEl.className = 'year-goal';
-                goalEl.style.borderLeftColor = goal.color;
-                
-                goalEl.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <h3 style="margin-bottom: 5px;">${goal.title}</h3>
-                            ${goal.description ? `<p style="color: var(--gray); font-size: 0.9rem; margin-bottom: 10px;">${goal.description}</p>` : ''}
-                        </div>
-                        <div style="display: flex; gap: 5px;">
-                            <button class="btn btn-icon btn-outline btn-sm" onclick="editGoal(${goal.id}, 'year')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-icon btn-danger btn-sm" onclick="deleteGoal(${goal.id}, 'year')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="goal-progress">
-                        <div class="progress-fill" style="width: ${goal.progress}%; background: ${goal.color};"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                        <span style="color: var(--gray); font-size: 0.9rem;">Progresso</span>
-                        <span style="font-weight: 600;">${goal.progress}%</span>
-                    </div>
-                `;
-                
-                yearGoalsContainer.appendChild(goalEl);
-            });
-        }
-
-        // Renderizar metas mensais
-        function renderMonthGoals() {
-            const monthNames = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", 
-                               "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
-            
-            document.getElementById('currentMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
-            
-            monthGoalsContainer.innerHTML = '';
-            
-            // Filtrar metas do mês atual
-            const currentMonthGoals = monthGoals.filter(goal => goal.month === currentMonth || goal.month === undefined);
-            
-            if (currentMonthGoals.length === 0) {
-                monthGoalsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-flag"></i>
-                        <h3>Nenhuma meta mensal definida</h3>
-                        <p>Adicione suas metas para ${monthNames[currentMonth]}</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            currentMonthGoals.forEach(goal => {
-                const goalEl = document.createElement('div');
-                goalEl.className = 'month-goal';
-                goalEl.style.borderLeftColor = goal.color;
-                
-                goalEl.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <h3 style="margin-bottom: 5px;">${goal.title}</h3>
-                            ${goal.target ? `<p style="color: var(--gray); font-size: 0.9rem;">${goal.target}</p>` : ''}
-                        </div>
-                        <div style="display: flex; gap: 5px;">
-                            <button class="btn btn-icon btn-outline btn-sm" onclick="editGoal(${goal.id}, 'month')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-icon btn-danger btn-sm" onclick="deleteGoal(${goal.id}, 'month')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="goal-progress">
-                        <div class="progress-fill" style="width: ${goal.progress}%; background: ${goal.color};"></div>
-                    </div>
-                    <div class="goal-stats">
-                        <span>Progresso</span>
-                        <span>${goal.progress}%</span>
-                    </div>
-                `;
-                
-                monthGoalsContainer.appendChild(goalEl);
-            });
-        }
-
-        // Renderizar visão semanal
-        function renderWeekView() {
-            weeklyView.innerHTML = '';
-            
-            // Obter a data atual
-            const today = new Date();
-            const currentDayIndex = today.getDay(); // 0 = Domingo, 1 = Segunda, etc.
-            
-            // Calcular datas para cada dia da semana (começando na segunda)
-            const weekDates = [];
-            for (let i = 0; i < 7; i++) {
-                const date = new Date(today);
-                // Ajustar para começar na segunda-feira
-                const dayOffset = i - (currentDayIndex === 0 ? 6 : currentDayIndex - 1);
-                date.setDate(today.getDate() + dayOffset);
-                weekDates.push(date);
-            }
-            
-            WEEK_DAYS.forEach((day, index) => {
-                const date = weekDates[index];
-                const dayTasks = tasks.filter(task => task.day === day.id);
-                const dayHabits = habits.filter(habit => habit.day === day.id || !habit.day);
-                
-                const dayEl = document.createElement('div');
-                dayEl.className = 'day-card';
-                if (date.toDateString() === today.toDateString()) {
-                    dayEl.style.border = '2px solid var(--primary)';
-                }
-                
-                // Formatar data
-                const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-                
-                // Tarefas por prioridade
-                const priorityATasks = dayTasks.filter(task => task.priority === 'A');
-                const priorityFTasks = dayTasks.filter(task => task.priority === 'F1' || task.priority === 'F2');
-                
-                dayEl.innerHTML = `
-                    <div class="day-header">
-                        <div>
-                            <div class="day-name">${day.name}</div>
-                            <div class="day-date">${formattedDate}</div>
-                        </div>
-                        <button class="btn btn-success btn-sm" onclick="addTaskForDay('${day.id}')">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                    
-                    ${priorityATasks.length > 0 ? `
-                        <div class="priority-a">
-                            <div class="priority-label"><i class="fas fa-exclamation-circle"></i> PRIORIDADE A</div>
-                            ${priorityATasks.map(task => `
-                                <div class="task-item">
-                                    <span>${task.title}</span>
-                                    <span class="task-time">${task.duration || 25}min</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                    
-                    ${priorityFTasks.length > 0 ? `
-                        <div class="priority-f">
-                            <div class="priority-label"><i class="fas fa-tasks"></i> PRIORIDADES F</div>
-                            ${priorityFTasks.map(task => `
-                                <div class="task-item">
-                                    <span>${task.title}</span>
-                                    <span class="task-time">${task.duration || 25}min</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                    
-                    ${dayHabits.length > 0 ? `
-                        <div class="habits-list">
-                            <div style="font-size: 0.9rem; color: var(--gray); margin-bottom: 10px;">Hábitos:</div>
-                            ${dayHabits.map(habit => `
-                                <div class="habit-item">
-                                    <div class="habit-checkbox ${habit.completed ? 'checked' : ''}" onclick="toggleHabit(${habit.id})"></div>
-                                    <span>${habit.name}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                `;
-                
-                weeklyView.appendChild(dayEl);
-            });
-        }
-
-        // Renderizar calendário
-        function renderCalendar() {
-            calendarContainer.innerHTML = '';
-            
-            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
-                               "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-            
-            // Criar cabeçalho do calendário
-            const calendarHeader = document.createElement('div');
-            calendarHeader.className = 'calendar-header';
-            calendarHeader.innerHTML = `
-                <div>Dom</div>
-                <div>Seg</div>
-                <div>Ter</div>
-                <div>Qua</div>
-                <div>Qui</div>
-                <div>Sex</div>
-                <div>Sáb</div>
-            `;
-            calendarContainer.appendChild(calendarHeader);
-            
-            // Criar grid do calendário
-            const calendarGrid = document.createElement('div');
-            calendarGrid.className = 'calendar-grid';
-            
-            // Obter primeiro dia do mês
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const startingDay = firstDay.getDay(); // 0 = Domingo
-            
-            // Obter último dia do mês
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const daysInMonth = lastDay.getDate();
-            
-            // Obter data atual
-            const today = new Date();
-            const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
-            
-            // Adicionar dias vazios no início
-            for (let i = 0; i < startingDay; i++) {
-                const emptyDay = document.createElement('div');
-                emptyDay.className = 'calendar-day empty';
-                calendarGrid.appendChild(emptyDay);
-            }
-            
-            // Adicionar dias do mês
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dayEl = document.createElement('div');
-                dayEl.className = 'calendar-day';
-                
-                // Verificar se é o dia atual
-                if (isCurrentMonth && day === today.getDate()) {
-                    dayEl.classList.add('current');
-                }
-                
-                // Contar tarefas para este dia
-                const dayTasks = tasks.filter(task => {
-                    // Esta é uma simplificação - em um sistema real, você precisaria
-                    // de datas específicas para as tarefas
-                    return false;
-                });
-                
-                dayEl.innerHTML = `
-                    <div class="calendar-day-number">${day}</div>
-                    ${dayTasks.length > 0 ? `<div class="calendar-day-tasks">${dayTasks.length} tarefas</div>` : ''}
-                `;
-                
-                calendarGrid.appendChild(dayEl);
-            }
-            
-            calendarContainer.appendChild(calendarGrid);
-        }
-
-        // Renderizar hábitos
+        // Renderizar lista de hábitos
         function renderHabits() {
-            habitsList.innerHTML = '';
+            habitsContainer.innerHTML = '';
             
             if (habits.length === 0) {
-                habitsList.innerHTML = `
+                habitsContainer.innerHTML = `
                     <div class="empty-state">
-                        <i class="fas fa-check-circle"></i>
-                        <h3>Nenhum hábito definido</h3>
-                        <p>Adicione hábitos para acompanhar diariamente</p>
+                        <i class="fas fa-clipboard-list"></i>
+                        <h3>Nenhum hábito cadastrado</h3>
+                        <p>Comece adicionando seu primeiro hábito para iniciar sua jornada!</p>
                     </div>
                 `;
                 return;
             }
             
             habits.forEach(habit => {
-                const habitEl = document.createElement('div');
-                habitEl.className = 'habit-item';
+                const progress = Math.min(100, (habit.counts[currentWeekKey] || 0) / habit.goal * 100);
+                const progressColor = progress >= 80 ? '#10b981' : progress >= 60 ? '#f59e0b' : '#ef4444';
                 
-                habitEl.innerHTML = `
-                    <div class="habit-checkbox ${habit.completed ? 'checked' : ''}" onclick="toggleHabit(${habit.id})"></div>
-                    <span>${habit.name}</span>
-                    ${habit.time ? `<span style="margin-left: auto; font-size: 0.8rem; color: var(--gray);">${habit.time}</span>` : ''}
+                const habitElement = document.createElement('div');
+                habitElement.className = 'habit-item';
+                habitElement.style.borderLeftColor = habit.color;
+                
+                habitElement.innerHTML = `
+                    <div class="habit-info">
+                        <div class="habit-name">
+                            ${getIcon(habit.icon)} ${habit.name}
+                        </div>
+                        <div class="habit-goal">
+                            ${habit.counts[currentWeekKey] || 0} de ${habit.goal} vezes esta semana
+                        </div>
+                        <div class="habit-progress">
+                            <div class="progress-fill" style="width: ${progress}%; background: ${progressColor};"></div>
+                        </div>
+                    </div>
+                    <div class="habit-actions">
+                        <button class="btn btn-success btn-sm" onclick="incrementHabit(${habit.id})">
+                            <i class="fas fa-plus"></i> +1
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="editHabit(${habit.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteHabit(${habit.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 `;
                 
-                habitsList.appendChild(habitEl);
+                habitsContainer.appendChild(habitElement);
             });
         }
 
-        // Renderizar progresso mensal
-        function renderMonthProgress() {
-            monthProgress.innerHTML = '';
+        // Obter ícone baseado no valor
+        function getIcon(iconName) {
+            const iconMap = {
+                'dumbbell': '🏋️',
+                'book': '📚',
+                'brain': '🧠',
+                'apple': '🍎',
+                'moon': '😴',
+                'water': '💧',
+                'pray': '🙏',
+                'code': '💻'
+            };
+            return iconMap[iconName] || '✅';
+        }
+
+        // Incrementar contagem de um hábito
+        function incrementHabit(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
             
-            // Calcular progresso médio das metas mensais
-            const currentMonthGoals = monthGoals.filter(goal => goal.month === currentMonth || goal.month === undefined);
-            const avgProgress = currentMonthGoals.length > 0 
-                ? Math.round(currentMonthGoals.reduce((sum, goal) => sum + goal.progress, 0) / currentMonthGoals.length)
-                : 0;
-            
-            monthProgress.innerHTML = `
-                <div style="margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span>Progresso Geral</span>
-                        <span>${avgProgress}%</span>
-                    </div>
-                    <div class="goal-progress">
-                        <div class="progress-fill" style="width: ${avgProgress}%; background: var(--primary);"></div>
-                    </div>
-                </div>
+            const currentCount = habit.counts[currentWeekKey] || 0;
+            if (currentCount < habit.goal) {
+                habit.counts[currentWeekKey] = currentCount + 1;
+                saveData();
+                renderHabits();
+                updateStats();
+                renderCharts();
                 
-                ${currentMonthGoals.map(goal => `
-                    <div style="margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>${goal.title}</span>
-                            <span>${goal.progress}%</span>
-                        </div>
-                        <div class="goal-progress">
-                            <div class="progress-fill" style="width: ${goal.progress}%; background: ${goal.color};"></div>
-                        </div>
-                    </div>
-                `).join('')}
-            `;
+                // Efeito visual
+                const btn = event.target.closest('button');
+                btn.innerHTML = '<i class="fas fa-check"></i> Feito!';
+                btn.style.background = '#10b981';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-plus"></i> +1';
+                    btn.style.background = '';
+                }, 1000);
+            }
         }
 
-        // Atualizar insights
-        function updateInsights() {
-            // Taxa de conclusão (média de progresso das metas mensais)
-            const currentMonthGoals = monthGoals.filter(goal => goal.month === currentMonth || goal.month === undefined);
-            const avgProgress = currentMonthGoals.length > 0 
-                ? Math.round(currentMonthGoals.reduce((sum, goal) => sum + goal.progress, 0) / currentMonthGoals.length)
-                : 0;
+        // Editar hábito
+        function editHabit(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
             
-            completionRateEl.textContent = `${avgProgress}%`;
+            habitIdInput.value = habit.id;
+            habitNameInput.value = habit.name;
+            habitGoalInput.value = habit.goal;
+            habitColorInput.value = habit.color;
+            habitIconInput.value = habit.icon;
             
-            // Tarefas concluídas
-            const completedTasks = tasks.filter(task => task.completed).length;
-            tasksCompletedEl.textContent = completedTasks;
-            
-            // Pomodoros hoje
-            pomodorosTodayEl.textContent = pomodorosToday;
-            
-            // Sequência de hábitos
-            const today = new Date().toDateString();
-            const habitsToday = habits.filter(habit => habit.lastCompleted === today).length;
-            habitsStreakEl.textContent = habitsToday > 0 ? habitsToday : 0;
+            modalTitle.textContent = 'Editar Hábito';
+            habitModal.style.display = 'flex';
         }
 
-        // Sistema de abas
-        function initTabs() {
-            const tabs = document.querySelectorAll('.tab');
-            const tabContents = document.querySelectorAll('.tab-content');
+        // Excluir hábito
+        function deleteHabit(id) {
+            if (!confirm('Tem certeza que deseja excluir este hábito?')) return;
             
+            habits = habits.filter(h => h.id !== id);
+            saveData();
+            renderHabits();
+            updateStats();
+            renderCharts();
+        }
+
+        // Abrir modal para adicionar hábito
+        function openAddHabitModal() {
+            habitIdInput.value = '';
+            habitNameInput.value = '';
+            habitGoalInput.value = 5;
+            habitColorInput.value = '#6366f1';
+            habitIconInput.value = 'dumbbell';
+            
+            modalTitle.textContent = 'Adicionar Novo Hábito';
+            habitModal.style.display = 'flex';
+        }
+
+        // Salvar hábito (adicionar ou editar)
+        habitForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = parseInt(habitIdInput.value) || Date.now();
+            const name = habitNameInput.value.trim();
+            const goal = parseInt(habitGoalInput.value);
+            const color = habitColorInput.value;
+            const icon = habitIconInput.value;
+            
+            if (!name || goal < 1) {
+                alert('Preencha todos os campos corretamente!');
+                return;
+            }
+            
+            // Verificar se é edição ou adição
+            const existingIndex = habits.findIndex(h => h.id === id);
+            
+            if (existingIndex >= 0) {
+                // Editar
+                habits[existingIndex].name = name;
+                habits[existingIndex].goal = goal;
+                habits[existingIndex].color = color;
+                habits[existingIndex].icon = icon;
+            } else {
+                // Adicionar novo
+                const newHabit = {
+                    id,
+                    name,
+                    goal,
+                    color,
+                    icon,
+                    counts: { [currentWeekKey]: 0 }
+                };
+                habits.push(newHabit);
+            }
+            
+            saveData();
+            renderHabits();
+            updateStats();
+            renderCharts();
+            closeModal();
+        });
+
+        // Fechar modal
+        function closeModal() {
+            habitModal.style.display = 'none';
+            habitForm.reset();
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            addHabitBtn.addEventListener('click', openAddHabitModal);
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            
+            // Fechar modal ao clicar fora
+            habitModal.addEventListener('click', function(e) {
+                if (e.target === habitModal) closeModal();
+            });
+            
+            // Sistema de abas
             tabs.forEach(tab => {
                 tab.addEventListener('click', function() {
                     const tabId = this.getAttribute('data-tab');
@@ -1380,343 +975,425 @@
                     // Adicionar classe active à aba clicada e seu conteúdo
                     this.classList.add('active');
                     document.getElementById(tabId).classList.add('active');
+                    
+                    // Se for a aba de estatísticas, atualizar o gráfico
+                    if (tabId === 'habits-stats') {
+                        renderHabitsChart();
+                    }
                 });
             });
+            
+            // Botões de visualização (semanal/mensal)
+            viewWeeklyBtn.addEventListener('click', function() {
+                viewWeeklyBtn.classList.add('btn-primary');
+                viewWeeklyBtn.classList.remove('btn-outline');
+                viewMonthlyBtn.classList.add('btn-outline');
+                viewMonthlyBtn.classList.remove('btn-primary');
+                renderPerformanceChart('week');
+            });
+            
+            viewMonthlyBtn.addEventListener('click', function() {
+                viewMonthlyBtn.classList.add('btn-primary');
+                viewMonthlyBtn.classList.remove('btn-outline');
+                viewWeeklyBtn.classList.add('btn-outline');
+                viewWeeklyBtn.classList.remove('btn-primary');
+                renderPerformanceChart('month');
+            });
         }
 
-        // Configurar event listeners
-        function setupEventListeners() {
-            // Botões de navegação do mês
-            prevMonthBtn.addEventListener('click', () => {
-                currentMonth--;
-                if (currentMonth < 0) {
-                    currentMonth = 11;
-                    currentYear--;
-                }
-                renderMonthGoals();
-                renderCalendar();
-                renderMonthProgress();
-                updateInsights();
+        // Calcular estatísticas
+        function updateStats() {
+            // Pontuação da semana atual
+            let weekScore = 0;
+            let totalPossible = 0;
+            
+            habits.forEach(habit => {
+                const count = habit.counts[currentWeekKey] || 0;
+                weekScore += Math.min(1, count / habit.goal);
+                totalPossible += 1;
             });
             
-            nextMonthBtn.addEventListener('click', () => {
-                currentMonth++;
-                if (currentMonth > 11) {
-                    currentMonth = 0;
-                    currentYear++;
-                }
-                renderMonthGoals();
-                renderCalendar();
-                renderMonthProgress();
-                updateInsights();
-            });
+            weekScore = totalPossible > 0 ? Math.round((weekScore / totalPossible) * 100) : 0;
             
-            // Botão para adicionar meta anual
-            addYearGoalBtn.addEventListener('click', () => {
-                document.getElementById('goalType').value = 'year';
-                document.getElementById('modalTitle').textContent = 'Adicionar Meta Anual';
-                document.getElementById('goalId').value = '';
-                document.getElementById('goalTitle').value = '';
-                document.getElementById('goalDescription').value = '';
-                document.getElementById('goalTarget').value = '';
-                document.getElementById('goalProgress').value = 0;
-                document.getElementById('progressValue').textContent = '0%';
-                document.getElementById('goalColor').value = '#3b82f6';
-                
-                goalModal.style.display = 'flex';
-            });
+            // Pontuação do mês atual
+            let monthScore = 0;
+            let monthTotalPossible = 0;
             
-            // Botão para adicionar tarefa semanal
-            addWeekTaskBtn.addEventListener('click', () => {
-                openTaskModal();
-            });
-            
-            // Botão para adicionar hábito
-            addHabitBtn.addEventListener('click', () => {
-                const habitName = prompt('Nome do novo hábito:');
-                if (habitName && habitName.trim()) {
-                    const newHabit = {
-                        id: Date.now(),
-                        name: habitName.trim(),
-                        completed: false
-                    };
-                    habits.push(newHabit);
-                    saveData();
-                    renderHabits();
-                    renderWeekView();
-                    updateInsights();
-                }
-            });
-            
-            // Formulário de meta
-            goalForm.addEventListener('submit', function(e) {
-                e.preventDefault();
+            habits.forEach(habit => {
+                let monthCount = 0;
+                let monthGoal = 0;
                 
-                const id = document.getElementById('goalId').value || Date.now();
-                const type = document.getElementById('goalType').value;
-                const title = document.getElementById('goalTitle').value.trim();
-                const description = document.getElementById('goalDescription').value.trim();
-                const target = document.getElementById('goalTarget').value.trim();
-                const progress = parseInt(document.getElementById('goalProgress').value);
-                const color = document.getElementById('goalColor').value;
-                
-                if (!title) {
-                    alert('Por favor, insira um título para a meta!');
-                    return;
-                }
-                
-                const goal = {
-                    id: parseInt(id),
-                    title,
-                    description,
-                    target,
-                    progress,
-                    color
-                };
-                
-                if (type === 'year') {
-                    // Adicionar ou atualizar meta anual
-                    const existingIndex = yearGoals.findIndex(g => g.id === goal.id);
-                    if (existingIndex >= 0) {
-                        yearGoals[existingIndex] = goal;
-                    } else {
-                        goal.id = Date.now();
-                        yearGoals.push(goal);
+                // Somar todas as semanas do mês atual
+                Object.keys(habit.counts).forEach(weekKey => {
+                    if (weekKey.startsWith(`${currentYear}-${currentMonth}`)) {
+                        monthCount += habit.counts[weekKey];
+                        monthGoal += habit.goal;
                     }
-                } else {
-                    // Adicionar ou atualizar meta mensal
-                    goal.month = currentMonth;
-                    const existingIndex = monthGoals.findIndex(g => g.id === goal.id);
-                    if (existingIndex >= 0) {
-                        monthGoals[existingIndex] = goal;
-                    } else {
-                        goal.id = Date.now();
-                        monthGoals.push(goal);
-                    }
+                });
+                
+                monthScore += Math.min(1, monthCount / (monthGoal || 1));
+                monthTotalPossible += 1;
+            });
+            
+            monthScore = monthTotalPossible > 0 ? Math.round((monthScore / monthTotalPossible) * 100) : 0;
+            
+            // Pontuação global (média das últimas 4 semanas)
+            let globalScore = 0;
+            let weekCount = 0;
+            
+            for (let i = 0; i < 4; i++) {
+                const week = currentWeek - i;
+                const weekKey = `${currentYear}-W${week}`;
+                let weekTotal = 0;
+                let weekPossible = 0;
+                
+                habits.forEach(habit => {
+                    const count = habit.counts[weekKey] || 0;
+                    weekTotal += Math.min(1, count / habit.goal);
+                    weekPossible += 1;
+                });
+                
+                if (weekPossible > 0) {
+                    globalScore += (weekTotal / weekPossible) * 100;
+                    weekCount++;
                 }
-                
-                saveData();
-                
-                if (type === 'year') {
-                    renderYearGoals();
-                } else {
-                    renderMonthGoals();
-                    renderMonthProgress();
-                }
-                
-                updateInsights();
-                closeGoalModal();
-            });
-            
-            // Formulário de tarefa
-            taskForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const id = document.getElementById('taskId').value || Date.now();
-                const title = document.getElementById('taskTitle').value.trim();
-                const day = document.getElementById('taskDay').value;
-                const priority = document.getElementById('taskPriority').value;
-                const duration = parseInt(document.getElementById('taskDuration').value);
-                const category = document.getElementById('taskCategory').value;
-                
-                if (!title) {
-                    alert('Por favor, insira um título para a tarefa!');
-                    return;
-                }
-                
-                const task = {
-                    id: parseInt(id),
-                    title,
-                    day,
-                    priority,
-                    duration,
-                    category,
-                    completed: false
-                };
-                
-                // Adicionar ou atualizar tarefa
-                const existingIndex = tasks.findIndex(t => t.id === task.id);
-                if (existingIndex >= 0) {
-                    tasks[existingIndex] = task;
-                } else {
-                    task.id = Date.now();
-                    tasks.push(task);
-                }
-                
-                saveData();
-                renderWeekView();
-                updateInsights();
-                closeTaskModal();
-            });
-            
-            // Controle do slider de progresso
-            const progressSlider = document.getElementById('goalProgress');
-            const progressValue = document.getElementById('progressValue');
-            
-            progressSlider.addEventListener('input', function() {
-                progressValue.textContent = `${this.value}%`;
-            });
-            
-            // Fechar modais
-            document.getElementById('closeModal').addEventListener('click', closeGoalModal);
-            document.getElementById('cancelBtn').addEventListener('click', closeGoalModal);
-            document.getElementById('closeTaskModal').addEventListener('click', closeTaskModal);
-            document.getElementById('cancelTaskBtn').addEventListener('click', closeTaskModal);
-            
-            // Fechar modais ao clicar fora
-            goalModal.addEventListener('click', function(e) {
-                if (e.target === goalModal) closeGoalModal();
-            });
-            
-            taskModal.addEventListener('click', function(e) {
-                if (e.target === taskModal) closeTaskModal();
-            });
-            
-            // Timer Pomodoro
-            startTimerBtn.addEventListener('click', startPomodoroTimer);
-            stopTimerBtn.addEventListener('click', stopPomodoroTimer);
-            resetTimerBtn.addEventListener('click', resetPomodoroTimer);
-        }
-
-        // Funções de modal
-        function openTaskModal(dayId = null) {
-            if (dayId) {
-                document.getElementById('taskDay').value = dayId;
             }
             
-            document.getElementById('taskModalTitle').textContent = 'Adicionar Nova Tarefa';
-            document.getElementById('taskId').value = '';
-            document.getElementById('taskTitle').value = '';
-            document.getElementById('taskDay').value = dayId || 'segunda';
-            document.getElementById('taskPriority').value = 'A';
-            document.getElementById('taskDuration').value = '25';
-            document.getElementById('taskCategory').value = 'Minhas Coisas';
+            globalScore = weekCount > 0 ? Math.round(globalScore / weekCount) : 0;
             
-            taskModal.style.display = 'flex';
-        }
-
-        function closeGoalModal() {
-            goalModal.style.display = 'none';
-            goalForm.reset();
-        }
-
-        function closeTaskModal() {
-            taskModal.style.display = 'none';
-            taskForm.reset();
-        }
-
-        // Funções para metas
-        function editGoal(id, type) {
-            let goal;
+            // Atualizar elementos DOM
+            document.getElementById('globalScore').textContent = `${globalScore}%`;
+            document.getElementById('weekScore').textContent = `${weekScore}%`;
+            document.getElementById('monthScore').textContent = `${monthScore}%`;
+            document.getElementById('streak').textContent = appData.streak;
             
-            if (type === 'year') {
-                goal = yearGoals.find(g => g.id === id);
-                document.getElementById('goalType').value = 'year';
-                document.getElementById('modalTitle').textContent = 'Editar Meta Anual';
-            } else {
-                goal = monthGoals.find(g => g.id === id);
-                document.getElementById('goalType').value = 'month';
-                document.getElementById('modalTitle').textContent = 'Editar Meta Mensal';
-            }
+            // Atualizar nível
+            const level = getLevel(globalScore);
+            const levelBadge = document.getElementById('levelBadge');
+            levelBadge.textContent = `Nível ${level.level}: ${level.name}`;
+            levelBadge.className = `level-badge ${level.badgeClass}`;
             
-            if (goal) {
-                document.getElementById('goalId').value = goal.id;
-                document.getElementById('goalTitle').value = goal.title;
-                document.getElementById('goalDescription').value = goal.description || '';
-                document.getElementById('goalTarget').value = goal.target || '';
-                document.getElementById('goalProgress').value = goal.progress;
-                document.getElementById('progressValue').textContent = `${goal.progress}%`;
-                document.getElementById('goalColor').value = goal.color;
-                
-                goalModal.style.display = 'flex';
-            }
-        }
-
-        function deleteGoal(id, type) {
-            if (!confirm('Tem certeza que deseja excluir esta meta?')) return;
+            // Calcular comparações
+            const lastWeekScore = getLastWeekScore();
+            const lastMonthScore = getLastMonthScore();
             
-            if (type === 'year') {
-                yearGoals = yearGoals.filter(g => g.id !== id);
-                renderYearGoals();
-            } else {
-                monthGoals = monthGoals.filter(g => g.id !== id);
-                renderMonthGoals();
-                renderMonthProgress();
-            }
+            // Atualizar comparações
+            document.getElementById('comparisonWeek').textContent = `${weekScore - lastWeekScore > 0 ? '+' : ''}${weekScore - lastWeekScore}%`;
+            document.getElementById('comparisonWeek').className = `comparison-value ${weekScore > lastWeekScore ? 'positive' : weekScore < lastWeekScore ? 'negative' : 'neutral'}`;
             
-            saveData();
+            document.getElementById('comparisonMonth').textContent = `${monthScore - lastMonthScore > 0 ? '+' : ''}${monthScore - lastMonthScore}%`;
+            document.getElementById('comparisonMonth').className = `comparison-value ${monthScore > lastMonthScore ? 'positive' : monthScore < lastMonthScore ? 'negative' : 'neutral'}`;
+            
+            // Atualizar insights
             updateInsights();
         }
 
-        // Funções para hábitos
-        function toggleHabit(id) {
-            const habit = habits.find(h => h.id === id);
-            if (habit) {
-                habit.completed = !habit.completed;
-                habit.lastCompleted = habit.completed ? new Date().toDateString() : null;
-                saveData();
-                renderHabits();
-                renderWeekView();
-                updateInsights();
-            }
-        }
-
-        // Funções para tarefas
-        function addTaskForDay(dayId) {
-            openTaskModal(dayId);
-        }
-
-        // Timer Pomodoro
-        function startPomodoroTimer() {
-            if (pomodoroRunning) return;
-            
-            pomodoroRunning = true;
-            startTimerBtn.disabled = true;
-            stopTimerBtn.disabled = false;
-            
-            pomodoroTimer = setInterval(() => {
-                pomodoroTimeLeft--;
-                updateTimerDisplay();
-                
-                if (pomodoroTimeLeft <= 0) {
-                    clearInterval(pomodoroTimer);
-                    pomodoroRunning = false;
-                    
-                    // Aumentar contador de pomodoros hoje
-                    pomodorosToday++;
-                    saveData();
-                    updateInsights();
-                    
-                    // Notificação
-                    alert('Pomodoro concluído! Hora de uma pausa.');
-                    resetPomodoroTimer();
-                    
-                    // Iniciar temporizador de pausa (5 minutos)
-                    pomodoroTimeLeft = 5 * 60;
-                    updateTimerDisplay();
-                    startTimerBtn.disabled = false;
-                    stopTimerBtn.disabled = true;
+        // Obter nível baseado na pontuação
+        function getLevel(score) {
+            for (let i = LEVELS.length - 1; i >= 0; i--) {
+                if (score >= LEVELS[i].minScore) {
+                    return {
+                        level: i + 1,
+                        name: LEVELS[i].name,
+                        badgeClass: LEVELS[i].badgeClass
+                    };
                 }
-            }, 1000);
+            }
+            return { level: 1, name: "Iniciante", badgeClass: "level-1" };
         }
 
-        function stopPomodoroTimer() {
-            clearInterval(pomodoroTimer);
-            pomodoroRunning = false;
-            startTimerBtn.disabled = false;
-            stopTimerBtn.disabled = true;
+        // Obter pontuação da semana anterior
+        function getLastWeekScore() {
+            const lastWeek = currentWeek - 1;
+            const lastWeekKey = `${currentYear}-W${lastWeek}`;
+            
+            let lastWeekScore = 0;
+            let totalPossible = 0;
+            
+            habits.forEach(habit => {
+                const count = habit.counts[lastWeekKey] || 0;
+                lastWeekScore += Math.min(1, count / habit.goal);
+                totalPossible += 1;
+            });
+            
+            return totalPossible > 0 ? Math.round((lastWeekScore / totalPossible) * 100) : 0;
         }
 
-        function resetPomodoroTimer() {
-            stopPomodoroTimer();
-            pomodoroTimeLeft = 25 * 60;
-            updateTimerDisplay();
+        // Obter pontuação do mês anterior
+        function getLastMonthScore() {
+            const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+            const lastMonthKey = `${lastMonthYear}-${lastMonth}`;
+            
+            let lastMonthScore = 0;
+            let monthTotalPossible = 0;
+            
+            habits.forEach(habit => {
+                let monthCount = 0;
+                let monthGoal = 0;
+                
+                Object.keys(habit.counts).forEach(weekKey => {
+                    if (weekKey.startsWith(lastMonthKey)) {
+                        monthCount += habit.counts[weekKey];
+                        monthGoal += habit.goal;
+                    }
+                });
+                
+                lastMonthScore += Math.min(1, monthCount / (monthGoal || 1));
+                monthTotalPossible += 1;
+            });
+            
+            return monthTotalPossible > 0 ? Math.round((lastMonthScore / monthTotalPossible) * 100) : 0;
         }
 
-        function updateTimerDisplay() {
-            const minutes = Math.floor(pomodoroTimeLeft / 60);
-            const seconds = pomodoroTimeLeft % 60;
-            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        // Atualizar insights
+        function updateInsights() {
+            // Melhor hábito da semana
+            let bestHabit = null;
+            let bestScore = 0;
+            
+            habits.forEach(habit => {
+                const count = habit.counts[currentWeekKey] || 0;
+                const score = count / habit.goal;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestHabit = habit.name;
+                }
+            });
+            
+            document.getElementById('bestHabit').textContent = bestHabit || '-';
+            
+            // Pior hábito da semana
+            let worstHabit = null;
+            let worstScore = 1;
+            
+            habits.forEach(habit => {
+                const count = habit.counts[currentWeekKey] || 0;
+                const score = count / habit.goal;
+                if (score < worstScore) {
+                    worstScore = score;
+                    worstHabit = habit.name;
+                }
+            });
+            
+            document.getElementById('worstHabit').textContent = worstHabit || '-';
+            
+            // Taxa de conclusão geral
+            let totalCompleted = 0;
+            let totalPossible = 0;
+            
+            habits.forEach(habit => {
+                const count = habit.counts[currentWeekKey] || 0;
+                totalCompleted += Math.min(count, habit.goal);
+                totalPossible += habit.goal;
+            });
+            
+            const completionRate = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
+            document.getElementById('completionRate').textContent = `${completionRate}%`;
+            
+            // Progresso para próximo nível
+            const globalScore = parseInt(document.getElementById('globalScore').textContent);
+            const level = getLevel(globalScore);
+            const nextLevel = level.level < LEVELS.length ? LEVELS[level.level].minScore : 100;
+            const progress = Math.min(100, Math.round((globalScore - LEVELS[level.level-1].minScore) / (nextLevel - LEVELS[level.level-1].minScore) * 100));
+            document.getElementById('nextLevel').textContent = `${progress}%`;
+        }
+
+        // Renderizar gráficos
+        function renderCharts() {
+            renderHabitsChart();
+            renderPerformanceChart('week');
+        }
+
+        // Gráfico de hábitos
+        function renderHabitsChart() {
+            const ctx = document.getElementById('habitsChart').getContext('2d');
+            
+            if (habitsChart) {
+                habitsChart.destroy();
+            }
+            
+            const habitNames = habits.map(h => h.name);
+            const habitProgress = habits.map(h => {
+                const count = h.counts[currentWeekKey] || 0;
+                return Math.min(100, (count / h.goal) * 100);
+            });
+            const habitColors = habits.map(h => h.color);
+            
+            habitsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: habitNames,
+                    datasets: [{
+                        label: 'Progresso (%)',
+                        data: habitProgress,
+                        backgroundColor: habitColors,
+                        borderColor: habitColors.map(c => c.replace('0.8', '1')),
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const habit = habits[context.dataIndex];
+                                    const count = habit.counts[currentWeekKey] || 0;
+                                    return `${habit.name}: ${count}/${habit.goal} (${context.raw}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de desempenho
+        function renderPerformanceChart(type) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+            
+            let labels = [];
+            let data = [];
+            
+            if (type === 'week') {
+                // Últimas 8 semanas
+                for (let i = 7; i >= 0; i--) {
+                    const week = currentWeek - i;
+                    const weekKey = `${currentYear}-W${week}`;
+                    
+                    let weekScore = 0;
+                    let totalPossible = 0;
+                    
+                    habits.forEach(habit => {
+                        const count = habit.counts[weekKey] || 0;
+                        weekScore += Math.min(1, count / habit.goal);
+                        totalPossible += 1;
+                    });
+                    
+                    labels.push(`Sem ${week}`);
+                    data.push(totalPossible > 0 ? Math.round((weekScore / totalPossible) * 100) : 0);
+                }
+            } else {
+                // Últimos 6 meses
+                for (let i = 5; i >= 0; i--) {
+                    const month = currentMonth - i;
+                    let year = currentYear;
+                    let monthIdx = month;
+                    
+                    if (month < 0) {
+                        monthIdx = 12 + month;
+                        year--;
+                    }
+                    
+                    const monthKey = `${year}-${monthIdx}`;
+                    
+                    let monthScore = 0;
+                    let monthTotalPossible = 0;
+                    
+                    habits.forEach(habit => {
+                        let monthCount = 0;
+                        let monthGoal = 0;
+                        
+                        Object.keys(habit.counts).forEach(weekKey => {
+                            if (weekKey.startsWith(monthKey)) {
+                                monthCount += habit.counts[weekKey];
+                                monthGoal += habit.goal;
+                            }
+                        });
+                        
+                        monthScore += Math.min(1, monthCount / (monthGoal || 1));
+                        monthTotalPossible += 1;
+                    });
+                    
+                    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                    labels.push(`${monthNames[monthIdx]}/${year.toString().slice(2)}`);
+                    data.push(monthTotalPossible > 0 ? Math.round((monthScore / monthTotalPossible) * 100) : 0);
+                }
+            }
+            
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Desempenho',
+                        data: data,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#6366f1',
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Salvar dados no localStorage
+        function saveData() {
+            localStorage.setItem("habitGamePro", JSON.stringify(habits));
+            localStorage.setItem("habitGameProData", JSON.stringify(appData));
         }
 
         // Inicializar aplicação quando a página carregar
