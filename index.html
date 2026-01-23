@@ -1,121 +1,205 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Habit Tracker</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Habit Game Pro</title>
 
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
-      background: #0e0e11;
-      color: #fff;
-      margin: 0;
-      padding: 24px;
-    }
+<style>
+body {
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro",sans-serif;
+  background:#0e0e11;
+  color:#fff;
+  padding:20px;
+}
 
-    h1 {
-      text-align: center;
-      margin-bottom: 24px;
-    }
+h1 { text-align:center; margin-bottom:4px; }
+.sub { text-align:center; color:#9ca3af; font-size:13px; margin-bottom:20px; }
 
-    .habit {
-      background: #1c1c22;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 12px;
-    }
+.card {
+  background:#1c1c22;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:14px;
+}
 
-    .habit-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+.center { text-align:center; }
 
-    .habit-name {
-      font-size: 16px;
-      font-weight: 600;
-    }
+button {
+  background:#22c55e;
+  color:#0e0e11;
+  border:none;
+  border-radius:10px;
+  padding:6px 12px;
+  font-weight:bold;
+  cursor:pointer;
+}
 
-    button {
-      background: #2dd4bf;
-      border: none;
-      border-radius: 10px;
-      padding: 6px 12px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+.bar { background:#2a2a32; height:8px; border-radius:8px; overflow:hidden; margin-top:8px; }
+.fill { height:100%; }
 
-    .progress {
-      margin-top: 10px;
-      background: #2a2a32;
-      border-radius: 8px;
-      overflow: hidden;
-    }
+.badge {
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:600;
+  margin-top:8px;
+}
 
-    .progress-bar {
-      height: 8px;
-      background: #22c55e;
-      width: 0%;
-      transition: width .3s;
-    }
+canvas { width:100%; height:160px; margin-top:12px; }
 
-    .info {
-      margin-top: 6px;
-      font-size: 12px;
-      color: #aaa;
-    }
-  </style>
+.habit-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+</style>
 </head>
 
 <body>
 
-<h1>📊 Meus Hábitos</h1>
+<h1>🎮 Habit Game Pro</h1>
+<div class="sub">Consistência vence intensidade</div>
+
+<div class="card center">
+  <div id="globalScore" style="font-size:26px;font-weight:700">0%</div>
+  <div id="badge"></div>
+  <div id="compare" style="margin-top:6px;font-size:13px;color:#9ca3af"></div>
+</div>
 
 <div id="habits"></div>
 
+<div class="card">
+  <strong>📊 Histórico Semanal (8 semanas)</strong>
+  <canvas id="historyChart"></canvas>
+</div>
+
 <script>
-  const habits = [
-    { name: "Treino", goal: 5, done: 0 },
-    { name: "Inglês", goal: 5, done: 0 },
-    { name: "Leitura", goal: 5, done: 0 },
-    { name: "Devocional", goal: 7, done: 0 }
-  ];
+const habits = [
+  { name:"Treino", goal:5 },
+  { name:"Inglês", goal:5 },
+  { name:"Leitura", goal:5 },
+  { name:"Devocional", goal:7 }
+];
 
-  const container = document.getElementById("habits");
+Date.prototype.getWeek = function(){
+  const d=new Date(Date.UTC(this.getFullYear(),this.getMonth(),this.getDate()));
+  const day=d.getUTCDay()||7;
+  d.setUTCDate(d.getUTCDate()+4-day);
+  const yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  return Math.ceil((((d-yearStart)/86400000)+1)/7);
+};
 
-  habits.forEach((habit, index) => {
-    const div = document.createElement("div");
-    div.className = "habit";
+const now=new Date();
+const currentWeek=now.getWeek();
 
-    div.innerHTML = `
-      <div class="habit-header">
-        <div class="habit-name">${habit.name}</div>
-        <button onclick="add(${index})">+1</button>
-      </div>
-      <div class="progress">
-        <div class="progress-bar" id="bar-${index}"></div>
-      </div>
-      <div class="info" id="info-${index}"></div>
-    `;
+const data = JSON.parse(localStorage.getItem("habitPro")) || {
+  week:currentWeek,
+  counts:{},
+  history:[]
+};
 
-    container.appendChild(div);
-    update(index);
+if(data.week !== currentWeek){
+  const score = calcScore();
+  data.history.unshift(score);
+  data.history = data.history.slice(0,8);
+  data.counts = {};
+  data.week = currentWeek;
+}
+
+habits.forEach((h,i)=> data.counts[i] ||= 0);
+
+function save(){
+  localStorage.setItem("habitPro", JSON.stringify(data));
+}
+
+const container=document.getElementById("habits");
+
+habits.forEach((h,i)=>{
+  const div=document.createElement("div");
+  div.className="card";
+  div.innerHTML=`
+    <div class="habit-header">
+      <strong>${h.name}</strong>
+      <button onclick="add(${i})">+1</button>
+    </div>
+    <div class="bar"><div class="fill" id="bar-${i}"></div></div>
+    <div style="font-size:12px;color:#9ca3af;margin-top:6px" id="info-${i}"></div>
+  `;
+  container.appendChild(div);
+  updateHabit(i);
+});
+
+function add(i){
+  if(data.counts[i] < habits[i].goal){
+    data.counts[i]++;
+    save();
+    updateHabit(i);
+  }
+}
+
+function updateHabit(i){
+  const h=habits[i];
+  const p=(data.counts[i]/h.goal)*100;
+  const bar=document.getElementById(`bar-${i}`);
+  bar.style.width=Math.min(100,p)+"%";
+  bar.style.background=p>=80?"#22c55e":p>=60?"#eab308":"#ef4444";
+  document.getElementById(`info-${i}`).innerText=`${data.counts[i]}/${h.goal}`;
+  updateGlobal();
+}
+
+function calcScore(){
+  let total=0;
+  habits.forEach((h,i)=> total+=Math.min(1,data.counts[i]/h.goal));
+  return Math.round((total/habits.length)*100);
+}
+
+function updateGlobal(){
+  const score=calcScore();
+  document.getElementById("globalScore").innerText=score+"%";
+
+  let badgeText="", color="";
+  if(score>=90){ badgeText="🥇 Elite"; color="#22c55e"; }
+  else if(score>=80){ badgeText="🟢 Consistente"; color="#16a34a"; }
+  else if(score>=60){ badgeText="🟡 Em progresso"; color="#eab308"; }
+  else { badgeText="🔴 Em risco"; color="#ef4444"; }
+
+  document.getElementById("badge").innerHTML =
+    `<span class="badge" style="background:${color}">${badgeText}</span>`;
+
+  const best=Math.max(...data.history, score);
+  const last=data.history[0] || score;
+
+  let msg="Primeira semana registrada";
+  if(score > last) msg=`⬆️ Você melhorou +${score-last}%`;
+  else if(score < last) msg=`⬇️ Caiu ${last-score}%`;
+  if(score >= best) msg+=" • Novo recorde pessoal 🏆";
+
+  document.getElementById("compare").innerText=msg;
+
+  drawHistory();
+}
+
+function drawHistory(){
+  const c=document.getElementById("historyChart");
+  const ctx=c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+
+  const values=[calcScore(),...data.history].slice(0,8);
+  const step=c.width/(values.length-1||1);
+
+  ctx.strokeStyle="#22c55e";
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  values.forEach((v,i)=>{
+    const x=i*step;
+    const y=c.height-(v/100*c.height);
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
   });
+  ctx.stroke();
+}
 
-  function add(i) {
-    if (habits[i].done < habits[i].goal) {
-      habits[i].done++;
-      update(i);
-    }
-  }
-
-  function update(i) {
-    const percent = (habits[i].done / habits[i].goal) * 100;
-    document.getElementById(`bar-${i}`).style.width = percent + "%";
-    document.getElementById(`info-${i}`).innerText =
-      `${habits[i].done}/${habits[i].goal} (${Math.round(percent)}%)`;
-  }
+updateGlobal();
 </script>
 
 </body>
