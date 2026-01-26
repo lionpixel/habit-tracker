@@ -1680,300 +1680,739 @@
         }
 
         // ============================================
-        // DADOS CIENTÍFICOS
-        // ============================================
+// DADOS DE REFERÊNCIA CIENTÍFICA ATUALIZADOS
+// ============================================
 
-        const SCIENTIFIC_BASELINE = {
-            reading: {
-                name: "Leitura",
-                brazilAvg: 2.5,
-                worldAvg: 12,
-                scientificIdeal: 12,
-                weeklyMinutes: 150,
-                units: "livros/ano",
-                color: "#10b981",
-                neuroImpact: 85
-            },
-            english: {
-                name: "Inglês",
-                brazilAvg: 90,
-                worldAvg: 180,
-                scientificIdeal: 250,
-                weeklyMinutes: 250,
-                units: "minutos/semana",
-                color: "#6366f1",
-                neuroImpact: 90
-            },
-            exercise: {
-                name: "Treino",
-                brazilAvg: 60,
-                worldAvg: 120,
-                scientificIdeal: 150,
-                weeklyMinutes: 250,
-                units: "minutos/semana",
-                color: "#f59e0b",
-                neuroImpact: 75
-            },
-            study: {
-                name: "PPCI",
-                brazilAvg: 45,
-                worldAvg: 120,
-                scientificIdeal: 150,
-                weeklyMinutes: 150,
-                units: "minutos/semana",
-                color: "#8b5cf6",
-                neuroImpact: 80
-            },
-            neuroscience: {
-                name: "Dopamina",
-                brazilAvg: 15,
-                worldAvg: 30,
-                scientificIdeal: 100,
-                weeklyMinutes: 100,
-                units: "minutos/semana",
-                color: "#06b6d4",
-                neuroImpact: 95
-            }
-        };
+const SCIENTIFIC_BASELINE = {
+    reading: {
+        name: "Leitura",
+        brazilAvg: 15,        // páginas por semana (≈ 2-3 livros/ano)
+        worldAvg: 45,         // páginas por semana (≈ 10-12 livros/ano)
+        scientificIdeal: 50,  // 10 páginas/dia, 5x/semana
+        weeklyMinutes: 150,   // 50 páginas × 3min/página
+        units: "páginas/semana",
+        color: "#10b981",
+        neuroImpact: 85
+    },
+    study: {
+        name: "Estudo",
+        brazilAvg: 60,        // minutos/semana
+        worldAvg: 120,        // minutos/semana
+        scientificIdeal: 180, // base científica recomendada
+        weeklyMinutes: 180,
+        units: "minutos/semana",
+        color: "#0ea5e9",
+        neuroImpact: 80
+    },
+    courses: {
+        name: "Cursos",
+        brazilAvg: 90,        // minutos/semana
+        worldAvg: 180,        // minutos/semana
+        scientificIdeal: 240, // recomendação alta performance
+        weeklyMinutes: 240,
+        units: "minutos/semana",
+        color: "#f59e0b",
+        neuroImpact: 75
+    },
+    english: {
+        name: "Inglês",
+        brazilAvg: 90,
+        worldAvg: 180,
+        scientificIdeal: 250,
+        weeklyMinutes: 250,
+        units: "minutos/semana",
+        color: "#6366f1",
+        neuroImpact: 90
+    },
+    exercise: {
+        name: "Treino",
+        brazilAvg: 60,
+        worldAvg: 120,
+        scientificIdeal: 150,
+        weeklyMinutes: 250,
+        units: "minutos/semana",
+        color: "#f59e0b",
+        neuroImpact: 75
+    },
+    ppci: {
+        name: "PPCI",
+        brazilAvg: 45,
+        worldAvg: 120,
+        scientificIdeal: 150,
+        weeklyMinutes: 150,
+        units: "minutos/semana",
+        color: "#8b5cf6",
+        neuroImpact: 80
+    },
+    neuroscience: {
+        name: "Dopamina",
+        brazilAvg: 15,
+        worldAvg: 30,
+        scientificIdeal: 100,
+        weeklyMinutes: 100,
+        units: "minutos/semana",
+        color: "#06b6d4",
+        neuroImpact: 95
+    }
+};
 
-        // ============================================
-        // GRÁFICOS - INSTÂNCIAS
-        // ============================================
+// ============================================
+// ATUALIZAÇÃO DO GRÁFICO DE PROGRESSO CIENTÍFICO
+// ============================================
 
-        let scientificProgressChart = null;
-        let globalComparisonChart = null;
-        let neuroplasticityChart = null;
-        let habitsProgressChart = null;
-        let weeklyForecastChart = null;
-
-        // ============================================
-        // RENDERIZAÇÃO DE GRÁFICOS
-        // ============================================
-
-        function renderScientificProgressChart() {
-            const canvas = document.getElementById('scientificProgressChart');
-            if (!canvas) return;
-            
-            const ctx = canvas.getContext('2d');
-            if (scientificProgressChart) {
-                scientificProgressChart.destroy();
-            }
-            
-            const habits = habitTracker.habits.filter(h => h.isActive);
-            const labels = habits.map(h => h.name);
-            
-            const userData = habits.map(habit => {
-                const weeklyMinutes = (habit.completedSessions * habit.durationMinutes);
-                const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
-                    habit.name.toLowerCase().includes(b.name.toLowerCase())
-                );
-                return baseline ? weeklyMinutes : 0;
-            });
-            
-            const scientificData = habits.map(habit => {
-                const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
-                    habit.name.toLowerCase().includes(b.name.toLowerCase())
-                );
-                return baseline ? baseline.scientificIdeal : 0;
-            });
-            
-            const brazilAvgData = habits.map(habit => {
-                const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
-                    habit.name.toLowerCase().includes(b.name.toLowerCase())
-                );
-                return baseline ? baseline.brazilAvg : 0;
-            });
-            
-            const worldAvgData = habits.map(habit => {
-                const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
-                    habit.name.toLowerCase().includes(b.name.toLowerCase())
-                );
-                return baseline ? baseline.worldAvg : 0;
-            });
-            
-            scientificProgressChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Você',
-                            data: userData,
-                            backgroundColor: 'rgba(99, 102, 241, 0.8)',
-                            borderColor: '#6366f1',
-                            borderWidth: 2,
-                            borderRadius: 8,
-                        },
-                        {
-                            label: 'Meta Científica',
-                            data: scientificData,
-                            backgroundColor: 'rgba(16, 185, 129, 0.3)',
-                            borderColor: '#10b981',
-                            borderWidth: 2,
-                            type: 'line',
-                            tension: 0.4,
-                            pointRadius: 6,
-                        },
-                        {
-                            label: 'Média Brasil',
-                            data: brazilAvgData,
-                            backgroundColor: 'rgba(148, 163, 184, 0.3)',
-                            borderColor: '#94a3b8',
-                            borderWidth: 1,
-                            borderDash: [5, 5],
-                            type: 'line',
-                            pointRadius: 4,
-                        },
-                        {
-                            label: 'Média Mundial',
-                            data: worldAvgData,
-                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                            borderColor: '#8b5cf6',
-                            borderWidth: 1,
-                            borderDash: [3, 3],
-                            type: 'line',
-                            pointRadius: 4,
-                        }
-                    ]
+function renderScientificProgressChart() {
+    const canvas = document.getElementById('scientificProgressChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (scientificProgressChart) {
+        scientificProgressChart.destroy();
+    }
+    
+    const habits = habitTracker.habits.filter(h => h.isActive);
+    const labels = habits.map(h => h.name);
+    
+    const userData = habits.map(habit => {
+        const weeklyMinutes = (habit.completedSessions * habit.durationMinutes);
+        const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+            habit.name.toLowerCase().includes(b.name.toLowerCase())
+        );
+        if (!baseline) return 0;
+        
+        // Converter minutos para unidade apropriada
+        if (baseline.name === "Leitura") {
+            return Math.round(weeklyMinutes / 3); // 3 minutos por página
+        }
+        return weeklyMinutes;
+    });
+    
+    const scientificData = habits.map(habit => {
+        const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+            habit.name.toLowerCase().includes(b.name.toLowerCase())
+        );
+        return baseline ? baseline.scientificIdeal : 0;
+    });
+    
+    const brazilAvgData = habits.map(habit => {
+        const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+            habit.name.toLowerCase().includes(b.name.toLowerCase())
+        );
+        return baseline ? baseline.brazilAvg : 0;
+    });
+    
+    const worldAvgData = habits.map(habit => {
+        const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+            habit.name.toLowerCase().includes(b.name.toLowerCase())
+        );
+        return baseline ? baseline.worldAvg : 0;
+    });
+    
+    scientificProgressChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Você',
+                    data: userData,
+                    backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                    borderColor: '#6366f1',
+                    borderWidth: 2,
+                    borderRadius: 8,
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: {
-                                color: '#94a3b8',
-                                callback: function(value) { return value + (value > 100 ? '' : 'min'); }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Minutos por Semana',
-                                color: '#94a3b8'
+                {
+                    label: 'Meta Científica',
+                    data: scientificData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.3)',
+                    borderColor: '#10b981',
+                    borderWidth: 2,
+                    type: 'line',
+                    tension: 0.4,
+                    pointRadius: 6,
+                },
+                {
+                    label: 'Média Brasil',
+                    data: brazilAvgData,
+                    backgroundColor: 'rgba(148, 163, 184, 0.3)',
+                    borderColor: '#94a3b8',
+                    borderWidth: 1,
+                    borderDash: [5, 5],
+                    type: 'line',
+                    pointRadius: 4,
+                },
+                {
+                    label: 'Média Mundial',
+                    data: worldAvgData,
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                    borderColor: '#8b5cf6',
+                    borderWidth: 1,
+                    borderDash: [3, 3],
+                    type: 'line',
+                    pointRadius: 4,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#94a3b8',
+                        callback: function(value, index, values) {
+                            // Verificar se é leitura (páginas) ou outros (minutos)
+                            const habits = habitTracker.habits.filter(h => h.isActive);
+                            if (habits.length > 0) {
+                                const firstHabit = habits[0];
+                                const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+                                    firstHabit.name.toLowerCase().includes(b.name.toLowerCase())
+                                );
+                                if (baseline?.name === "Leitura") {
+                                    return value + ' pág';
+                                }
                             }
-                        },
-                        x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: '#cbd5e1', maxRotation: 45 }
+                            return value + (value > 100 ? '' : 'min');
                         }
                     },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: { color: '#e2e8f0', padding: 20, usePointStyle: true }
-                        }
+                    title: {
+                        display: true,
+                        text: 'Unidade por Semana',
+                        color: '#94a3b8'
                     }
-                }
-            });
-        }
-
-        function renderGlobalComparisonChart() {
-            const canvas = document.getElementById('globalComparisonChart');
-            if (!canvas) return;
-            
-            const ctx = canvas.getContext('2d');
-            if (globalComparisonChart) {
-                globalComparisonChart.destroy();
-            }
-            
-            const categories = ['Leitura', 'Inglês', 'Treino', 'PPCI', 'Dopamina'];
-            const normalize = (value, max) => Math.min(100, (value / max) * 100);
-            const maxValue = 300;
-            
-            const userData = categories.map(cat => {
-                const habit = habitTracker.habits.find(h => 
-                    h.isActive && h.name.toLowerCase().includes(cat.toLowerCase())
-                );
-                if (!habit) return 0;
-                const weeklyMinutes = habit.completedSessions * habit.durationMinutes;
-                const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
-                    b.name.toLowerCase() === cat.toLowerCase()
-                );
-                if (!baseline) return normalize(weeklyMinutes, maxValue);
-                return normalize(weeklyMinutes, baseline.scientificIdeal * 1.5);
-            });
-            
-            const brazilData = categories.map(cat => {
-                const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
-                    b.name.toLowerCase() === cat.toLowerCase()
-                );
-                if (!baseline) return 0;
-                return normalize(baseline.brazilAvg, baseline.scientificIdeal * 1.5);
-            });
-            
-            const worldData = categories.map(cat => {
-                const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
-                    b.name.toLowerCase() === cat.toLowerCase()
-                );
-                if (!baseline) return 0;
-                return normalize(baseline.worldAvg, baseline.scientificIdeal * 1.5);
-            });
-            
-            const idealData = categories.map(() => 100);
-            
-            globalComparisonChart = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: categories,
-                    datasets: [
-                        {
-                            label: 'Você 🎯',
-                            data: userData,
-                            backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                            borderColor: '#6366f1',
-                            borderWidth: 3,
-                            pointRadius: 5,
-                        },
-                        {
-                            label: 'Brasil 🇧🇷',
-                            data: brazilData,
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                            borderColor: '#22c55e',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            pointRadius: 4,
-                        },
-                        {
-                            label: 'Mundo 🌍',
-                            data: worldData,
-                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                            borderColor: '#8b5cf6',
-                            borderWidth: 2,
-                            borderDash: [3, 3],
-                            pointRadius: 4,
-                        },
-                        {
-                            label: 'Ideal 🏆',
-                            data: idealData,
-                            borderColor: 'rgba(245, 158, 11, 0.3)',
-                            borderWidth: 1,
-                            borderDash: [2, 2],
-                            pointRadius: 0,
-                            fill: false
-                        }
-                    ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            pointLabels: { color: '#cbd5e1', font: { size: 12, weight: '600' } },
-                            ticks: {
-                                color: '#94a3b8',
-                                callback: function(value) { return value + '%'; },
-                                stepSize: 25
-                            },
-                            min: 0,
-                            max: 100
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#cbd5e1', maxRotation: 45 }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#e2e8f0', padding: 20, usePointStyle: true }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            const value = context.parsed.y;
+                            const habitIndex = context.dataIndex;
+                            const habit = habitTracker.habits.filter(h => h.isActive)[habitIndex];
+                            const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+                                habit?.name.toLowerCase().includes(b.name.toLowerCase())
+                            );
+                            
+                            if (baseline?.name === "Leitura") {
+                                label += value + ' páginas/semana';
+                            } else {
+                                label += value + ' minutos/semana';
+                            }
+                            
+                            if (context.dataset.label === 'Média Brasil') {
+                                label += ' (média brasileira)';
+                            } else if (context.dataset.label === 'Média Mundial') {
+                                label += ' (média mundial)';
+                            } else if (context.dataset.label === 'Meta Científica') {
+                                label += ' (referência científica)';
+                            }
+                            
+                            return label;
                         }
                     }
                 }
+            }
+        }
+    });
+}
+
+// ============================================
+// ATUALIZAÇÃO DO GRÁFICO DE COMPARAÇÃO GLOBAL
+// ============================================
+
+function renderGlobalComparisonChart() {
+    const canvas = document.getElementById('globalComparisonChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (globalComparisonChart) {
+        globalComparisonChart.destroy();
+    }
+    
+    // Usar todas as categorias do SCIENTIFIC_BASELINE
+    const categories = Object.values(SCIENTIFIC_BASELINE).map(b => b.name);
+    
+    const normalize = (value, max) => Math.min(100, (value / max) * 100);
+    
+    const userData = categories.map(categoryName => {
+        const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+            b.name === categoryName
+        );
+        if (!baseline) return 0;
+        
+        // Encontrar hábito correspondente do usuário
+        const habit = habitTracker.habits.find(h => 
+            h.isActive && h.name.toLowerCase().includes(categoryName.toLowerCase())
+        );
+        
+        if (!habit) return 0;
+        
+        const weeklyMinutes = habit.completedSessions * habit.durationMinutes;
+        let userValue = weeklyMinutes;
+        
+        // Converter para unidade apropriada
+        if (baseline.name === "Leitura") {
+            userValue = Math.round(weeklyMinutes / 3); // 3 minutos por página
+        }
+        
+        return normalize(userValue, baseline.scientificIdeal * 1.5);
+    });
+    
+    const brazilData = categories.map(categoryName => {
+        const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+            b.name === categoryName
+        );
+        if (!baseline) return 0;
+        return normalize(baseline.brazilAvg, baseline.scientificIdeal * 1.5);
+    });
+    
+    const worldData = categories.map(categoryName => {
+        const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+            b.name === categoryName
+        );
+        if (!baseline) return 0;
+        return normalize(baseline.worldAvg, baseline.scientificIdeal * 1.5);
+    });
+    
+    const idealData = categories.map(() => 100);
+    
+    globalComparisonChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: categories,
+            datasets: [
+                {
+                    label: 'Você 🎯',
+                    data: userData,
+                    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                    borderColor: '#6366f1',
+                    borderWidth: 3,
+                    pointRadius: 5,
+                },
+                {
+                    label: 'Brasil 🇧🇷',
+                    data: brazilData,
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    borderColor: '#22c55e',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                },
+                {
+                    label: 'Mundo 🌍',
+                    data: worldData,
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderColor: '#8b5cf6',
+                    borderWidth: 2,
+                    borderDash: [3, 3],
+                    pointRadius: 4,
+                },
+                {
+                    label: 'Ideal 🏆',
+                    data: idealData,
+                    borderColor: 'rgba(245, 158, 11, 0.3)',
+                    borderWidth: 1,
+                    borderDash: [2, 2],
+                    pointRadius: 0,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    pointLabels: { color: '#cbd5e1', font: { size: 12, weight: '600' } },
+                    ticks: {
+                        color: '#94a3b8',
+                        callback: function(value) { return value + '%'; },
+                        stepSize: 25
+                    },
+                    min: 0,
+                    max: 100
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label;
+                            const value = context.raw;
+                            const category = context.chart.data.labels[context.dataIndex];
+                            const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+                                b.name === category
+                            );
+                            
+                            if (!baseline) return label + ': ' + value + '%';
+                            
+                            let actualValue = (value / 100) * (baseline.scientificIdeal * 1.5);
+                            actualValue = Math.round(actualValue);
+                            
+                            if (baseline.name === "Leitura") {
+                                return label + ': ' + actualValue + ' páginas/semana (' + value + '%)';
+                            }
+                            return label + ': ' + actualValue + ' minutos/semana (' + value + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ============================================
+// ATUALIZAÇÃO DAS COMPARAÇÕES CIENTÍFICAS
+// ============================================
+
+function updateScientificComparisons() {
+    const habits = habitTracker.habits.filter(h => h.isActive);
+    
+    // Atualizar leitura
+    const readingHabit = habits.find(h => 
+        h.name.includes("Ler") || 
+        h.name.includes("Leitura") || 
+        h.name.toLowerCase().includes("reading")
+    );
+    
+    if (readingHabit) {
+        const weeklyMinutes = readingHabit.completedSessions * readingHabit.durationMinutes;
+        const pagesPerWeek = Math.round(weeklyMinutes / 3); // 3 minutos por página
+        const readingScore = readingHabit.frequencyPerWeek > 0 ? 
+            Math.round((readingHabit.completedSessions / readingHabit.frequencyPerWeek) * 100) : 0;
+        
+        document.getElementById('readingScore').textContent = `${readingScore}%`;
+        
+        // Comparar com as novas médias
+        const brazilAvg = SCIENTIFIC_BASELINE.reading.brazilAvg;
+        const worldAvg = SCIENTIFIC_BASELINE.reading.worldAvg;
+        const scientificIdeal = SCIENTIFIC_BASELINE.reading.scientificIdeal;
+        
+        let comparisonText = '';
+        if (pagesPerWeek >= scientificIdeal) {
+            comparisonText = 'acima do ideal científico';
+        } else if (pagesPerWeek >= worldAvg) {
+            comparisonText = 'acima da média mundial';
+        } else if (pagesPerWeek >= brazilAvg) {
+            comparisonText = 'acima da média brasileira';
+        } else {
+            comparisonText = 'abaixo da média brasileira';
+        }
+        
+        document.getElementById('readingComparison').textContent = comparisonText;
+        document.getElementById('readingComparison').style.color = 
+            pagesPerWeek >= brazilAvg ? 'var(--secondary)' : 'var(--danger)';
+    }
+    
+    // Atualizar estudo (autodesenvolvimento)
+    const studyHabit = habits.find(h => 
+        h.category === 'aprendizado' || 
+        h.name.toLowerCase().includes("estudo") ||
+        h.name.toLowerCase().includes("study")
+    );
+    
+    if (studyHabit) {
+        const weeklyMinutes = studyHabit.completedSessions * studyHabit.durationMinutes;
+        const studyScore = studyHabit.frequencyPerWeek > 0 ? 
+            Math.round((studyHabit.completedSessions / studyHabit.frequencyPerWeek) * 100) : 0;
+        
+        // Adicionar ou atualizar elemento de estudo se não existir
+        let studyElement = document.getElementById('studyScore');
+        if (!studyElement) {
+            // Pode adicionar dinamicamente se necessário
+        }
+    }
+    
+    // Atualizar cursos
+    const coursesHabit = habits.find(h => 
+        h.name.toLowerCase().includes("curso") ||
+        h.name.toLowerCase().includes("course") ||
+        h.category === 'desenvolvimento'
+    );
+    
+    if (coursesHabit) {
+        const weeklyMinutes = coursesHabit.completedSessions * coursesHabit.durationMinutes;
+        const coursesScore = coursesHabit.frequencyPerWeek > 0 ? 
+            Math.round((coursesHabit.completedSessions / coursesHabit.frequencyPerWeek) * 100) : 0;
+        
+        // Adicionar ou atualizar elemento de cursos se não existir
+        let coursesElement = document.getElementById('coursesScore');
+        if (!coursesElement) {
+            // Pode adicionar dinamicamente se necessário
+        }
+    }
+    
+    // Atualizar os hábitos existentes (inglês, treino, PPCI, dopamina)
+    const englishHabit = habits.find(h => h.name.includes("Inglês") || h.name.toLowerCase().includes("inglês"));
+    const englishScore = englishHabit ? Math.round((englishHabit.completedSessions / englishHabit.frequencyPerWeek) * 100) : 0;
+    document.getElementById('englishScore').textContent = `${englishScore}%`;
+    
+    const englishWeeklyMinutes = englishHabit ? englishHabit.completedSessions * englishHabit.durationMinutes : 0;
+    const englishBrazilAvg = SCIENTIFIC_BASELINE.english.brazilAvg;
+    const englishWorldAvg = SCIENTIFIC_BASELINE.english.worldAvg;
+    
+    let englishComparisonText = '';
+    if (englishWeeklyMinutes >= SCIENTIFIC_BASELINE.english.scientificIdeal) {
+        englishComparisonText = 'acima do ideal científico';
+    } else if (englishWeeklyMinutes >= englishWorldAvg) {
+        englishComparisonText = 'acima da média mundial';
+    } else if (englishWeeklyMinutes >= englishBrazilAvg) {
+        englishComparisonText = 'acima da média brasileira';
+    } else {
+        englishComparisonText = 'abaixo da média brasileira';
+    }
+    
+    document.getElementById('englishComparison').textContent = englishComparisonText;
+    document.getElementById('englishComparison').style.color = 
+        englishWeeklyMinutes >= englishBrazilAvg ? 'var(--secondary)' : 'var(--danger)';
+    
+    // Atualizar treino
+    const exerciseHabit = habits.find(h => h.name.includes("Treino") || h.name.includes("Academia"));
+    const exerciseScore = exerciseHabit ? Math.round((exerciseHabit.completedSessions / exerciseHabit.frequencyPerWeek) * 100) : 0;
+    document.getElementById('exerciseScore').textContent = `${exerciseScore}%`;
+    
+    const exerciseWeeklyMinutes = exerciseHabit ? exerciseHabit.completedSessions * exerciseHabit.durationMinutes : 0;
+    const exerciseBrazilAvg = SCIENTIFIC_BASELINE.exercise.brazilAvg;
+    const exerciseWorldAvg = SCIENTIFIC_BASELINE.exercise.worldAvg;
+    
+    let exerciseComparisonText = '';
+    if (exerciseWeeklyMinutes >= SCIENTIFIC_BASELINE.exercise.scientificIdeal) {
+        exerciseComparisonText = 'acima do ideal científico';
+    } else if (exerciseWeeklyMinutes >= exerciseWorldAvg) {
+        exerciseComparisonText = 'acima da média mundial';
+    } else if (exerciseWeeklyMinutes >= exerciseBrazilAvg) {
+        exerciseComparisonText = 'acima da média brasileira';
+    } else {
+        exerciseComparisonText = 'abaixo da média brasileira';
+    }
+    
+    document.getElementById('exerciseComparison').textContent = exerciseComparisonText;
+    document.getElementById('exerciseComparison').style.color = 
+        exerciseWeeklyMinutes >= exerciseBrazilAvg ? 'var(--secondary)' : 'var(--danger)';
+    
+    // Atualizar PPCI
+    const ppciHabit = habits.find(h => h.name.includes("PPCI"));
+    const ppciScore = ppciHabit ? Math.round((ppciHabit.completedSessions / ppciHabit.frequencyPerWeek) * 100) : 0;
+    document.getElementById('ppciScore').textContent = `${ppciScore}%`;
+    
+    const ppciTotalHours = ppciHabit ? Math.round((ppciHabit.totalMinutes || 0) / 60) : 0;
+    document.getElementById('ppciTotalHours').textContent = `${ppciTotalHours}h`;
+    
+    // Atualizar Dopamina
+    const dopamineHabit = habits.find(h => h.name.includes("Dopamina"));
+    const dopamineScore = dopamineHabit ? Math.round((dopamineHabit.completedSessions / dopamineHabit.frequencyPerWeek) * 100) : 0;
+    document.getElementById('dopamineScore').textContent = `${dopamineScore}%`;
+    
+    // Atualizar scores científicos
+    document.getElementById('neuroplasticityScore').textContent = calculateNeuroplasticityScore();
+    document.getElementById('habitSynergy').textContent = habits.length >= 3 ? 'Alta' : 'Média';
+    
+    // Atualizar eficiência
+    const efficiency = habits.length > 0 ? 
+        Math.round(habits.reduce((sum, h) => {
+            if (h.durationMinutes >= 45 && h.durationMinutes <= 60) {
+                return sum + h.completedSessions;
+            }
+            return sum;
+        }, 0) / habits.reduce((sum, h) => sum + h.completedSessions, 1) * 100) : 0;
+    document.getElementById('parkinsonScore').textContent = efficiency >= 80 ? 'Alta' : efficiency >= 60 ? 'Média' : 'Baixa';
+    
+    const optimalSessions = habits.reduce((sum, h) => sum + h.completedSessions, 0);
+    document.getElementById('optimalSessions').textContent = optimalSessions;
+    
+    document.getElementById('neuroScore').textContent = `${calculateNeuroplasticityScore()}/100`;
+    document.getElementById('dopamineLevel').textContent = calculateNeuroplasticityScore() >= 70 ? 'Ótimo' : calculateNeuroplasticityScore() >= 50 ? 'Bom' : 'Melhorar';
+}
+
+// ============================================
+// ATUALIZAÇÃO DA GERAÇÃO DE INSIGHTS
+// ============================================
+
+function generateScientificInsights() {
+    const insights = [];
+    const habits = habitTracker.habits.filter(h => h.isActive);
+    
+    habits.forEach(habit => {
+        const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+            habit.name.toLowerCase().includes(b.name.toLowerCase())
+        );
+        if (!baseline) return;
+        
+        let userValue;
+        if (baseline.name === "Leitura") {
+            userValue = Math.round((habit.completedSessions * habit.durationMinutes) / 3); // páginas
+        } else {
+            userValue = habit.completedSessions * habit.durationMinutes; // minutos
+        }
+        
+        const brazilAvg = baseline.brazilAvg;
+        const worldAvg = baseline.worldAvg;
+        const scientificIdeal = baseline.scientificIdeal;
+        const consistency = calculateHabitConsistency(habit.id);
+        
+        // Insight por comparação com Brasil
+        if (brazilAvg > 0) {
+            const vsBrazil = ((userValue - brazilAvg) / brazilAvg) * 100;
+            if (Math.abs(vsBrazil) > 30) {
+                insights.push({
+                    emoji: vsBrazil > 0 ? '🚀' : '📉',
+                    title: vsBrazil > 0 ? 'Superando a média brasileira!' : 'Abaixo da média brasileira',
+                    message: `Seu hábito de ${habit.name.toLowerCase()} está <strong>${Math.abs(Math.round(vsBrazil))}% ${vsBrazil > 0 ? 'acima' : 'abaixo'}</strong> da média brasileira (${brazilAvg}${baseline.units}).`,
+                    color: vsBrazil > 0 ? '#10b981' : '#ef4444',
+                    icon: vsBrazil > 0 ? 'trophy' : 'exclamation-triangle'
+                });
+            }
+        }
+        
+        // Insight por comparação com mundo
+        if (worldAvg > 0) {
+            const vsWorld = ((userValue - worldAvg) / worldAvg) * 100;
+            if (Math.abs(vsWorld) > 20) {
+                insights.push({
+                    emoji: vsWorld > 0 ? '🌍' : '🇧🇷',
+                    title: vsWorld > 0 ? 'Acima da média mundial!' : 'Precisa evoluir',
+                    message: `Você está <strong>${Math.abs(Math.round(vsWorld))}% ${vsWorld > 0 ? 'acima' : 'abaixo'}</strong> da média mundial (${worldAvg}${baseline.units}).`,
+                    color: vsWorld > 0 ? '#8b5cf6' : '#f59e0b',
+                    icon: vsWorld > 0 ? 'globe-americas' : 'chart-line'
+                });
+            }
+        }
+        
+        // Insight por meta científica
+        if (userValue >= scientificIdeal * 0.9) {
+            insights.push({
+                emoji: '🎯',
+                title: 'Meta científica atingida!',
+                message: `Parabéns! Você atingiu a referência científica para ${habit.name.toLowerCase()} (${scientificIdeal}${baseline.units}).`,
+                color: '#ec4899',
+                icon: 'bullseye'
             });
         }
+        
+        // Insight por consistência
+        if (consistency >= 80) {
+            insights.push({
+                emoji: '📈',
+                title: 'Consistência Exemplar',
+                message: `${Math.round(consistency)}% de consistência em ${habit.name.toLowerCase()} - neuroplasticidade acelerada.`,
+                color: '#8b5cf6',
+                icon: 'chart-line'
+            });
+        }
+    });
+    
+    // Insight geral de neuroplasticidade
+    const avgConsistency = calculateAverageConsistency();
+    if (avgConsistency >= 70) {
+        insights.push({
+            emoji: '🧠',
+            title: 'Pico de Neuroplasticidade',
+            message: `Sua consistência de ${avgConsistency}% está criando novas conexões neurais permanentemente.`,
+            color: '#ec4899',
+            icon: 'brain'
+        });
+    }
+    
+    // Insight sobre progresso geral vs médias
+    const totalHabits = habits.length;
+    const aboveBrazilAvg = habits.filter(habit => {
+        const baseline = Object.values(SCIENTIFIC_BASELINE).find(b => 
+            habit.name.toLowerCase().includes(b.name.toLowerCase())
+        );
+        if (!baseline) return false;
+        
+        let userValue;
+        if (baseline.name === "Leitura") {
+            userValue = Math.round((habit.completedSessions * habit.durationMinutes) / 3);
+        } else {
+            userValue = habit.completedSessions * habit.durationMinutes;
+        }
+        
+        return userValue >= baseline.brazilAvg;
+    }).length;
+    
+    const brazilPercentage = totalHabits > 0 ? Math.round((aboveBrazilAvg / totalHabits) * 100) : 0;
+    
+    if (brazilPercentage >= 80) {
+        insights.push({
+            emoji: '🇧🇷',
+            title: 'Líder no Brasil',
+            message: `Você está acima da média brasileira em ${brazilPercentage}% dos seus hábitos.`,
+            color: '#22c55e',
+            icon: 'flag'
+        });
+    }
+    
+    return insights.slice(0, 4); // Limitar a 4 insights
+}
+
+// ============================================
+// ATUALIZAÇÃO DA INTERFACE COMPLETA
+// ============================================
+
+function updateInterface() {
+    renderHabitsList();
+    updateAllStats();
+    renderScientificProgressChart();
+    renderGlobalComparisonChart();
+    renderConsistencyHeatmap();
+    renderNeuroplasticityCurve();
+    renderScientificScores();
+    renderScientificInsights();
+    renderHabitsProgressChart();
+    renderWeeklyForecastChart();
+}
+
+// ============================================
+// INICIALIZAÇÃO ATUALIZADA
+// ============================================
+
+function initApp() {
+    const savedData = loadFromLocalStorage();
+    if (savedData) {
+        habitTracker = { ...habitTracker, ...savedData };
+    }
+    
+    checkAndUpdateWeek();
+    updateInterface();
+    setupEventListeners();
+    
+    // Verificação semanal periódica
+    setInterval(() => {
+        if (checkAndUpdateWeek()) {
+            updateInterface();
+        }
+    }, 60000);
+    
+    // Evento de mudança de visibilidade
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && checkAndUpdateWeek()) {
+            updateInterface();
+        }
+    });
+}
+
+// Garantir que a inicialização ocorra
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 
         function renderNeuroplasticityCurve() {
             const canvas = document.getElementById('neuroplasticityChart');
