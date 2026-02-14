@@ -409,6 +409,18 @@
             border-radius: 8px;
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+
+        .stat-item:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .rotating-comparison:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            background: rgba(99, 102, 241, 0.05);
+            cursor: help;
         }
 
         .stat-item-label {
@@ -651,6 +663,51 @@
         .view-section.active {
             display: block;
         }
+
+        .rotating-comparison {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .comparison-badge {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            animation: fadeIn 0.5s ease;
+            font-weight: 600 !important;
+            text-align: center;
+        }
+
+        .comparison-badge.fade-out {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+
+        @keyframes slideRotate {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin-slow {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .rotating-comparison .fa-sync-alt {
+            animation: spin-slow 3s linear infinite;
+        }
+
+        .rotating-comparison:hover .fa-sync-alt {
+            animation: spin-slow 1s linear infinite;
+        }
     </style>
 </head>
 <body>
@@ -877,6 +934,35 @@
 
         const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+        // Dados de comparação brasileira e mundial (por semana)
+        const comparisonData = {
+            reading: {
+                brAverage: 25,      // páginas/semana
+                worldAverage: 50,   // páginas/semana
+                unit: 'pág/sem'
+            },
+            english: {
+                brAverage: 30,      // minutos/semana
+                worldAverage: 90,   // minutos/semana
+                unit: 'min/sem'
+            },
+            hiit: {
+                brAverage: 75,      // minutos/semana
+                worldAverage: 150,  // minutos/semana
+                unit: 'min/sem'
+            },
+            ppci: {
+                brAverage: 60,      // minutos/semana
+                worldAverage: 180,  // minutos/semana
+                unit: 'min/sem'
+            },
+            dopamine: {
+                brAverage: 20,      // minutos/semana
+                worldAverage: 60,   // minutos/semana
+                unit: 'min/sem'
+            }
+        };
 
         // Funções utilitárias
         function getWeekNumber(date) {
@@ -1448,6 +1534,76 @@
                     const completion = Math.min((count / habit.frequency) * 100, 100);
                     const remaining = Math.max(0, habit.frequency - count);
                     
+                    // Calcular comparações
+                    const comparison = comparisonData[key];
+                    let vsBR = '';
+                    let vsWorld = '';
+                    let statusLevel = '';
+                    let statusColor = '';
+                    
+                    if (comparison) {
+                        const percentBR = Math.round((total / comparison.brAverage) * 100);
+                        const percentWorld = Math.round((total / comparison.worldAverage) * 100);
+                        
+                        // Comparação Brasil
+                        if (total >= comparison.brAverage * 2) {
+                            vsBR = `🇧🇷 ${Math.floor(total / comparison.brAverage)}x média BR`;
+                        } else if (total >= comparison.brAverage * 1.5) {
+                            vsBR = `🇧🇷 +${percentBR - 100}% acima BR`;
+                        } else if (total >= comparison.brAverage) {
+                            vsBR = `🇧🇷 Acima da média`;
+                        } else if (total >= comparison.brAverage * 0.7) {
+                            vsBR = `🇧🇷 ${percentBR}% da média`;
+                        } else if (total > 0) {
+                            vsBR = `🇧🇷 Continue (${percentBR}%)`;
+                        } else {
+                            vsBR = `🇧🇷 Comece hoje!`;
+                        }
+                        
+                        // Comparação Mundial
+                        if (total >= comparison.worldAverage * 2) {
+                            vsWorld = `🌍 ${Math.floor(total / comparison.worldAverage)}x mundial`;
+                        } else if (total >= comparison.worldAverage * 1.2) {
+                            vsWorld = `🌍 Acima mundial!`;
+                        } else if (total >= comparison.worldAverage) {
+                            vsWorld = `🌍 Nível mundial`;
+                        } else if (total >= comparison.worldAverage * 0.7) {
+                            vsWorld = `🌍 Quase lá (${percentWorld}%)`;
+                        } else if (total > 0) {
+                            vsWorld = `🌍 ${percentWorld}% da meta`;
+                        } else {
+                            vsWorld = `🌍 Meta: ${comparison.worldAverage}`;
+                        }
+                        
+                        // Status/Nível
+                        if (total >= comparison.worldAverage * 1.5) {
+                            statusLevel = '👑 Elite Global';
+                            statusColor = '#8b5cf6';
+                        } else if (total >= comparison.worldAverage) {
+                            statusLevel = '🏆 Mundial';
+                            statusColor = '#10b981';
+                        } else if (total >= comparison.brAverage) {
+                            statusLevel = '⚡ Acima BR';
+                            statusColor = '#f59e0b';
+                        } else if (total >= comparison.brAverage * 0.7) {
+                            statusLevel = '💪 Progredindo';
+                            statusColor = '#06b6d4';
+                        } else if (total > 0) {
+                            statusLevel = '🎯 Começando';
+                            statusColor = '#94a3b8';
+                        } else {
+                            statusLevel = '▶️ Iniciar';
+                            statusColor = '#6b7280';
+                        }
+                    }
+                    
+                    // Criar array de badges rotativos
+                    const rotatingBadges = JSON.stringify([
+                        { label: vsBR, color: total >= comparison.brAverage ? '#10b981' : '#ef4444' },
+                        { label: vsWorld, color: total >= comparison.worldAverage ? '#10b981' : '#f59e0b' },
+                        { label: statusLevel, color: statusColor }
+                    ]);
+                    
                     html += `
                         <div class="habit-card ${classKey}">
                             <div class="habit-header">
@@ -1488,9 +1644,11 @@
                                     <div class="stat-item-label">Total 2026</div>
                                     <div class="stat-item-value">${habit.totalYear} ${habit.unit}</div>
                                 </div>
-                                <div class="stat-item">
-                                    <div class="stat-item-label">Dias Restantes</div>
-                                    <div class="stat-item-value">${remaining}</div>
+                                <div class="stat-item rotating-comparison" data-badges='${rotatingBadges}' data-current="0" title="Comparação com médias BR e Mundial (rotação automática)">
+                                    <div class="stat-item-label">Comparação <i class="fas fa-sync-alt" style="font-size: 0.7rem; opacity: 0.5;"></i></div>
+                                    <div class="stat-item-value comparison-badge" style="font-size: 0.9rem; color: #ef4444;">
+                                        ${vsBR}
+                                    </div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-item-label">Status</div>
@@ -1509,6 +1667,13 @@
                                     <i class="fas fa-minus"></i>
                                     Remover
                                 </button>
+                            </div>
+                            
+                            <div style="background: rgba(99, 102, 241, 0.05); padding: 8px; border-radius: 6px; margin-top: 10px; text-align: center;">
+                                <div style="color: var(--gray); font-size: 0.75rem;">
+                                    <i class="fas fa-sync-alt" style="margin-right: 4px; font-size: 0.7rem;"></i>
+                                    <strong>Comparação</strong> alterna a cada 3s: 🇧🇷 Brasil → 🌍 Mundial → 📊 Status
+                                </div>
                             </div>
                         </div>
                     `;
@@ -1999,6 +2164,44 @@
             }
         }
 
+        function startComparisonRotation() {
+            setInterval(() => {
+                const rotatingElements = document.querySelectorAll('.rotating-comparison');
+                
+                rotatingElements.forEach(element => {
+                    try {
+                        const badges = JSON.parse(element.getAttribute('data-badges'));
+                        const currentIndex = parseInt(element.getAttribute('data-current') || '0');
+                        const badgeElement = element.querySelector('.comparison-badge');
+                        
+                        if (!badgeElement || badges.length === 0) return;
+                        
+                        // Fade out
+                        badgeElement.classList.add('fade-out');
+                        
+                        setTimeout(() => {
+                            // Próximo badge
+                            const nextIndex = (currentIndex + 1) % badges.length;
+                            const nextBadge = badges[nextIndex];
+                            
+                            // Atualizar conteúdo
+                            badgeElement.textContent = nextBadge.label;
+                            badgeElement.style.color = nextBadge.color;
+                            
+                            // Atualizar índice
+                            element.setAttribute('data-current', nextIndex);
+                            
+                            // Fade in
+                            badgeElement.classList.remove('fade-out');
+                        }, 400);
+                        
+                    } catch (e) {
+                        console.error('Erro ao rotacionar badge:', e);
+                    }
+                });
+            }, 3000); // Rotaciona a cada 3 segundos
+        }
+
         function initApp() {
             console.log('🚀 Iniciando Habit Science Pro 2026...');
             
@@ -2017,6 +2220,9 @@
             console.log('🔄 Executando primeira verificação do Zero Açúcar...');
             updateSugarFreeStreak();
             renderAll();
+            
+            // Iniciar rotação de badges de comparação
+            startComparisonRotation();
             
             // Verificar a cada 1 minuto
             setInterval(() => {
