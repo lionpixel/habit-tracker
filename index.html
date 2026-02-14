@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habit Science Pro 2026 - Sistema Completo de Hábitos</title>
+    <title>Habit Science Pro 2026 - Sistema Anual Completo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -103,6 +103,43 @@
             font-weight: 600;
         }
 
+        .view-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.1));
+            color: white;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(99, 102, 241, 0.2));
+            transform: scale(1.05);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-color: var(--primary);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+        }
+
         .stats-overview {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -186,7 +223,7 @@
             margin-top: 10px;
         }
 
-        .week-selector {
+        .week-selector, .month-selector {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -198,7 +235,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .week-btn {
+        .nav-btn {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
@@ -213,18 +250,18 @@
             font-size: 0.95rem;
         }
 
-        .week-btn:hover {
+        .nav-btn:hover {
             background: linear-gradient(135deg, var(--primary-dark), var(--accent));
             transform: scale(1.05);
         }
 
-        .week-btn:disabled {
+        .nav-btn:disabled {
             background: rgba(148, 163, 184, 0.3);
             cursor: not-allowed;
             transform: none;
         }
 
-        .week-display {
+        .period-display {
             font-size: 1.3rem;
             font-weight: 700;
             color: var(--light);
@@ -426,6 +463,7 @@
 
         .btn-remove:hover {
             background: rgba(239, 68, 68, 0.3);
+            transform: scale(1.02);
         }
 
         .charts-section {
@@ -460,7 +498,7 @@
             height: 400px;
         }
 
-        .comparisons-section {
+        .monthly-comparison {
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(30, 41, 59, 0.7));
             border-radius: var(--border-radius);
             padding: 35px;
@@ -478,14 +516,14 @@
             color: var(--light);
         }
 
-        .comparison-grid {
+        .month-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
             margin: 25px 0;
         }
 
-        .comparison-card {
+        .month-card {
             background: rgba(15, 23, 42, 0.6);
             padding: 25px;
             border-radius: 12px;
@@ -493,84 +531,33 @@
             transition: var(--transition);
         }
 
-        .comparison-card:hover {
+        .month-card:hover {
             border-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-5px);
         }
 
-        .comparison-header {
+        .month-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--light);
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
         }
 
-        .comparison-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .comparison-stats {
+        .month-stats {
             display: grid;
-            gap: 15px;
+            gap: 12px;
         }
 
-        .comparison-item {
+        .month-stat-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
+            padding: 10px;
             background: rgba(99, 102, 241, 0.05);
             border-radius: 8px;
-            border: 1px solid rgba(99, 102, 241, 0.1);
-        }
-
-        .comparison-label {
-            font-size: 0.9rem;
-            color: var(--gray);
-        }
-
-        .comparison-value {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--light);
-        }
-
-        .science-section {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(15, 23, 42, 0.9));
-            border-radius: var(--border-radius);
-            padding: 35px;
-            border: 2px solid rgba(139, 92, 246, 0.3);
-            margin: 30px 0;
-        }
-
-        .science-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
-        }
-
-        .science-card {
-            background: rgba(139, 92, 246, 0.1);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(139, 92, 246, 0.2);
-        }
-
-        .science-card h4 {
-            color: var(--accent);
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .science-card p {
-            color: var(--gray);
-            font-size: 0.95rem;
-            line-height: 1.6;
         }
 
         .insights-section {
@@ -639,8 +626,22 @@
             h1 { font-size: 2rem; }
             .habits-grid { grid-template-columns: 1fr; }
             .stats-overview { grid-template-columns: 1fr; }
-            .comparison-grid { grid-template-columns: 1fr; }
-            .week-selector { flex-direction: column; }
+            .month-grid { grid-template-columns: 1fr; }
+            .view-tabs { flex-direction: column; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .view-section.active {
+            display: block;
         }
     </style>
 </head>
@@ -649,80 +650,142 @@
         <header>
             <h1>🎯 Habit Science Pro 2026</h1>
             <div class="subtitle">
-                Sistema Científico de Formação de Hábitos • 6 Pilares do Alto Desempenho
+                Sistema Científico de Formação de Hábitos • Banco de Dados Anual Completo
             </div>
             <div class="date-display" id="currentDate"></div>
         </header>
 
-        <!-- Estatísticas Gerais -->
-        <div class="stats-overview" id="statsOverview"></div>
-
-        <!-- Seletor de Semana -->
-        <div class="week-selector">
-            <button class="week-btn" onclick="previousWeek()">
-                <i class="fas fa-chevron-left"></i>
-                Anterior
+        <!-- Abas de Visualização -->
+        <div class="view-tabs">
+            <button class="tab-btn active" onclick="switchView('weekly')" id="weeklyTab">
+                <i class="fas fa-calendar-week"></i>
+                Visão Semanal
             </button>
-            <div class="week-display" id="weekDisplay"></div>
-            <button class="week-btn" onclick="nextWeek()" id="nextWeekBtn">
-                Próxima
-                <i class="fas fa-chevron-right"></i>
+            <button class="tab-btn" onclick="switchView('monthly')" id="monthlyTab">
+                <i class="fas fa-calendar-alt"></i>
+                Visão Mensal
+            </button>
+            <button class="tab-btn" onclick="switchView('yearly')" id="yearlyTab">
+                <i class="fas fa-chart-line"></i>
+                Visão Anual 2026
             </button>
         </div>
 
-        <!-- Cards dos Hábitos -->
-        <div class="habits-grid" id="habitsGrid"></div>
+        <!-- VISÃO SEMANAL -->
+        <div id="weeklyView" class="view-section active">
+            <!-- Estatísticas Gerais -->
+            <div class="stats-overview" id="statsOverview"></div>
 
-        <!-- Gráficos -->
-        <div class="charts-section">
-            <div class="chart-card">
-                <div class="chart-header">
-                    <i class="fas fa-chart-line" style="color: var(--primary); font-size: 2rem;"></i>
-                    <h2>Progresso Semanal de Todos os Hábitos</h2>
+            <!-- Seletor de Semana -->
+            <div class="week-selector">
+                <button class="nav-btn" onclick="previousWeek()">
+                    <i class="fas fa-chevron-left"></i>
+                    Anterior
+                </button>
+                <div class="period-display" id="weekDisplay"></div>
+                <button class="nav-btn" onclick="nextWeek()" id="nextWeekBtn">
+                    Próxima
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Cards dos Hábitos -->
+            <div class="habits-grid" id="habitsGrid"></div>
+
+            <!-- Gráficos -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <i class="fas fa-chart-line" style="color: var(--primary); font-size: 2rem;"></i>
+                        <h2>Progresso Semanal de Todos os Hábitos</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="allHabitsChart"></canvas>
+                    </div>
                 </div>
-                <div class="chart-container">
-                    <canvas id="allHabitsChart"></canvas>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <i class="fas fa-calendar-alt" style="color: var(--secondary); font-size: 2rem;"></i>
+                        <h2>Evolução nas Últimas 8 Semanas</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <div class="chart-card">
-                <div class="chart-header">
-                    <i class="fas fa-calendar-alt" style="color: var(--secondary); font-size: 2rem;"></i>
-                    <h2>Evolução nas Últimas 8 Semanas</h2>
-                </div>
-                <div class="chart-container">
-                    <canvas id="evolutionChart"></canvas>
+            <!-- Insights Inteligentes -->
+            <div class="insights-section" id="insightsSection"></div>
+        </div>
+
+        <!-- VISÃO MENSAL -->
+        <div id="monthlyView" class="view-section">
+            <!-- Seletor de Mês -->
+            <div class="month-selector">
+                <button class="nav-btn" onclick="previousMonth()">
+                    <i class="fas fa-chevron-left"></i>
+                    Anterior
+                </button>
+                <div class="period-display" id="monthDisplay"></div>
+                <button class="nav-btn" onclick="nextMonth()" id="nextMonthBtn">
+                    Próximo
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Estatísticas do Mês -->
+            <div class="stats-overview" id="monthStatsOverview"></div>
+
+            <!-- Gráfico do Mês -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <i class="fas fa-chart-bar" style="color: var(--accent); font-size: 2rem;"></i>
+                        <h2>Desempenho Mensal por Hábito</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="monthChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Comparações Científicas -->
-        <div class="comparisons-section">
-            <div class="section-title">
-                <i class="fas fa-globe"></i>
-                Comparações: Você vs Brasil vs Mundo
-            </div>
-            <div class="comparison-grid" id="comparisonsGrid"></div>
-        </div>
+        <!-- VISÃO ANUAL -->
+        <div id="yearlyView" class="view-section">
+            <!-- Estatísticas Anuais -->
+            <div class="stats-overview" id="yearStatsOverview"></div>
 
-        <!-- Estudos Científicos -->
-        <div class="science-section">
-            <div class="section-title">
-                <i class="fas fa-flask"></i>
-                Base Científica dos Hábitos
+            <!-- Comparação Mensal -->
+            <div class="monthly-comparison">
+                <div class="section-title">
+                    <i class="fas fa-calendar"></i>
+                    Comparação Mês a Mês 2026
+                </div>
+                <div class="month-grid" id="monthlyGrid"></div>
             </div>
-            <div class="science-grid" id="scienceGrid"></div>
-        </div>
 
-        <!-- Insights Inteligentes -->
-        <div class="insights-section" id="insightsSection"></div>
+            <!-- Gráfico Anual -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <i class="fas fa-chart-line" style="color: var(--secondary); font-size: 2rem;"></i>
+                        <h2>Evolução Anual 2026 - Todos os Hábitos</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="yearChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Base de dados do aplicativo
+        // Base de dados do aplicativo - BANCO DE DADOS 2026 COMPLETO
         let appData = {
             currentWeek: null,
-            currentYear: null,
+            currentYear: 2026,
+            currentMonth: null,
             habits: {
                 reading: {
                     name: '📚 Leitura',
@@ -733,7 +796,8 @@
                     frequency: 5,
                     counts: {},
                     description: '10 páginas por dia, 5 dias por semana',
-                    totalYear: 0
+                    totalYear: 0,
+                    monthlyTotals: {}
                 },
                 english: {
                     name: '🗣️ Inglês',
@@ -744,7 +808,8 @@
                     frequency: 5,
                     counts: {},
                     description: '50 minutos de estudo, 5 dias por semana',
-                    totalYear: 0
+                    totalYear: 0,
+                    monthlyTotals: {}
                 },
                 hiit: {
                     name: '🏃‍♂️ HIIT',
@@ -755,7 +820,8 @@
                     frequency: 5,
                     counts: {},
                     description: '30 minutos de exercício intenso, 5 dias por semana',
-                    totalYear: 0
+                    totalYear: 0,
+                    monthlyTotals: {}
                 },
                 ppci: {
                     name: '🛠️ PPCI',
@@ -766,7 +832,8 @@
                     frequency: 3,
                     counts: {},
                     description: '50 minutos de projeto, 3 dias por semana',
-                    totalYear: 0
+                    totalYear: 0,
+                    monthlyTotals: {}
                 },
                 dopamine: {
                     name: '🧠 Dopamina',
@@ -777,7 +844,8 @@
                     frequency: 2,
                     counts: {},
                     description: '50 minutos de detox, 2 dias por semana',
-                    totalYear: 0
+                    totalYear: 0,
+                    monthlyTotals: {}
                 },
                 fasting: {
                     name: '🍬 Zero Açúcar',
@@ -789,71 +857,18 @@
                     currentStreak: 0,
                     completedCycles: 0,
                     lastUpdate: null,
+                    lastReset: null, // NOVO: registra quando foi resetado
                     counts: {},
                     description: 'Desafio 40 dias sem açúcar',
                     totalYear: 0,
-                    isSpecial: true
+                    isSpecial: true,
+                    monthlyTotals: {}
                 }
             }
         };
 
-        // Dados científicos de comparação
-        const scientificData = {
-            reading: {
-                brAverage: 10,
-                worldAverage: 30,
-                studies: [
-                    { title: '📊 PISA 2022', text: 'Estudantes que leem >30min/dia têm +30 pontos em avaliações' },
-                    { title: '🧠 Yale Study', text: 'Leitura regular reduz declínio cognitivo em 32%' },
-                    { title: '📈 Retratos BR', text: 'Apenas 9,5% dos brasileiros leem textos longos frequentemente' }
-                ]
-            },
-            english: {
-                brAverage: 20,
-                worldAverage: 60,
-                studies: [
-                    { title: '🌍 EF EPI 2023', text: 'Brasil está em 50º lugar em proficiência em inglês' },
-                    { title: '⏱️ FSI Study', text: '600-750 horas necessárias para fluência básica' },
-                    { title: '💼 LinkedIn', text: '+50% mais oportunidades com inglês fluente' }
-                ]
-            },
-            hiit: {
-                brAverage: 60,
-                worldAverage: 150,
-                studies: [
-                    { title: '❤️ OMS', text: '150 min/semana de exercício reduz mortalidade em 30%' },
-                    { title: '⚡ HIIT Research', text: 'HIIT melhora VO2max em 15-20% em 8 semanas' },
-                    { title: '🧬 Metabolismo', text: 'HIIT aumenta metabolismo por até 24h após treino' }
-                ]
-            },
-            ppci: {
-                brAverage: 90,
-                worldAverage: 180,
-                studies: [
-                    { title: '🚀 MIT Study', text: 'Projetos práticos aumentam retenção em 75%' },
-                    { title: '💡 Learning by Doing', text: '10.000 horas de prática deliberada = expertise' },
-                    { title: '📊 Portfolio Effect', text: 'Projetos práticos aumentam empregabilidade em 85%' }
-                ]
-            },
-            dopamine: {
-                brAverage: 30,
-                worldAverage: 90,
-                studies: [
-                    { title: '🧠 Dopamine Nation', text: 'Detox digital melhora foco em 40% após 30 dias' },
-                    { title: '📱 Digital Wellness', text: 'Uso excessivo de redes sociais reduz atenção em 50%' },
-                    { title: '⏳ Cal Newport', text: 'Deep work requer mínimo de 90 minutos ininterruptos' }
-                ]
-            },
-            fasting: {
-                brAverage: 40,
-                worldAverage: 80,
-                studies: [
-                    { title: '🔬 Autophagy', text: 'Jejum de 16h ativa autofagia celular e regeneração' },
-                    { title: '⚖️ Weight Loss', text: 'Jejum intermitente reduz 3-8% do peso em 24 semanas' },
-                    { title: '🧠 Brain Health', text: 'Jejum aumenta BDNF em até 400%, melhorando cognição' }
-                ]
-            }
-        };
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
         // Funções utilitárias
         function getWeekNumber(date) {
@@ -866,6 +881,10 @@
 
         function getWeekKey(year, week) {
             return `${year}-W${String(week).padStart(2, '0')}`;
+        }
+
+        function getMonthKey(year, month) {
+            return `${year}-M${String(month).padStart(2, '0')}`;
         }
 
         function getWeekDates(year, week) {
@@ -887,22 +906,25 @@
         }
 
         function loadData() {
+            console.log('📂 Carregando dados...');
             const saved = localStorage.getItem('habitSciencePro2026Complete');
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    // Mesclar dados salvos com estrutura atual
+                    console.log('✅ Dados encontrados no localStorage');
+                    
                     if (parsed.habits) {
                         Object.keys(appData.habits).forEach(key => {
                             if (parsed.habits[key]) {
                                 appData.habits[key].counts = parsed.habits[key].counts || {};
                                 appData.habits[key].totalYear = parsed.habits[key].totalYear || 0;
+                                appData.habits[key].monthlyTotals = parsed.habits[key].monthlyTotals || {};
                                 
-                                // Campos especiais para Zero Açúcar
                                 if (key === 'fasting') {
                                     appData.habits[key].currentStreak = parsed.habits[key].currentStreak || 0;
                                     appData.habits[key].completedCycles = parsed.habits[key].completedCycles || 0;
                                     appData.habits[key].lastUpdate = parsed.habits[key].lastUpdate || null;
+                                    appData.habits[key].lastReset = parsed.habits[key].lastReset || null;
                                 }
                             }
                         });
@@ -911,8 +933,11 @@
                         appData.currentWeek = parsed.currentWeek;
                         appData.currentYear = parsed.currentYear;
                     }
+                    if (parsed.currentMonth) {
+                        appData.currentMonth = parsed.currentMonth;
+                    }
                 } catch (e) {
-                    console.error('Erro ao carregar dados:', e);
+                    console.error('❌ Erro ao carregar dados:', e);
                 }
             }
             
@@ -921,19 +946,48 @@
                 appData.currentYear = now.getFullYear();
                 appData.currentWeek = getWeekNumber(now);
             }
+            
+            if (!appData.currentMonth) {
+                const now = new Date();
+                appData.currentMonth = now.getMonth() + 1;
+            }
         }
 
         function saveData() {
             try {
-                localStorage.setItem('habitSciencePro2026Complete', JSON.stringify(appData));
+                const dataToSave = JSON.stringify(appData);
+                localStorage.setItem('habitSciencePro2026Complete', dataToSave);
+                console.log('✅ Dados salvos com sucesso');
             } catch (e) {
-                console.error('Erro ao salvar dados:', e);
+                console.error('❌ Erro ao salvar dados:', e);
             }
+        }
+
+        function updateMonthlyTotals() {
+            Object.entries(appData.habits).forEach(([key, habit]) => {
+                if (key === 'fasting') return; // Pular Zero Açúcar
+                
+                // Resetar totais mensais
+                habit.monthlyTotals = {};
+                
+                // Calcular total de cada mês
+                Object.entries(habit.counts).forEach(([weekKey, count]) => {
+                    const [year, weekStr] = weekKey.split('-W');
+                    const week = parseInt(weekStr);
+                    const dates = getWeekDates(parseInt(year), week);
+                    const month = dates.start.getMonth() + 1;
+                    const monthKey = getMonthKey(parseInt(year), month);
+                    
+                    if (!habit.monthlyTotals[monthKey]) {
+                        habit.monthlyTotals[monthKey] = 0;
+                    }
+                    habit.monthlyTotals[monthKey] += count * habit.target;
+                });
+            });
         }
 
         function toggleHabit(habitKey) {
             if (habitKey === 'fasting') {
-                addSugarFreeDay();
                 return;
             }
             
@@ -947,6 +1001,7 @@
             if (habit.counts[weekKey] < habit.frequency) {
                 habit.counts[weekKey]++;
                 habit.totalYear += habit.target;
+                updateMonthlyTotals();
                 saveData();
                 renderAll();
             }
@@ -964,43 +1019,197 @@
             if (habit.counts[weekKey] && habit.counts[weekKey] > 0) {
                 habit.counts[weekKey]--;
                 habit.totalYear = Math.max(0, habit.totalYear - habit.target);
+                updateMonthlyTotals();
                 saveData();
                 renderAll();
             }
         }
 
-        function addSugarFreeDay() {
+        function updateSugarFreeStreak() {
             const habit = appData.habits.fasting;
             const today = new Date().toISOString().split('T')[0];
             
-            // Verificar se já adicionou hoje
+            console.log('🔍 Verificando Zero Açúcar...');
+            console.log('Hoje:', today);
+            console.log('Última atualização:', habit.lastUpdate);
+            console.log('Último reset:', habit.lastReset);
+            console.log('Streak atual:', habit.currentStreak);
+            
+            // Se já atualizou hoje, não faz nada
             if (habit.lastUpdate === today) {
+                console.log('✅ Já atualizado hoje');
                 return;
             }
             
-            habit.currentStreak++;
-            habit.lastUpdate = today;
-            
-            // Completou o desafio de 40 dias
-            if (habit.currentStreak >= 40) {
-                habit.completedCycles++;
-                habit.currentStreak = 0;
-                habit.totalYear += 40;
+            // CASO 1: Foi resetado ontem - iniciar automaticamente hoje
+            if (habit.lastReset) {
+                const resetDate = new Date(habit.lastReset);
+                const currentDate = new Date(today);
+                const daysSinceReset = Math.floor((currentDate - resetDate) / (1000 * 60 * 60 * 24));
+                
+                console.log('Dias desde reset:', daysSinceReset);
+                
+                if (daysSinceReset === 1 && habit.currentStreak === 0) {
+                    console.log('🚀 Iniciando automaticamente após reset');
+                    habit.currentStreak = 1;
+                    habit.lastUpdate = today;
+                    habit.lastReset = null; // Limpar flag de reset
+                    saveData();
+                    renderAll();
+                    return;
+                }
             }
             
-            saveData();
-            renderAll();
-        }
-
-        function resetSugarFree() {
-            const habit = appData.habits.fasting;
+            // CASO 2: Primeira vez ou estava zerado - iniciar
+            if (!habit.lastUpdate || habit.currentStreak === 0) {
+                console.log('🆕 Primeira execução ou zerado - iniciando');
+                habit.lastUpdate = today;
+                habit.currentStreak = 1;
+                saveData();
+                renderAll();
+                return;
+            }
             
-            if (confirm('Tem certeza que quer resetar o desafio? Você quebrou a sequência?')) {
-                habit.currentStreak = 0;
-                habit.lastUpdate = null;
+            // CASO 3: Incrementar se passou exatamente 1 dia
+            const lastDate = new Date(habit.lastUpdate);
+            const currentDate = new Date(today);
+            const daysDiff = Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24));
+            
+            console.log('Diferença de dias:', daysDiff);
+            
+            if (daysDiff === 1) {
+                console.log('➕ Incrementando streak');
+                habit.currentStreak++;
+                habit.lastUpdate = today;
+                
+                // Completou o desafio de 40 dias
+                if (habit.currentStreak >= 40) {
+                    console.log('🏆 Desafio completo!');
+                    habit.completedCycles++;
+                    habit.totalYear += 40;
+                    habit.currentStreak = 0;
+                    habit.lastUpdate = null;
+                    habit.lastReset = null;
+                }
+                
                 saveData();
                 renderAll();
             }
+            // CASO 4: Passou mais de 1 dia sem atualizar - perdeu a sequência
+            else if (daysDiff > 1) {
+                console.log('❌ Perdeu a sequência (passou mais de 1 dia)');
+                habit.currentStreak = 0;
+                habit.lastUpdate = null;
+                habit.lastReset = null;
+                saveData();
+                renderAll();
+            }
+        }
+
+        function resetSugarFree() {
+            console.log('🔄 resetSugarFree chamada');
+            const habit = appData.habits.fasting;
+            const today = new Date().toISOString().split('T')[0];
+            
+            const message = habit.currentStreak > 0 
+                ? `⚠️ Você comeu açúcar hoje?\n\nIsso vai resetar sua sequência de ${habit.currentStreak} dias consecutivos.\n\nTem certeza?`
+                : 'Resetar o contador de Zero Açúcar?';
+            
+            if (confirm(message)) {
+                console.log('✅ Usuário confirmou reset');
+                
+                // Resetar contador E marcar a data do reset
+                habit.currentStreak = 0;
+                habit.lastUpdate = null;
+                habit.lastReset = today; // IMPORTANTE: marca hoje como dia do reset
+                
+                console.log('Dados após reset:');
+                console.log('- currentStreak:', habit.currentStreak);
+                console.log('- lastUpdate:', habit.lastUpdate);
+                console.log('- lastReset:', habit.lastReset);
+                
+                saveData();
+                renderAll();
+                
+                alert('✅ Sequência resetada!\n\nO contador vai reiniciar automaticamente AMANHÃ às 00:00.\n\nNão precisa fazer nada, o sistema fará isso sozinho.');
+            }
+        }
+
+        function switchView(view) {
+            // Atualizar abas
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(view + 'Tab').classList.add('active');
+            
+            // Atualizar seções
+            document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active'));
+            document.getElementById(view + 'View').classList.add('active');
+            
+            // Renderizar a view específica
+            if (view === 'weekly') {
+                renderWeeklyView();
+            } else if (view === 'monthly') {
+                renderMonthlyView();
+            } else if (view === 'yearly') {
+                renderYearlyView();
+            }
+        }
+
+        function previousWeek() {
+            appData.currentWeek--;
+            if (appData.currentWeek < 1) {
+                appData.currentWeek = 52;
+                appData.currentYear--;
+            }
+            renderWeeklyView();
+        }
+
+        function nextWeek() {
+            appData.currentWeek++;
+            if (appData.currentWeek > 52) {
+                appData.currentWeek = 1;
+                appData.currentYear++;
+            }
+            renderWeeklyView();
+        }
+
+        function previousMonth() {
+            appData.currentMonth--;
+            if (appData.currentMonth < 1) {
+                appData.currentMonth = 12;
+                appData.currentYear--;
+            }
+            renderMonthlyView();
+        }
+
+        function nextMonth() {
+            appData.currentMonth++;
+            if (appData.currentMonth > 12) {
+                appData.currentMonth = 1;
+                appData.currentYear++;
+            }
+            renderMonthlyView();
+        }
+
+        // RENDERIZAÇÕES
+
+        function renderWeeklyView() {
+            renderStatsOverview();
+            renderWeekSelector();
+            renderHabits();
+            renderWeeklyCharts();
+            generateInsights();
+        }
+
+        function renderMonthlyView() {
+            renderMonthSelector();
+            renderMonthStats();
+            renderMonthChart();
+        }
+
+        function renderYearlyView() {
+            renderYearStats();
+            renderMonthlyGrid();
+            renderYearChart();
         }
 
         function renderStatsOverview() {
@@ -1011,9 +1220,23 @@
             Object.entries(appData.habits).forEach(([key, habit]) => {
                 const classKey = key;
                 
-                // Tratamento especial para Zero Açúcar
                 if (key === 'fasting') {
                     const progress = (habit.currentStreak / 40) * 100;
+                    const today = new Date().toISOString().split('T')[0];
+                    const isActive = habit.lastUpdate === today;
+                    
+                    let completionInfo = '';
+                    if (habit.currentStreak > 0 && habit.currentStreak < 40) {
+                        const daysRemaining = 40 - habit.currentStreak;
+                        const completionDate = new Date();
+                        completionDate.setDate(completionDate.getDate() + daysRemaining);
+                        
+                        const day = completionDate.getDate();
+                        const month = completionDate.toLocaleDateString('pt-BR', { month: 'short' });
+                        
+                        completionInfo = `Termina: ${day} ${month}`;
+                    }
+                    
                     html += `
                         <div class="stat-card ${classKey}">
                             <div class="stat-icon">
@@ -1021,7 +1244,12 @@
                             </div>
                             <div class="stat-label">${habit.name}</div>
                             <div class="stat-value">${habit.currentStreak}/40</div>
-                            <div class="stat-meta">Dias consecutivos</div>
+                            <div class="stat-meta">${isActive ? '🟢 Ativo Hoje' : habit.lastReset ? '⏳ Reinicia Amanhã' : '⚪ Aguardando'}</div>
+                            ${completionInfo ? `
+                                <div style="margin-top: 8px; font-size: 0.85rem; color: ${habit.color}; font-weight: 600;">
+                                    📅 ${completionInfo}
+                                </div>
+                            ` : ''}
                             <div style="margin-top: 10px; font-size: 0.85rem; color: ${progress >= 100 ? 'var(--secondary)' : progress >= 50 ? 'var(--warning)' : 'var(--gray)'}">
                                 ${habit.completedCycles} desafios completos
                             </div>
@@ -1062,6 +1290,17 @@
             document.getElementById('nextWeekBtn').disabled = isCurrentWeek;
         }
 
+        function renderMonthSelector() {
+            const monthName = monthNames[appData.currentMonth - 1];
+            document.getElementById('monthDisplay').textContent = 
+                `${monthName} ${appData.currentYear}`;
+            
+            const now = new Date();
+            const isCurrentMonth = appData.currentYear === now.getFullYear() && 
+                                   appData.currentMonth === now.getMonth() + 1;
+            document.getElementById('nextMonthBtn').disabled = isCurrentMonth;
+        }
+
         function renderHabits() {
             const weekKey = getWeekKey(appData.currentYear, appData.currentWeek);
             const container = document.getElementById('habitsGrid');
@@ -1070,10 +1309,21 @@
             Object.entries(appData.habits).forEach(([key, habit]) => {
                 const classKey = key;
                 
-                // Card especial para Zero Açúcar
                 if (key === 'fasting') {
                     const progress = (habit.currentStreak / 40) * 100;
                     const remaining = Math.max(0, 40 - habit.currentStreak);
+                    const today = new Date().toISOString().split('T')[0];
+                    const isActive = habit.lastUpdate === today;
+                    const willResetTomorrow = habit.lastReset === today;
+                    
+                    let statusMessage = '';
+                    if (willResetTomorrow) {
+                        statusMessage = '⏳ O contador vai REINICIAR AUTOMATICAMENTE amanhã às 00:00';
+                    } else if (isActive) {
+                        statusMessage = '✅ Atualizado hoje! Contador ativo.';
+                    } else {
+                        statusMessage = '⏰ Aguardando: Será atualizado automaticamente às 00:00';
+                    }
                     
                     html += `
                         <div class="habit-card ${classKey}">
@@ -1085,14 +1335,23 @@
                                     <div>
                                         <div class="habit-name">${habit.name}</div>
                                         <div style="font-size: 0.85rem; color: var(--gray);">
-                                            Desafio de 40 dias
+                                            ⚙️ Contador 100% Automático
                                         </div>
                                     </div>
                                 </div>
-                                <div class="habit-count">${habit.currentStreak}</div>
+                                <div style="text-align: right;">
+                                    <div class="habit-count">${habit.currentStreak}</div>
+                                </div>
                             </div>
                             
-                            <div class="habit-description">${habit.description}</div>
+                            <div class="habit-description">Incrementa automaticamente +1 dia a cada 24h sem açúcar</div>
+                            
+                            <div style="background: ${willResetTomorrow ? 'rgba(245, 158, 11, 0.15)' : isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(148, 163, 184, 0.1)'}; padding: 14px; border-radius: 8px; margin: 15px 0; border-left: 3px solid ${willResetTomorrow ? 'var(--warning)' : isActive ? 'var(--secondary)' : 'var(--gray)'};">
+                                <div style="color: ${willResetTomorrow ? 'var(--warning)' : isActive ? 'var(--secondary)' : 'var(--gray)'}; font-size: 0.95rem; font-weight: 600;">
+                                    <i class="fas ${willResetTomorrow ? 'fa-clock' : isActive ? 'fa-check-circle' : 'fa-clock'}"></i>
+                                    ${statusMessage}
+                                </div>
+                            </div>
                             
                             <div class="habit-progress">
                                 <div class="progress-label">
@@ -1120,41 +1379,25 @@
                                 <div class="stat-item">
                                     <div class="stat-item-label">Status</div>
                                     <div class="stat-item-value" style="font-size: 0.95rem;">
-                                        ${progress >= 100 ? '🏆 Completo!' : progress >= 50 ? '💪 Forte' : '🚀 Iniciando'}
+                                        ${progress >= 100 ? '🏆 Completo!' : progress >= 50 ? '💪 Forte' : habit.currentStreak > 0 ? '🔥 Ativo' : '⚪ Parado'}
                                     </div>
                                 </div>
                             </div>
                             
-                            ${remaining > 0 ? `
-                                <div style="background: rgba(6, 182, 212, 0.1); padding: 12px; border-radius: 8px; margin: 15px 0; border-left: 3px solid ${habit.color};">
-                                    <div style="color: ${habit.color}; font-size: 0.9rem;">
-                                        <i class="fas fa-fire"></i>
-                                        Faltam ${remaining} dias para completar o desafio!
-                                    </div>
-                                </div>
-                            ` : `
-                                <div style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px; margin: 15px 0; border-left: 3px solid var(--secondary);">
-                                    <div style="color: var(--secondary); font-size: 0.9rem;">
-                                        <i class="fas fa-trophy"></i>
-                                        Parabéns! Desafio completo! Será resetado no próximo dia.
-                                    </div>
-                                </div>
-                            `}
-                            
-                            <div class="habit-controls">
-                                <button class="habit-btn btn-add" onclick="toggleHabit('${key}')">
-                                    <i class="fas fa-plus"></i>
-                                    +1 Dia Sem Açúcar
-                                </button>
-                                <button class="habit-btn btn-remove" onclick="decreaseHabit('${key}')">
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button class="habit-btn btn-remove" onclick="resetSugarFree()" style="flex: 1;">
                                     <i class="fas fa-times"></i>
-                                    Quebrei
+                                    Quebrei! Comi Açúcar Hoje
                                 </button>
+                            </div>
+                            
+                            <div style="margin-top: 12px; padding: 12px; background: rgba(14, 165, 233, 0.1); border-radius: 8px; font-size: 0.85rem; color: var(--info); text-align: center; border: 1px solid rgba(14, 165, 233, 0.2);">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Sistema Automático:</strong> O contador aumenta sozinho todos os dias. Se você quebrar e clicar no botão, ele vai REINICIAR AUTOMATICAMENTE no dia seguinte!
                             </div>
                         </div>
                     `;
                 } else {
-                    // Cards normais para os outros hábitos
                     const count = habit.counts[weekKey] || 0;
                     const total = count * habit.target;
                     const completion = Math.min((count / habit.frequency) * 100, 100);
@@ -1174,7 +1417,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="habit-count">${count}x</div>
+                                <div style="text-align: right;">
+                                    <div class="habit-count">${count}x</div>
+                                </div>
                             </div>
                             
                             <div class="habit-description">${habit.description}</div>
@@ -1210,15 +1455,6 @@
                                 </div>
                             </div>
                             
-                            ${remaining > 0 ? `
-                                <div style="background: rgba(245, 158, 11, 0.1); padding: 12px; border-radius: 8px; margin: 15px 0; border-left: 3px solid var(--warning);">
-                                    <div style="color: var(--warning); font-size: 0.9rem;">
-                                        <i class="fas fa-info-circle"></i>
-                                        Faltam ${remaining} dias para completar a meta semanal
-                                    </div>
-                                </div>
-                            ` : ''}
-                            
                             <div class="habit-controls">
                                 <button class="habit-btn btn-add" onclick="toggleHabit('${key}')">
                                     <i class="fas fa-plus"></i>
@@ -1237,7 +1473,7 @@
             container.innerHTML = html;
         }
 
-        function renderCharts() {
+        function renderWeeklyCharts() {
             renderAllHabitsChart();
             renderEvolutionChart();
         }
@@ -1255,7 +1491,6 @@
             Object.entries(appData.habits).forEach(([key, habit]) => {
                 labels.push(habit.name);
                 
-                // Zero Açúcar usa progresso de dias consecutivos
                 if (key === 'fasting') {
                     const completion = Math.min((habit.currentStreak / 40) * 100, 100);
                     data.push(completion);
@@ -1326,7 +1561,6 @@
             const weeks = [];
             const datasets = [];
             
-            // Últimas 8 semanas
             for (let i = 7; i >= 0; i--) {
                 let weekNum = appData.currentWeek - i;
                 let yearNum = appData.currentYear;
@@ -1413,74 +1647,123 @@
             });
         }
 
-        function renderComparisons() {
-            const weekKey = getWeekKey(appData.currentYear, appData.currentWeek);
-            const container = document.getElementById('comparisonsGrid');
+        function renderMonthStats() {
+            const container = document.getElementById('monthStatsOverview');
+            const monthKey = getMonthKey(appData.currentYear, appData.currentMonth);
             
             let html = '';
             Object.entries(appData.habits).forEach(([key, habit]) => {
-                const data = scientificData[key];
+                if (key === 'fasting') return;
                 
-                // Card especial para Zero Açúcar
+                const monthTotal = habit.monthlyTotals[monthKey] || 0;
+                const classKey = key;
+                
+                html += `
+                    <div class="stat-card ${classKey}">
+                        <div class="stat-icon">
+                            <i class="fas ${habit.icon}"></i>
+                        </div>
+                        <div class="stat-label">${habit.name}</div>
+                        <div class="stat-value">${monthTotal}</div>
+                        <div class="stat-meta">${habit.unit} em ${monthNames[appData.currentMonth - 1]}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function renderMonthChart() {
+            const ctx = document.getElementById('monthChart');
+            if (!ctx) return;
+            
+            const monthKey = getMonthKey(appData.currentYear, appData.currentMonth);
+            const labels = [];
+            const data = [];
+            const colors = [];
+            
+            Object.entries(appData.habits).forEach(([key, habit]) => {
+                if (key === 'fasting') return;
+                
+                labels.push(habit.name);
+                data.push(habit.monthlyTotals[monthKey] || 0);
+                colors.push(habit.color);
+            });
+
+            if (window.monthChart && typeof window.monthChart.destroy === 'function') {
+                window.monthChart.destroy();
+            }
+
+            window.monthChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total do Mês',
+                        data: data,
+                        backgroundColor: colors.map(c => c + '80'),
+                        borderColor: colors,
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            padding: 12
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#f8fafc' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#f8fafc' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderYearStats() {
+            const container = document.getElementById('yearStatsOverview');
+            
+            let html = '';
+            Object.entries(appData.habits).forEach(([key, habit]) => {
+                const classKey = key;
+                
                 if (key === 'fasting') {
                     html += `
-                        <div class="comparison-card">
-                            <div class="comparison-header">
-                                <i class="fas ${habit.icon}" style="font-size: 1.5rem; color: ${habit.color}"></i>
-                                <div class="comparison-title" style="color: ${habit.color}">${habit.name}</div>
+                        <div class="stat-card ${classKey}">
+                            <div class="stat-icon">
+                                <i class="fas ${habit.icon}"></i>
                             </div>
-                            <div class="comparison-stats">
-                                <div class="comparison-item">
-                                    <span class="comparison-label">Dias Consecutivos</span>
-                                    <span class="comparison-value" style="color: ${habit.color}">${habit.currentStreak} dias</span>
-                                </div>
-                                <div class="comparison-item">
-                                    <span class="comparison-label">Desafios Completos 2026</span>
-                                    <span class="comparison-value">${habit.completedCycles}</span>
-                                </div>
-                                <div class="comparison-item">
-                                    <span class="comparison-label">Média BR (dias/ano)</span>
-                                    <span class="comparison-value">2-3 desafios</span>
-                                </div>
-                                <div class="comparison-item" style="background: ${habit.completedCycles >= 3 ? 'rgba(16, 185, 129, 0.1)' : habit.completedCycles >= 1 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(148, 163, 184, 0.1)'}">
-                                    <span class="comparison-label">Status</span>
-                                    <span class="comparison-value" style="color: ${habit.completedCycles >= 3 ? 'var(--secondary)' : habit.completedCycles >= 1 ? 'var(--warning)' : 'var(--gray)'}">
-                                        ${habit.completedCycles >= 3 ? '🏆 Elite' : habit.completedCycles >= 1 ? '💪 Forte' : '🚀 Começando'}
-                                    </span>
-                                </div>
+                            <div class="stat-label">${habit.name}</div>
+                            <div class="stat-value">${habit.completedCycles}</div>
+                            <div class="stat-meta">Desafios completos em 2026</div>
+                            <div style="margin-top: 10px; font-size: 0.85rem; color: var(--gray)">
+                                ${habit.completedCycles * 40} dias total
                             </div>
                         </div>
                     `;
                 } else {
-                    const count = habit.counts[weekKey] || 0;
-                    const total = count * habit.target;
-                    
                     html += `
-                        <div class="comparison-card">
-                            <div class="comparison-header">
-                                <i class="fas ${habit.icon}" style="font-size: 1.5rem; color: ${habit.color}"></i>
-                                <div class="comparison-title" style="color: ${habit.color}">${habit.name}</div>
+                        <div class="stat-card ${classKey}">
+                            <div class="stat-icon">
+                                <i class="fas ${habit.icon}"></i>
                             </div>
-                            <div class="comparison-stats">
-                                <div class="comparison-item">
-                                    <span class="comparison-label">Você (semana)</span>
-                                    <span class="comparison-value" style="color: ${habit.color}">${total} ${habit.unit}</span>
-                                </div>
-                                <div class="comparison-item">
-                                    <span class="comparison-label">Média Brasil</span>
-                                    <span class="comparison-value">${data.brAverage} ${habit.unit}</span>
-                                </div>
-                                <div class="comparison-item">
-                                    <span class="comparison-label">Média Mundial</span>
-                                    <span class="comparison-value">${data.worldAverage} ${habit.unit}</span>
-                                </div>
-                                <div class="comparison-item" style="background: ${total >= data.worldAverage ? 'rgba(16, 185, 129, 0.1)' : total >= data.brAverage ? 'rgba(245, 158, 11, 0.1)' : 'rgba(148, 163, 184, 0.1)'}">
-                                    <span class="comparison-label">Status</span>
-                                    <span class="comparison-value" style="color: ${total >= data.worldAverage ? 'var(--secondary)' : total >= data.brAverage ? 'var(--warning)' : 'var(--gray)'}">
-                                        ${total >= data.worldAverage ? '🏆 Mundo' : total >= data.brAverage ? '✓ Brasil' : '⏳ Continue'}
-                                    </span>
-                                </div>
-                            </div>
+                            <div class="stat-label">${habit.name}</div>
+                            <div class="stat-value">${habit.totalYear}</div>
+                            <div class="stat-meta">${habit.unit} acumulados em 2026</div>
                         </div>
                     `;
                 }
@@ -1489,22 +1772,111 @@
             container.innerHTML = html;
         }
 
-        function renderScience() {
-            const container = document.getElementById('scienceGrid');
+        function renderMonthlyGrid() {
+            const container = document.getElementById('monthlyGrid');
             
             let html = '';
-            Object.entries(scientificData).forEach(([key, data]) => {
-                data.studies.forEach(study => {
+            for (let month = 1; month <= 12; month++) {
+                const monthKey = getMonthKey(2026, month);
+                const monthName = monthNames[month - 1];
+                
+                html += `
+                    <div class="month-card">
+                        <div class="month-name">
+                            <i class="fas fa-calendar"></i>
+                            ${monthName}
+                        </div>
+                        <div class="month-stats">
+                `;
+                
+                Object.entries(appData.habits).forEach(([key, habit]) => {
+                    if (key === 'fasting') return;
+                    
+                    const total = habit.monthlyTotals[monthKey] || 0;
                     html += `
-                        <div class="science-card">
-                            <h4>${study.title}</h4>
-                            <p>${study.text}</p>
+                        <div class="month-stat-item">
+                            <span style="color: var(--gray); font-size: 0.85rem;">${habit.name}</span>
+                            <span style="color: ${habit.color}; font-weight: 700;">${total} ${habit.unit}</span>
                         </div>
                     `;
                 });
-            });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
             
             container.innerHTML = html;
+        }
+
+        function renderYearChart() {
+            const ctx = document.getElementById('yearChart');
+            if (!ctx) return;
+            
+            const months = monthNames;
+            const datasets = [];
+            
+            Object.entries(appData.habits).forEach(([key, habit]) => {
+                if (key === 'fasting') return;
+                
+                const data = [];
+                for (let month = 1; month <= 12; month++) {
+                    const monthKey = getMonthKey(2026, month);
+                    data.push(habit.monthlyTotals[monthKey] || 0);
+                }
+                
+                datasets.push({
+                    label: habit.name,
+                    data: data,
+                    borderColor: habit.color,
+                    backgroundColor: habit.color + '20',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                });
+            });
+
+            if (window.yearChart && typeof window.yearChart.destroy === 'function') {
+                window.yearChart.destroy();
+            }
+
+            window.yearChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#f8fafc',
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            padding: 12
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#f8fafc' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#f8fafc' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
         }
 
         function generateInsights() {
@@ -1512,12 +1884,8 @@
             const container = document.getElementById('insightsSection');
             const insights = [];
             
-            // Análise de cada hábito
             Object.entries(appData.habits).forEach(([key, habit]) => {
-                // Insights especiais para Zero Açúcar
                 if (key === 'fasting') {
-                    const progress = (habit.currentStreak / 40) * 100;
-                    
                     if (habit.completedCycles > 0) {
                         insights.push({
                             type: 'success',
@@ -1534,56 +1902,23 @@
                             title: `🔥 ${habit.name}: Reta Final!`,
                             text: `Você está há ${habit.currentStreak} dias sem açúcar! Faltam apenas ${40 - habit.currentStreak} dias para completar o desafio. Continue firme!`
                         });
-                    } else if (habit.currentStreak >= 15) {
-                        insights.push({
-                            type: 'warning',
-                            icon: 'fa-fire',
-                            title: `💪 ${habit.name}: Na Metade do Caminho!`,
-                            text: `${habit.currentStreak} dias sem açúcar! Você já está acima da média. Continue assim!`
-                        });
-                    } else if (habit.currentStreak > 0) {
-                        insights.push({
-                            type: 'info',
-                            icon: 'fa-seedling',
-                            title: `🌱 ${habit.name}: Começou Bem!`,
-                            text: `${habit.currentStreak} dias sem açúcar. Cada dia conta! Mantenha o foco nos benefícios.`
-                        });
                     }
                 } else {
-                    // Insights para outros hábitos
                     const count = habit.counts[weekKey] || 0;
                     const completion = Math.min((count / habit.frequency) * 100, 100);
                     const total = count * habit.target;
-                    const data = scientificData[key];
                     
                     if (completion >= 100) {
                         insights.push({
                             type: 'success',
                             icon: 'fa-trophy',
                             title: `🏆 ${habit.name}: META COMPLETA!`,
-                            text: `Você atingiu ${count}/${habit.frequency} dias com ${total} ${habit.unit}! Isso coloca você acima da média mundial (${data.worldAverage} ${habit.unit}/semana). Excelente!`
-                        });
-                    } else if (completion >= 60) {
-                        insights.push({
-                            type: 'warning',
-                            icon: 'fa-fire',
-                            title: `⚡ ${habit.name}: Bom Progresso`,
-                            text: `${completion.toFixed(0)}% completo (${count}/${habit.frequency} dias). Continue para superar a média brasileira de ${data.brAverage} ${habit.unit}/semana!`
-                        });
-                    }
-                    
-                    if (total > data.worldAverage) {
-                        insights.push({
-                            type: 'success',
-                            icon: 'fa-globe',
-                            title: `🌍 ${habit.name}: Nível Internacional`,
-                            text: `Com ${total} ${habit.unit} esta semana, você superou a média mundial! Continue nesse ritmo excepcional.`
+                            text: `Você atingiu ${count}/${habit.frequency} dias com ${total} ${habit.unit}! Excelente!`
                         });
                     }
                 }
             });
             
-            // Limitar insights
             const limitedInsights = insights.slice(0, 6);
             
             if (limitedInsights.length === 0) {
@@ -1591,7 +1926,7 @@
                     type: 'info',
                     icon: 'fa-info-circle',
                     title: 'Comece Sua Jornada',
-                    text: 'Registre seus primeiros hábitos e acompanhe seu progresso em relação às médias brasileiras e mundiais!'
+                    text: 'Registre seus primeiros hábitos e acompanhe seu progresso ao longo de 2026!'
                 });
             }
             
@@ -1608,36 +1943,22 @@
             `).join('');
         }
 
-        function previousWeek() {
-            appData.currentWeek--;
-            if (appData.currentWeek < 1) {
-                appData.currentWeek = 52;
-                appData.currentYear--;
-            }
-            renderAll();
-        }
-
-        function nextWeek() {
-            appData.currentWeek++;
-            if (appData.currentWeek > 52) {
-                appData.currentWeek = 1;
-                appData.currentYear++;
-            }
-            renderAll();
-        }
-
         function renderAll() {
-            renderStatsOverview();
-            renderWeekSelector();
-            renderHabits();
-            renderCharts();
-            renderComparisons();
-            renderScience();
-            generateInsights();
+            const activeView = document.querySelector('.view-section.active').id.replace('View', '');
+            if (activeView === 'weekly') {
+                renderWeeklyView();
+            } else if (activeView === 'monthly') {
+                renderMonthlyView();
+            } else if (activeView === 'yearly') {
+                renderYearlyView();
+            }
         }
 
         function initApp() {
+            console.log('🚀 Iniciando Habit Science Pro 2026...');
+            
             loadData();
+            updateMonthlyTotals();
             
             const now = new Date();
             document.getElementById('currentDate').textContent = 
@@ -1648,7 +1969,18 @@
                     day: 'numeric' 
                 });
 
+            console.log('🔄 Executando primeira verificação do Zero Açúcar...');
+            updateSugarFreeStreak();
             renderAll();
+            
+            // Verificar a cada 1 minuto
+            setInterval(() => {
+                console.log('⏰ Verificação automática...');
+                updateSugarFreeStreak();
+            }, 60000);
+            
+            console.log('✅ App inicializado com sucesso!');
+            console.log('📊 Banco de dados 2026 completo ativo');
         }
 
         document.addEventListener('DOMContentLoaded', initApp);
