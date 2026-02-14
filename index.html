@@ -455,6 +455,10 @@
             box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
         }
 
+        .btn-add:active {
+            transform: scale(0.98);
+        }
+
         .btn-remove {
             background: rgba(239, 68, 68, 0.2);
             color: var(--danger);
@@ -464,6 +468,10 @@
         .btn-remove:hover {
             background: rgba(239, 68, 68, 0.3);
             transform: scale(1.02);
+        }
+
+        .btn-remove:active {
+            transform: scale(0.98);
         }
 
         .charts-section {
@@ -1041,68 +1049,77 @@
                 return;
             }
             
-            // CASO 1: Foi resetado ontem - iniciar automaticamente hoje
-            if (habit.lastReset) {
-                const resetDate = new Date(habit.lastReset);
-                const currentDate = new Date(today);
-                const daysSinceReset = Math.floor((currentDate - resetDate) / (1000 * 60 * 60 * 24));
-                
-                console.log('Dias desde reset:', daysSinceReset);
-                
-                if (daysSinceReset === 1 && habit.currentStreak === 0) {
-                    console.log('🚀 Iniciando automaticamente após reset');
-                    habit.currentStreak = 1;
-                    habit.lastUpdate = today;
-                    habit.lastReset = null; // Limpar flag de reset
-                    saveData();
-                    renderAll();
-                    return;
-                }
-            }
-            
-            // CASO 2: Primeira vez ou estava zerado - iniciar
-            if (!habit.lastUpdate || habit.currentStreak === 0) {
-                console.log('🆕 Primeira execução ou zerado - iniciando');
-                habit.lastUpdate = today;
-                habit.currentStreak = 1;
-                saveData();
-                renderAll();
+            // Se o streak está em 0, não faz nada - espera o usuário clicar em "Iniciar"
+            if (habit.currentStreak === 0) {
+                console.log('⏸️ Streak em 0 - aguardando usuário iniciar manualmente');
                 return;
             }
             
-            // CASO 3: Incrementar se passou exatamente 1 dia
-            const lastDate = new Date(habit.lastUpdate);
-            const currentDate = new Date(today);
-            const daysDiff = Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24));
-            
-            console.log('Diferença de dias:', daysDiff);
-            
-            if (daysDiff === 1) {
-                console.log('➕ Incrementando streak');
-                habit.currentStreak++;
-                habit.lastUpdate = today;
+            // Se tem streak ativo, verificar se passou 1 dia
+            if (habit.lastUpdate) {
+                const lastDate = new Date(habit.lastUpdate);
+                const currentDate = new Date(today);
+                const daysDiff = Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24));
                 
-                // Completou o desafio de 40 dias
-                if (habit.currentStreak >= 40) {
-                    console.log('🏆 Desafio completo!');
-                    habit.completedCycles++;
-                    habit.totalYear += 40;
+                console.log('Diferença de dias:', daysDiff);
+                
+                if (daysDiff === 1) {
+                    console.log('➕ Incrementando streak');
+                    habit.currentStreak++;
+                    habit.lastUpdate = today;
+                    
+                    // Completou o desafio de 40 dias
+                    if (habit.currentStreak >= 40) {
+                        console.log('🏆 Desafio completo!');
+                        habit.completedCycles++;
+                        habit.totalYear += 40;
+                        habit.currentStreak = 0;
+                        habit.lastUpdate = null;
+                        habit.lastReset = null;
+                    }
+                    
+                    saveData();
+                    renderAll();
+                }
+                // Passou mais de 1 dia sem atualizar - perdeu a sequência
+                else if (daysDiff > 1) {
+                    console.log('❌ Perdeu a sequência (passou mais de 1 dia)');
                     habit.currentStreak = 0;
                     habit.lastUpdate = null;
                     habit.lastReset = null;
+                    saveData();
+                    renderAll();
                 }
+            }
+        }
+
+        function startSugarFree() {
+            console.log('🚀 startSugarFree chamada');
+            const habit = appData.habits.fasting;
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (habit.currentStreak > 0) {
+                alert('⚠️ Você já tem um desafio em andamento!\n\nSe quiser recomeçar, use o botão "Quebrei" primeiro.');
+                return;
+            }
+            
+            if (confirm('🎯 Iniciar novo desafio de 40 dias sem açúcar?\n\nO contador começará agora!')) {
+                console.log('✅ Usuário confirmou início');
+                
+                // Iniciar novo desafio
+                habit.currentStreak = 1;
+                habit.lastUpdate = today;
+                habit.lastReset = null; // Limpar qualquer reset anterior
+                
+                console.log('Dados após início:');
+                console.log('- currentStreak:', habit.currentStreak);
+                console.log('- lastUpdate:', habit.lastUpdate);
+                console.log('- lastReset:', habit.lastReset);
                 
                 saveData();
                 renderAll();
-            }
-            // CASO 4: Passou mais de 1 dia sem atualizar - perdeu a sequência
-            else if (daysDiff > 1) {
-                console.log('❌ Perdeu a sequência (passou mais de 1 dia)');
-                habit.currentStreak = 0;
-                habit.lastUpdate = null;
-                habit.lastReset = null;
-                saveData();
-                renderAll();
+                
+                alert('✅ Desafio iniciado!\n\nDia 1/40 começou agora. O contador aumentará automaticamente todos os dias às 00:00.\n\nBoa sorte! 💪');
             }
         }
 
@@ -1131,7 +1148,7 @@
                 saveData();
                 renderAll();
                 
-                alert('✅ Sequência resetada!\n\nO contador vai reiniciar automaticamente AMANHÃ às 00:00.\n\nNão precisa fazer nada, o sistema fará isso sozinho.');
+                alert('✅ Sequência resetada!\n\nQuando quiser começar um novo desafio, clique no botão "Iniciar Desafio Agora".\n\nO contador NÃO vai reiniciar sozinho - você escolhe quando começar!');
             }
         }
 
@@ -1224,6 +1241,16 @@
                     const progress = (habit.currentStreak / 40) * 100;
                     const today = new Date().toISOString().split('T')[0];
                     const isActive = habit.lastUpdate === today;
+                    const isWaiting = habit.currentStreak === 0;
+                    
+                    let statusText = '';
+                    if (isWaiting) {
+                        statusText = '⏸️ Parado';
+                    } else if (isActive) {
+                        statusText = '🟢 Ativo Hoje';
+                    } else {
+                        statusText = '⚪ Aguardando';
+                    }
                     
                     let completionInfo = '';
                     if (habit.currentStreak > 0 && habit.currentStreak < 40) {
@@ -1244,7 +1271,7 @@
                             </div>
                             <div class="stat-label">${habit.name}</div>
                             <div class="stat-value">${habit.currentStreak}/40</div>
-                            <div class="stat-meta">${isActive ? '🟢 Ativo Hoje' : habit.lastReset ? '⏳ Reinicia Amanhã' : '⚪ Aguardando'}</div>
+                            <div class="stat-meta">${statusText}</div>
                             ${completionInfo ? `
                                 <div style="margin-top: 8px; font-size: 0.85rem; color: ${habit.color}; font-weight: 600;">
                                     📅 ${completionInfo}
@@ -1314,15 +1341,24 @@
                     const remaining = Math.max(0, 40 - habit.currentStreak);
                     const today = new Date().toISOString().split('T')[0];
                     const isActive = habit.lastUpdate === today;
-                    const willResetTomorrow = habit.lastReset === today;
+                    const isWaiting = habit.currentStreak === 0; // Qualquer streak em 0 está esperando
                     
                     let statusMessage = '';
-                    if (willResetTomorrow) {
-                        statusMessage = '⏳ O contador vai REINICIAR AUTOMATICAMENTE amanhã às 00:00';
+                    let statusColor = '';
+                    let statusIcon = '';
+                    
+                    if (isWaiting) {
+                        statusMessage = '⏸️ Desafio parado. Clique em "Iniciar Desafio" para começar!';
+                        statusColor = 'rgba(148, 163, 184, 0.1)';
+                        statusIcon = 'fa-pause-circle';
                     } else if (isActive) {
-                        statusMessage = '✅ Atualizado hoje! Contador ativo.';
+                        statusMessage = '✅ Atualizado hoje! Contador ativo e funcionando.';
+                        statusColor = 'rgba(16, 185, 129, 0.1)';
+                        statusIcon = 'fa-check-circle';
                     } else {
                         statusMessage = '⏰ Aguardando: Será atualizado automaticamente às 00:00';
+                        statusColor = 'rgba(148, 163, 184, 0.1)';
+                        statusIcon = 'fa-clock';
                     }
                     
                     html += `
@@ -1346,9 +1382,9 @@
                             
                             <div class="habit-description">Incrementa automaticamente +1 dia a cada 24h sem açúcar</div>
                             
-                            <div style="background: ${willResetTomorrow ? 'rgba(245, 158, 11, 0.15)' : isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(148, 163, 184, 0.1)'}; padding: 14px; border-radius: 8px; margin: 15px 0; border-left: 3px solid ${willResetTomorrow ? 'var(--warning)' : isActive ? 'var(--secondary)' : 'var(--gray)'};">
-                                <div style="color: ${willResetTomorrow ? 'var(--warning)' : isActive ? 'var(--secondary)' : 'var(--gray)'}; font-size: 0.95rem; font-weight: 600;">
-                                    <i class="fas ${willResetTomorrow ? 'fa-clock' : isActive ? 'fa-check-circle' : 'fa-clock'}"></i>
+                            <div style="background: ${statusColor}; padding: 14px; border-radius: 8px; margin: 15px 0; border-left: 3px solid ${isWaiting ? 'var(--gray)' : isActive ? 'var(--secondary)' : 'var(--gray)'};">
+                                <div style="color: ${isWaiting ? 'var(--gray)' : isActive ? 'var(--secondary)' : 'var(--gray)'}; font-size: 0.95rem; font-weight: 600;">
+                                    <i class="fas ${statusIcon}"></i>
                                     ${statusMessage}
                                 </div>
                             </div>
@@ -1385,15 +1421,24 @@
                             </div>
                             
                             <div style="display: flex; gap: 10px; margin-top: 20px;">
-                                <button class="habit-btn btn-remove" onclick="resetSugarFree()" style="flex: 1;">
-                                    <i class="fas fa-times"></i>
-                                    Quebrei! Comi Açúcar Hoje
-                                </button>
+                                ${habit.currentStreak === 0 ? `
+                                    <button class="habit-btn btn-add" onclick="startSugarFree()" style="flex: 1;">
+                                        <i class="fas fa-play"></i>
+                                        Iniciar Desafio Agora
+                                    </button>
+                                ` : `
+                                    <button class="habit-btn btn-remove" onclick="resetSugarFree()" style="flex: 1;">
+                                        <i class="fas fa-times"></i>
+                                        Quebrei! Comi Açúcar Hoje
+                                    </button>
+                                `}
                             </div>
                             
                             <div style="margin-top: 12px; padding: 12px; background: rgba(14, 165, 233, 0.1); border-radius: 8px; font-size: 0.85rem; color: var(--info); text-align: center; border: 1px solid rgba(14, 165, 233, 0.2);">
                                 <i class="fas fa-info-circle"></i>
-                                <strong>Sistema Automático:</strong> O contador aumenta sozinho todos os dias. Se você quebrar e clicar no botão, ele vai REINICIAR AUTOMATICAMENTE no dia seguinte!
+                                <strong>Como Funciona:</strong> ${habit.currentStreak === 0 
+                                    ? 'Clique em "Iniciar Desafio" para começar. O contador aumentará automaticamente +1 a cada dia às 00:00. Se quebrar, ficará parado até você clicar em "Iniciar" novamente.' 
+                                    : 'O contador aumenta automaticamente +1 a cada dia às 00:00. Se você quebrar e clicar no botão vermelho, ele irá parar e você precisará clicar em "Iniciar Desafio" quando quiser começar novamente.'}
                             </div>
                         </div>
                     `;
