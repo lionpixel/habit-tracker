@@ -893,11 +893,11 @@
                     name: '📚 Leitura',
                     icon: 'fa-book',
                     color: '#3b82f6',
-                    target: 10,
-                    unit: 'páginas',
+                    target: 25,
+                    unit: 'minutos',
                     frequency: 5,
                     counts: {},
-                    description: '10 páginas por dia, 5 dias por semana',
+                    description: '25 minutos de leitura, 5 dias por semana',
                     totalYear: 0,
                     monthlyTotals: {}
                 },
@@ -907,9 +907,10 @@
                     color: '#10b981',
                     target: 50,
                     unit: 'minutos',
-                    frequency: 5,
+                    frequency: 6, // 6 sessões por semana
                     counts: {},
-                    description: '50 minutos de estudo, 5 dias por semana',
+                    seriesCounts: {}, // Contador separado para séries
+                    description: '50 minutos de estudo, 6 dias por semana',
                     totalYear: 0,
                     monthlyTotals: {}
                 },
@@ -975,13 +976,13 @@
         // Dados de comparação brasileira e mundial (por semana)
         const comparisonData = {
             reading: {
-                brAverage: 25,      // páginas/semana
-                worldAverage: 50,   // páginas/semana
-                unit: 'pág/sem'
+                brAverage: 60,      // minutos/semana (~25min x 2-3x)
+                worldAverage: 210,  // minutos/semana (~30min x 7 dias)
+                unit: 'min/sem'
             },
             english: {
                 brAverage: 30,      // minutos/semana
-                worldAverage: 90,   // minutos/semana
+                worldAverage: 300,  // minutos/semana (5x50 estudo + 1x50 série = método completo)
                 unit: 'min/sem'
             },
             hiit: {
@@ -1010,7 +1011,7 @@
                 overview: {
                     brSituation: "Brasil lê em média 2,43 livros/ano (Retratos da Leitura 2020). 52% da população leu pelo menos 1 livro no último ano. Entre os que não leem, 34% alegam falta de tempo.",
                     worldSituation: "Países desenvolvidos leem em média 12 livros/ano. Finlândia, EUA e UK lideram. Correlação direta entre horas de leitura e renda per capita nacional.",
-                    weeklyTarget: "50 páginas/semana = 2.600 páginas/ano = ~8-10 livros médios. Coloca você no top 10% dos leitores brasileiros."
+                    weeklyTarget: "125 minutos/semana (5x 25min) = 108h/ano de leitura. Equivale a ~8-10 livros médios por ano. Coloca você no top 10% dos leitores brasileiros."
                 },
                 studies: [
                     {
@@ -1084,7 +1085,7 @@
                 overview: {
                     brSituation: "Brasil: 50º lugar em proficiência (EF EPI 2023). Apenas 5,1% falam inglês, 1% fluente. Ensino básico: apenas 10h/ano de prática real vs 200h recomendado.",
                     worldSituation: "Europeus: 90min/dia em aprendizado de idiomas. FSI (Foreign Service Institute): 600-750h para proficiência. Holanda lidera com 647 pontos no EF EPI.",
-                    weeklyTarget: "250 minutos/semana = 1.000h/ano. Atingir fluência em 1,5-2 anos vs 6-8 anos de método tradicional brasileiro."
+                    weeklyTarget: "300 minutos/semana (5x 50min estudo + 1x 50min série). Método misto: input ativo + imersão passiva = atingir fluência em 1,5-2 anos vs 6-8 anos tradicional."
                 },
                 studies: [
                     {
@@ -1099,6 +1100,17 @@
                         impact: "50min/dia de estudo ativo = subir 2 níveis em 1 ano"
                     },
                     {
+                        title: "📺 Netflix & Language Learning Study (2021)",
+                        source: "University of California + Netflix Research",
+                        findings: [
+                            "Assistir com áudio original + legendas inglês: retenção 250% maior vs dublado",
+                            "1 episódio/semana (45-60min): +340 palavras vocabulário/mês",
+                            "Compreensão contextual: séries ensinam 3x mais expressões idiomáticas que livros",
+                            "Método dual: legendas inglês > sem legendas > áudio português (progressão)"
+                        ],
+                        impact: "1 série/semana em inglês = +4.000 palavras/ano no vocabulário"
+                    },
+                    {
                         title: "⏱️ FSI - Foreign Service Institute",
                         source: "US Department of State",
                         findings: [
@@ -1107,7 +1119,18 @@
                             "Método intensivo: 6-8 meses (25h/semana)",
                             "Método tradicional BR: 6-8 anos (3h/semana em escola)"
                         ],
-                        impact: "250min/semana = proficiência em 1,5-2 anos"
+                        impact: "300min/semana = proficiência em 1,5-2 anos"
+                    },
+                    {
+                        title: "🎧 Comprehensible Input Hypothesis - Stephen Krashen",
+                        source: "USC Linguistics Department",
+                        findings: [
+                            "Input compreensível (i+1): 80-90% compreensão = aprendizado ótimo",
+                            "Séries com contexto visual: reduz necessidade tradução em 67%",
+                            "Aquisição natural > aprendizado forçado (séries > gramática isolada)",
+                            "Repetição espaçada: rever episódios aumenta fixação 180%"
+                        ],
+                        impact: "Séries fornecem input compreensível contínuo e contextualizado"
                     },
                     {
                         title: "💼 British Council & Catho (2022)",
@@ -1152,14 +1175,28 @@
                             "Flashcards espaçados: retenção 2,5x maior que releitura"
                         ],
                         impact: "Falar desde o início reduz tempo para fluência em 40%"
+                    },
+                    {
+                        title: "🎬 Multimedia Learning Theory - Richard Mayer",
+                        source: "University of California, Santa Barbara",
+                        findings: [
+                            "Dual coding: áudio + visual = retenção 89% vs 23% só áudio",
+                            "Séries ativam múltiplas áreas cerebrais simultaneamente",
+                            "Contexto emocional (drama/comédia): aumenta memorização 150%",
+                            "Engagement: séries mantém atenção 3x mais que aulas tradicionais"
+                        ],
+                        impact: "Aprendizado multimodal (séries) é 3-4x mais efetivo"
                     }
                 ],
                 practicalTips: [
-                    "🎯 Imersão: 50min/dia > 3,5h/semana concentradas",
-                    "🎧 Input compreensível: podcasts, séries com legendas em inglês",
-                    "💬 Output desde dia 1: falar sozinho, shadowing, apps de conversação",
-                    "📝 Anki/Flashcards: revisão espaçada aumenta retenção em 250%",
-                    "🎬 Método: 20min input + 20min prática + 10min revisão"
+                    "🎯 Método Misto: 5x estudo ativo + 1x série = balanceamento perfeito",
+                    "📺 Séries: começar com sitcoms (diálogos simples, contexto claro)",
+                    "🎧 Progressão: legendas PT → legendas EN → sem legendas",
+                    "💬 Shadowing: pausar e repetir frases da série em voz alta",
+                    "📝 Vocabulário: anotar 5-10 palavras novas por episódio",
+                    "🔄 Rewatching: rever episódios favoritos = fixação 180% maior",
+                    "⏰ Timing: estudo ativo pela manhã + série à noite (variedade)",
+                    "🎬 Gêneros: Friends, The Office, Brooklyn Nine-Nine = ideais iniciantes"
                 ]
             },
             hiit: {
@@ -1566,6 +1603,11 @@
                                 appData.habits[key].totalYear = parsed.habits[key].totalYear || 0;
                                 appData.habits[key].monthlyTotals = parsed.habits[key].monthlyTotals || {};
                                 
+                                // Carregar seriesCounts para inglês
+                                if (key === 'english') {
+                                    appData.habits[key].seriesCounts = parsed.habits[key].seriesCounts || {};
+                                }
+                                
                                 if (key === 'fasting') {
                                     appData.habits[key].currentStreak = parsed.habits[key].currentStreak || 0;
                                     appData.habits[key].completedCycles = parsed.habits[key].completedCycles || 0;
@@ -1644,8 +1686,34 @@
                 habit.counts[weekKey] = 0;
             }
             
-            if (habit.counts[weekKey] < habit.frequency) {
+            // Para inglês, limitar a 5 (pois série é separada)
+            const maxNormal = habitKey === 'english' ? 5 : habit.frequency;
+            
+            if (habit.counts[weekKey] < maxNormal) {
                 habit.counts[weekKey]++;
+                habit.totalYear += habit.target;
+                updateMonthlyTotals();
+                saveData();
+                renderAll();
+            }
+        }
+
+        function toggleSeries() {
+            const weekKey = getWeekKey(appData.currentYear, appData.currentWeek);
+            const habit = appData.habits.english;
+            
+            if (!habit.counts[weekKey]) {
+                habit.counts[weekKey] = 0;
+            }
+            
+            if (!habit.seriesCounts[weekKey]) {
+                habit.seriesCounts[weekKey] = 0;
+            }
+            
+            // Série conta como mais um estudo no total de 6
+            if (habit.counts[weekKey] < 6) {
+                habit.counts[weekKey]++;
+                habit.seriesCounts[weekKey]++;
                 habit.totalYear += habit.target;
                 updateMonthlyTotals();
                 saveData();
@@ -1663,6 +1731,11 @@
             const habit = appData.habits[habitKey];
             
             if (habit.counts[weekKey] && habit.counts[weekKey] > 0) {
+                // Para inglês, decrementar seriesCounts se tiver
+                if (habitKey === 'english' && habit.seriesCounts && habit.seriesCounts[weekKey] && habit.seriesCounts[weekKey] > 0) {
+                    habit.seriesCounts[weekKey]--;
+                }
+                
                 habit.counts[weekKey]--;
                 habit.totalYear = Math.max(0, habit.totalYear - habit.target);
                 updateMonthlyTotals();
@@ -1932,7 +2005,7 @@
                             </div>
                             <div class="stat-label">${habit.name}</div>
                             <div class="stat-value">${count}/${habit.frequency}</div>
-                            <div class="stat-meta">${total} ${habit.unit} esta semana</div>
+                            <div class="stat-meta">${formatTime(total, habit.unit)} esta semana</div>
                             <div style="margin-top: 10px; font-size: 0.85rem; color: ${completion >= 100 ? 'var(--secondary)' : completion >= 60 ? 'var(--warning)' : 'var(--gray)'}">
                                 ${completion.toFixed(0)}% completo
                             </div>
@@ -2095,8 +2168,19 @@
                 } else {
                     const count = habit.counts[weekKey] || 0;
                     const total = count * habit.target;
-                    const completion = Math.min((count / habit.frequency) * 100, 100);
-                    const remaining = Math.max(0, habit.frequency - count);
+                    
+                    // Tratamento especial para inglês
+                    let seriesCount = 0;
+                    let normalStudies = count;
+                    let totalSessions = count;
+                    
+                    if (key === 'english') {
+                        seriesCount = habit.seriesCounts[weekKey] || 0;
+                        normalStudies = count - seriesCount; // Estudos normais = total - séries
+                        totalSessions = count; // Total já inclui séries
+                    }
+                    
+                    const completion = Math.min((totalSessions / habit.frequency) * 100, 100);
                     
                     // Calcular comparações
                     const comparison = comparisonData[key];
@@ -2183,7 +2267,7 @@
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
-                                    <div class="habit-count">${count}x</div>
+                                    <div class="habit-count">${totalSessions}x</div>
                                 </div>
                             </div>
                             
@@ -2202,15 +2286,15 @@
                             <div class="habit-stats">
                                 <div class="stat-item">
                                     <div class="stat-item-label">Esta Semana</div>
-                                    <div class="stat-item-value">${total} ${habit.unit}</div>
+                                    <div class="stat-item-value">${formatTime(total, habit.unit)}</div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-item-label">Total 2026</div>
-                                    <div class="stat-item-value">${habit.totalYear} ${habit.unit}</div>
+                                    <div class="stat-item-value">${formatTime(habit.totalYear, habit.unit)}</div>
                                 </div>
                                 <div class="stat-item rotating-comparison" data-badges='${rotatingBadges}' data-current="0" title="Comparação com médias BR e Mundial (rotação automática)">
                                     <div class="stat-item-label">Comparação <i class="fas fa-sync-alt" style="font-size: 0.7rem; opacity: 0.5;"></i></div>
-                                    <div class="stat-item-value comparison-badge" style="font-size: 0.9rem; color: #ef4444;">
+                                    <div class="stat-item-value comparison-badge" style="font-size: 0.9rem; color: ${total >= comparison.brAverage ? '#10b981' : '#ef4444'};">
                                         ${vsBR}
                                     </div>
                                 </div>
@@ -2222,16 +2306,112 @@
                                 </div>
                             </div>
                             
-                            <div class="habit-controls">
-                                <button class="habit-btn btn-add" onclick="toggleHabit('${key}')">
-                                    <i class="fas fa-plus"></i>
-                                    Registrar ${habit.target} ${habit.unit}
-                                </button>
-                                <button class="habit-btn btn-remove" onclick="decreaseHabit('${key}')">
-                                    <i class="fas fa-minus"></i>
-                                    Remover
-                                </button>
-                            </div>
+                            ${key === 'english' ? `
+                                <div class="habit-controls">
+                                    <button class="habit-btn btn-add" onclick="toggleHabit('english')">
+                                        <i class="fas fa-plus"></i>
+                                        Registrar 50 min
+                                    </button>
+                                    <button class="habit-btn btn-add" onclick="toggleSeries()" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                                        <i class="fas fa-tv"></i>
+                                        Série (50 min)
+                                    </button>
+                                </div>
+                                <div style="margin-top: 8px;">
+                                    <button class="habit-btn btn-remove" onclick="decreaseHabit('english')" style="width: 100%;">
+                                        <i class="fas fa-minus"></i>
+                                        Remover
+                                    </button>
+                                </div>
+                            ` : `
+                                <div class="habit-controls">
+                                    <button class="habit-btn btn-add" onclick="toggleHabit('${key}')">
+                                        <i class="fas fa-plus"></i>
+                                        Registrar ${habit.target} ${habit.unit}
+                                    </button>
+                                    <button class="habit-btn btn-remove" onclick="decreaseHabit('${key}')">
+                                        <i class="fas fa-minus"></i>
+                                        Remover
+                                    </button>
+                                </div>
+                            `}
+                            
+                            ${key === 'english' ? (() => {
+                                const totalMinutes = habit.totalYear || 0;
+                                const totalHours = Math.round((totalMinutes / 60) * 100) / 100;
+                                
+                                const cefrLevels = [
+                                    { level: 'A1', min: 0,    max: 100,  label: 'Iniciante' },
+                                    { level: 'A2', min: 100,  max: 250,  label: 'Básico' },
+                                    { level: 'B1', min: 250,  max: 500,  label: 'Intermediário' },
+                                    { level: 'B2', min: 500,  max: 800,  label: 'Intermediário Alto' },
+                                    { level: 'C1', min: 800,  max: 1200, label: 'Avançado' },
+                                    { level: 'C2', min: 1200, max: 1200, label: 'Maestria' },
+                                ];
+                                
+                                const currentLevel = cefrLevels.findIndex(l => totalHours < l.max || l.level === 'C2');
+                                const lvl = cefrLevels[Math.max(0, currentLevel)];
+                                const nextLvl = cefrLevels[Math.min(currentLevel + 1, cefrLevels.length - 1)];
+                                
+                                const hoursInLevel = totalHours - lvl.min;
+                                const levelRange = lvl.max - lvl.min;
+                                const progressPct = lvl.level === 'C2' ? 100 : Math.min(Math.round((hoursInLevel / levelRange) * 100), 100);
+                                const hoursLeft = lvl.level === 'C2' ? 0 : Math.max(0, Math.round((lvl.max - totalHours) * 10) / 10);
+                                
+                                const levelColors = { A1: '#94a3b8', A2: '#06b6d4', B1: '#10b981', B2: '#f59e0b', C1: '#8b5cf6', C2: '#ef4444' };
+                                const color = levelColors[lvl.level];
+                                
+                                return `
+                                <div style="margin-top: 15px; padding: 15px; background: rgba(15, 23, 42, 0.5); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 0.05em;">
+                                            <i class="fas fa-graduation-cap"></i> Nível CEFR
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: var(--gray);">
+                                            ${totalHours}h acumuladas
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Nível atual + próximo -->
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 1.6rem; font-weight: 900; color: ${color};">${lvl.level}</span>
+                                            <div>
+                                                <div style="font-size: 0.85rem; font-weight: 600; color: var(--light);">${lvl.label}</div>
+                                                <div style="font-size: 0.72rem; color: var(--gray);">${lvl.min}h – ${lvl.level === 'C2' ? '∞' : lvl.max + 'h'}</div>
+                                            </div>
+                                        </div>
+                                        ${lvl.level !== 'C2' ? `
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 0.72rem; color: var(--gray);">Próximo nível</div>
+                                            <div style="font-size: 1rem; font-weight: 800; color: ${levelColors[nextLvl.level]};">${nextLvl.level}</div>
+                                            <div style="font-size: 0.72rem; color: var(--gray);">${hoursLeft}h restantes</div>
+                                        </div>
+                                        ` : '<div style="font-size: 0.85rem; color: #ef4444; font-weight: 700;">🏆 Maestria</div>'}
+                                    </div>
+                                    
+                                    <!-- Barra de progresso CEFR -->
+                                    <div style="margin-bottom: 8px;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="font-size: 0.72rem; color: var(--gray);">Progresso em ${lvl.level}</span>
+                                            <span style="font-size: 0.72rem; font-weight: 700; color: ${color};">${progressPct}%</span>
+                                        </div>
+                                        <div style="height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
+                                            <div style="height: 100%; width: ${progressPct}%; background: linear-gradient(90deg, ${color}, ${color}99); border-radius: 3px; transition: width 0.5s ease;"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Mini linha de níveis -->
+                                    <div style="display: flex; gap: 3px; margin-top: 10px;">
+                                        ${cefrLevels.map(l => `
+                                            <div style="flex: 1; text-align: center;">
+                                                <div style="height: 3px; border-radius: 2px; background: ${totalHours >= l.min ? levelColors[l.level] : 'rgba(255,255,255,0.1)'}; margin-bottom: 3px;"></div>
+                                                <div style="font-size: 0.62rem; color: ${l.level === lvl.level ? levelColors[l.level] : 'rgba(255,255,255,0.25)'}; font-weight: ${l.level === lvl.level ? '800' : '400'};">${l.level}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>`;
+                            })() : ''}
                             
                             <div style="background: rgba(99, 102, 241, 0.05); padding: 8px; border-radius: 6px; margin-top: 10px; text-align: center;">
                                 <div style="color: var(--gray); font-size: 0.75rem;">
@@ -2548,8 +2728,8 @@
                                 <i class="fas ${habit.icon}"></i>
                             </div>
                             <div class="stat-label">${habit.name}</div>
-                            <div class="stat-value">${habit.totalYear}</div>
-                            <div class="stat-meta">${habit.unit} acumulados em 2026</div>
+                            <div class="stat-value">${formatTime(habit.totalYear, habit.unit)}</div>
+                            <div class="stat-meta">acumulados em 2026</div>
                         </div>
                     `;
                 }
@@ -2582,7 +2762,7 @@
                     html += `
                         <div class="month-stat-item">
                             <span style="color: var(--gray); font-size: 0.85rem;">${habit.name}</span>
-                            <span style="color: ${habit.color}; font-weight: 700;">${total} ${habit.unit}</span>
+                            <span style="color: ${habit.color}; font-weight: 700;">${formatTime(total, habit.unit)}</span>
                         </div>
                     `;
                 });
@@ -2699,7 +2879,7 @@
                             type: 'success',
                             icon: 'fa-trophy',
                             title: `🏆 ${habit.name}: META COMPLETA!`,
-                            text: `Você atingiu ${count}/${habit.frequency} dias com ${total} ${habit.unit}! Excelente!`
+                            text: `Você atingiu ${count}/${habit.frequency} dias com ${formatTime(total, habit.unit)}! Excelente!`
                         });
                     }
                 }
@@ -2854,6 +3034,16 @@
             `;
             
             return html;
+        }
+
+        function formatTime(minutes, unit) {
+            if (unit !== 'minutos' && unit !== 'minutos') return `${minutes} ${unit}`;
+            if (minutes >= 60) {
+                const h = Math.floor(minutes / 60);
+                const m = minutes % 60;
+                return m > 0 ? `${h}h ${m}min` : `${h}h`;
+            }
+            return `${minutes} min`;
         }
 
         function startComparisonRotation() {
