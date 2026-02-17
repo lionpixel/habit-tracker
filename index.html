@@ -912,7 +912,8 @@
                     seriesCounts: {}, // Contador separado para séries
                     description: '50 minutos de estudo, 6 dias por semana',
                     totalYear: 0,
-                    monthlyTotals: {}
+                    monthlyTotals: {},
+                    carryoverMinutes: 2520 // 42h feitas antes de 2026
                 },
                 hiit: {
                     name: '🏃‍♂️ HIIT',
@@ -960,7 +961,7 @@
                     currentStreak: 0,
                     completedCycles: 0,
                     lastUpdate: null,
-                    lastReset: null, // NOVO: registra quando foi resetado
+                    lastReset: null,
                     counts: {},
                     description: 'Desafio 40 dias sem açúcar',
                     totalYear: 0,
@@ -976,28 +977,28 @@
         // Dados de comparação brasileira e mundial (por semana)
         const comparisonData = {
             reading: {
-                brAverage: 60,      // minutos/semana (~25min x 2-3x)
-                worldAverage: 210,  // minutos/semana (~30min x 7 dias)
+                brAverage: 60,
+                worldAverage: 210,
                 unit: 'min/sem'
             },
             english: {
-                brAverage: 30,      // minutos/semana
-                worldAverage: 300,  // minutos/semana (5x50 estudo + 1x50 série = método completo)
+                brAverage: 30,
+                worldAverage: 300,
                 unit: 'min/sem'
             },
             hiit: {
-                brAverage: 75,      // minutos/semana
-                worldAverage: 150,  // minutos/semana
+                brAverage: 75,
+                worldAverage: 150,
                 unit: 'min/sem'
             },
             ppci: {
-                brAverage: 60,      // minutos/semana
-                worldAverage: 180,  // minutos/semana
+                brAverage: 60,
+                worldAverage: 180,
                 unit: 'min/sem'
             },
             dopamine: {
-                brAverage: 20,      // minutos/semana
-                worldAverage: 60,   // minutos/semana
+                brAverage: 20,
+                worldAverage: 60,
                 unit: 'min/sem'
             }
         };
@@ -1603,9 +1604,12 @@
                                 appData.habits[key].totalYear = parsed.habits[key].totalYear || 0;
                                 appData.habits[key].monthlyTotals = parsed.habits[key].monthlyTotals || {};
                                 
-                                // Carregar seriesCounts para inglês
+                                // Carregar seriesCounts e carryoverMinutes para inglês
                                 if (key === 'english') {
                                     appData.habits[key].seriesCounts = parsed.habits[key].seriesCounts || {};
+                                    appData.habits[key].carryoverMinutes = parsed.habits[key].carryoverMinutes !== undefined
+                                        ? parsed.habits[key].carryoverMinutes
+                                        : 2520;
                                 }
                                 
                                 if (key === 'fasting') {
@@ -1653,12 +1657,10 @@
 
         function updateMonthlyTotals() {
             Object.entries(appData.habits).forEach(([key, habit]) => {
-                if (key === 'fasting') return; // Pular Zero Açúcar
+                if (key === 'fasting') return;
                 
-                // Resetar totais mensais
                 habit.monthlyTotals = {};
                 
-                // Calcular total de cada mês
                 Object.entries(habit.counts).forEach(([weekKey, count]) => {
                     const [year, weekStr] = weekKey.split('-W');
                     const week = parseInt(weekStr);
@@ -1686,7 +1688,6 @@
                 habit.counts[weekKey] = 0;
             }
             
-            // Para inglês, limitar a 5 (pois série é separada)
             const maxNormal = habitKey === 'english' ? 5 : habit.frequency;
             
             if (habit.counts[weekKey] < maxNormal) {
@@ -1710,7 +1711,6 @@
                 habit.seriesCounts[weekKey] = 0;
             }
             
-            // Série conta como mais um estudo no total de 6
             if (habit.counts[weekKey] < 6) {
                 habit.counts[weekKey]++;
                 habit.seriesCounts[weekKey]++;
@@ -1731,7 +1731,6 @@
             const habit = appData.habits[habitKey];
             
             if (habit.counts[weekKey] && habit.counts[weekKey] > 0) {
-                // Para inglês, decrementar seriesCounts se tiver
                 if (habitKey === 'english' && habit.seriesCounts && habit.seriesCounts[weekKey] && habit.seriesCounts[weekKey] > 0) {
                     habit.seriesCounts[weekKey]--;
                 }
@@ -1748,40 +1747,24 @@
             const habit = appData.habits.fasting;
             const today = new Date().toISOString().split('T')[0];
             
-            console.log('🔍 Verificando Zero Açúcar...');
-            console.log('Hoje:', today);
-            console.log('Última atualização:', habit.lastUpdate);
-            console.log('Último reset:', habit.lastReset);
-            console.log('Streak atual:', habit.currentStreak);
-            
-            // Se já atualizou hoje, não faz nada
             if (habit.lastUpdate === today) {
-                console.log('✅ Já atualizado hoje');
                 return;
             }
             
-            // Se o streak está em 0, não faz nada - espera o usuário clicar em "Iniciar"
             if (habit.currentStreak === 0) {
-                console.log('⏸️ Streak em 0 - aguardando usuário iniciar manualmente');
                 return;
             }
             
-            // Se tem streak ativo, verificar se passou 1 dia
             if (habit.lastUpdate) {
                 const lastDate = new Date(habit.lastUpdate);
                 const currentDate = new Date(today);
                 const daysDiff = Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24));
                 
-                console.log('Diferença de dias:', daysDiff);
-                
                 if (daysDiff === 1) {
-                    console.log('➕ Incrementando streak');
                     habit.currentStreak++;
                     habit.lastUpdate = today;
                     
-                    // Completou o desafio de 40 dias
                     if (habit.currentStreak >= 40) {
-                        console.log('🏆 Desafio completo!');
                         habit.completedCycles++;
                         habit.totalYear += 40;
                         habit.currentStreak = 0;
@@ -1792,9 +1775,7 @@
                     saveData();
                     renderAll();
                 }
-                // Passou mais de 1 dia sem atualizar - perdeu a sequência
                 else if (daysDiff > 1) {
-                    console.log('❌ Perdeu a sequência (passou mais de 1 dia)');
                     habit.currentStreak = 0;
                     habit.lastUpdate = null;
                     habit.lastReset = null;
@@ -1805,7 +1786,6 @@
         }
 
         function startSugarFree() {
-            console.log('🚀 startSugarFree chamada');
             const habit = appData.habits.fasting;
             const today = new Date().toISOString().split('T')[0];
             
@@ -1815,17 +1795,9 @@
             }
             
             if (confirm('🎯 Iniciar novo desafio de 40 dias sem açúcar?\n\nO contador começará agora!')) {
-                console.log('✅ Usuário confirmou início');
-                
-                // Iniciar novo desafio
                 habit.currentStreak = 1;
                 habit.lastUpdate = today;
-                habit.lastReset = null; // Limpar qualquer reset anterior
-                
-                console.log('Dados após início:');
-                console.log('- currentStreak:', habit.currentStreak);
-                console.log('- lastUpdate:', habit.lastUpdate);
-                console.log('- lastReset:', habit.lastReset);
+                habit.lastReset = null;
                 
                 saveData();
                 renderAll();
@@ -1835,7 +1807,6 @@
         }
 
         function resetSugarFree() {
-            console.log('🔄 resetSugarFree chamada');
             const habit = appData.habits.fasting;
             const today = new Date().toISOString().split('T')[0];
             
@@ -1844,17 +1815,9 @@
                 : 'Resetar o contador de Zero Açúcar?';
             
             if (confirm(message)) {
-                console.log('✅ Usuário confirmou reset');
-                
-                // Resetar contador E marcar a data do reset
                 habit.currentStreak = 0;
                 habit.lastUpdate = null;
-                habit.lastReset = today; // IMPORTANTE: marca hoje como dia do reset
-                
-                console.log('Dados após reset:');
-                console.log('- currentStreak:', habit.currentStreak);
-                console.log('- lastUpdate:', habit.lastUpdate);
-                console.log('- lastReset:', habit.lastReset);
+                habit.lastReset = today;
                 
                 saveData();
                 renderAll();
@@ -1864,15 +1827,12 @@
         }
 
         function switchView(view) {
-            // Atualizar abas
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(view + 'Tab').classList.add('active');
             
-            // Atualizar seções
             document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active'));
             document.getElementById(view + 'View').classList.add('active');
             
-            // Renderizar a view específica
             if (view === 'weekly') {
                 renderWeeklyView();
             } else if (view === 'monthly') {
@@ -1917,8 +1877,6 @@
             }
             renderMonthlyView();
         }
-
-        // RENDERIZAÇÕES
 
         function renderWeeklyView() {
             renderStatsOverview();
@@ -2052,7 +2010,7 @@
                     const remaining = Math.max(0, 40 - habit.currentStreak);
                     const today = new Date().toISOString().split('T')[0];
                     const isActive = habit.lastUpdate === today;
-                    const isWaiting = habit.currentStreak === 0; // Qualquer streak em 0 está esperando
+                    const isWaiting = habit.currentStreak === 0;
                     
                     let statusMessage = '';
                     let statusColor = '';
@@ -2169,20 +2127,18 @@
                     const count = habit.counts[weekKey] || 0;
                     const total = count * habit.target;
                     
-                    // Tratamento especial para inglês
                     let seriesCount = 0;
                     let normalStudies = count;
                     let totalSessions = count;
                     
                     if (key === 'english') {
                         seriesCount = habit.seriesCounts[weekKey] || 0;
-                        normalStudies = count - seriesCount; // Estudos normais = total - séries
-                        totalSessions = count; // Total já inclui séries
+                        normalStudies = count - seriesCount;
+                        totalSessions = count;
                     }
                     
                     const completion = Math.min((totalSessions / habit.frequency) * 100, 100);
                     
-                    // Calcular comparações
                     const comparison = comparisonData[key];
                     let vsBR = '';
                     let vsWorld = '';
@@ -2193,7 +2149,6 @@
                         const percentBR = Math.round((total / comparison.brAverage) * 100);
                         const percentWorld = Math.round((total / comparison.worldAverage) * 100);
                         
-                        // Comparação Brasil
                         if (total >= comparison.brAverage * 2) {
                             vsBR = `🇧🇷 ${Math.floor(total / comparison.brAverage)}x média BR`;
                         } else if (total >= comparison.brAverage * 1.5) {
@@ -2208,7 +2163,6 @@
                             vsBR = `🇧🇷 Comece hoje!`;
                         }
                         
-                        // Comparação Mundial
                         if (total >= comparison.worldAverage * 2) {
                             vsWorld = `🌍 ${Math.floor(total / comparison.worldAverage)}x mundial`;
                         } else if (total >= comparison.worldAverage * 1.2) {
@@ -2223,7 +2177,6 @@
                             vsWorld = `🌍 Meta: ${comparison.worldAverage}`;
                         }
                         
-                        // Status/Nível
                         if (total >= comparison.worldAverage * 1.5) {
                             statusLevel = '👑 Elite Global';
                             statusColor = '#8b5cf6';
@@ -2245,7 +2198,6 @@
                         }
                     }
                     
-                    // Criar array de badges rotativos
                     const rotatingBadges = JSON.stringify([
                         { label: vsBR, color: total >= comparison.brAverage ? '#10b981' : '#ef4444' },
                         { label: vsWorld, color: total >= comparison.worldAverage ? '#10b981' : '#f59e0b' },
@@ -2337,7 +2289,8 @@
                             `}
                             
                             ${key === 'english' ? (() => {
-                                const totalMinutes = habit.totalYear || 0;
+                                // ✅ ALTERAÇÃO 3: totalMinutes agora inclui carryoverMinutes (42h = 2520min de crédito anterior)
+                                const totalMinutes = (habit.totalYear || 0) + (habit.carryoverMinutes || 0);
                                 const totalHours = Math.round((totalMinutes / 60) * 100) / 100;
                                 
                                 const cefrLevels = [
@@ -2985,7 +2938,6 @@
                     <div style="display: grid; gap: 15px;">
             `;
             
-            // Renderizar cada estudo
             data.studies.forEach((study, index) => {
                 html += `
                     <div style="padding: 15px; background: rgba(15, 23, 42, 0.4); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
@@ -3058,22 +3010,17 @@
                         
                         if (!badgeElement || badges.length === 0) return;
                         
-                        // Fade out
                         badgeElement.classList.add('fade-out');
                         
                         setTimeout(() => {
-                            // Próximo badge
                             const nextIndex = (currentIndex + 1) % badges.length;
                             const nextBadge = badges[nextIndex];
                             
-                            // Atualizar conteúdo
                             badgeElement.textContent = nextBadge.label;
                             badgeElement.style.color = nextBadge.color;
                             
-                            // Atualizar índice
                             element.setAttribute('data-current', nextIndex);
                             
-                            // Fade in
                             badgeElement.classList.remove('fade-out');
                         }, 400);
                         
@@ -3081,7 +3028,7 @@
                         console.error('Erro ao rotacionar badge:', e);
                     }
                 });
-            }, 3000); // Rotaciona a cada 3 segundos
+            }, 3000);
         }
 
         function initApp() {
@@ -3099,16 +3046,12 @@
                     day: 'numeric' 
                 });
 
-            console.log('🔄 Executando primeira verificação do Zero Açúcar...');
             updateSugarFreeStreak();
             renderAll();
             
-            // Iniciar rotação de badges de comparação
             startComparisonRotation();
             
-            // Verificar a cada 1 minuto
             setInterval(() => {
-                console.log('⏰ Verificação automática...');
                 updateSugarFreeStreak();
             }, 60000);
             
