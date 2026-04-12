@@ -1,0 +1,44 @@
+{
+  "name": "HabitDB — Sistema Científico de Hábitos",
+  "short_name": "HabitDB",
+  "description": "Rastreador científico de hábitos com análise semanal, mensal e anual.",
+  "start_url": "/weekly",
+  "display": "standalone",
+  "background_color": "#080b14",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "categories": ["productivity", "health", "lifestyle"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Hábitos Semanais",
+      "url": "/weekly",
+      "description": "Ver hábitos da semana"
+    },
+    {
+      "name": "Planner",
+      "url": "/planner",
+      "description": "Gerenciar metas e tarefas"
+    },
+    {
+      "name": "Finanças",
+      "url": "/finance",
+      "description": "Controle financeiro"
+    }
+  ]
+}

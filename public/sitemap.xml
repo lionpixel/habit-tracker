@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://habitdb.vercel.app/weekly</loc><priority>1.0</priority></url>
+  <url><loc>https://habitdb.vercel.app/monthly</loc><priority>0.8</priority></url>
+  <url><loc>https://habitdb.vercel.app/yearly</loc><priority>0.8</priority></url>
+  <url><loc>https://habitdb.vercel.app/planner</loc><priority>0.8</priority></url>
+  <url><loc>https://habitdb.vercel.app/projects</loc><priority>0.7</priority></url>
+  <url><loc>https://habitdb.vercel.app/review</loc><priority>0.7</priority></url>
+  <url><loc>https://habitdb.vercel.app/finance</loc><priority>0.7</priority></url>
+  <url><loc>https://habitdb.vercel.app/profile</loc><priority>0.7</priority></url>
+  <url><loc>https://habitdb.vercel.app/categories</loc><priority>0.6</priority></url>
+  <url><loc>https://habitdb.vercel.app/sleep</loc><priority>0.6</priority></url>
+  <url><loc>https://habitdb.vercel.app/focus</loc><priority>0.6</priority></url>
+  <url><loc>https://habitdb.vercel.app/report</loc><priority>0.6</priority></url>
+  <url><loc>https://habitdb.vercel.app/metas</loc><priority>0.5</priority></url>
+  <url><loc>https://habitdb.vercel.app/dreams</loc><priority>0.7</priority></url>
+</urlset>
