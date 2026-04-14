@@ -3,6 +3,10 @@
 // ─────────────────────────────────────────────
 // Ícones: identificadores Lucide (sem emojis)
 // Durações: leitura = 25 min, demais = 50 min
+//
+// monthlyTotals pré-populados com dados reais Q1 2026:
+//   Jan: 695min · Fev: 2400min · Mar: 1305min
+// totalYear = soma acumulada dos meses históricos
 
 import type { HabitsMap } from '@/types/habit'
 import { getWeekNumber, getWeekKey, getMonthKey } from '@/lib/helpers'
@@ -12,6 +16,13 @@ const now  = new Date()
 const week = getWeekNumber(now)
 const wKey = getWeekKey(APP_YEAR, week)
 const mKey = getMonthKey(APP_YEAR, now.getMonth() + 1)
+
+// Meses históricos já registrados
+const H = {
+  jan: '2026-01',
+  feb: '2026-02',
+  mar: '2026-03',
+}
 
 export const DEFAULT_HABITS: HabitsMap = {
   reading: {
@@ -23,8 +34,8 @@ export const DEFAULT_HABITS: HabitsMap = {
     frequency:     6,
     description:   'Leitura diária — 10 páginas de livros, artigos e documentação',
     counts:        { [wKey]: 0 },
-    monthlyTotals: { [mKey]: 0 },
-    totalYear:     0,
+    monthlyTotals: { [H.jan]: 125, [H.feb]: 450, [H.mar]: 225, [mKey]: 0 },
+    totalYear:     800,   // 125 + 450 + 225
     goalFreq:      6,
     goalDuration:  25,
   },
@@ -40,8 +51,8 @@ export const DEFAULT_HABITS: HabitsMap = {
     counts:           { [wKey]: 0 },
     seriesCounts:     { [wKey]: 0 },
     carryoverMinutes: 2520,
-    monthlyTotals:    { [mKey]: 0 },
-    totalYear:        0,
+    monthlyTotals:    { [H.jan]: 250, [H.feb]: 850, [H.mar]: 450, [mKey]: 0 },
+    totalYear:        1550,  // 250 + 850 + 450
     goalFreq:         6,
     goalDuration:     50,
   },
@@ -55,8 +66,8 @@ export const DEFAULT_HABITS: HabitsMap = {
     frequency:     4,
     description:   'Treino intervalado de alta intensidade',
     counts:        { [wKey]: 0 },
-    monthlyTotals: { [mKey]: 0 },
-    totalYear:     0,
+    monthlyTotals: { [H.jan]: 120, [H.feb]: 300, [H.mar]: 30,  [mKey]: 0 },
+    totalYear:     450,   // 120 + 300 + 30
     goalFreq:      4,
     goalDuration:  50,
   },
@@ -70,8 +81,8 @@ export const DEFAULT_HABITS: HabitsMap = {
     frequency:     5,
     description:   'Programação pessoal, projetos e crescimento intelectual',
     counts:        { [wKey]: 0 },
-    monthlyTotals: { [mKey]: 0 },
-    totalYear:     0,
+    monthlyTotals: { [H.jan]: 100, [H.feb]: 400, [H.mar]: 350, [mKey]: 0 },
+    totalYear:     850,   // 100 + 400 + 350
     goalFreq:      5,
     goalDuration:  50,
   },
@@ -85,8 +96,8 @@ export const DEFAULT_HABITS: HabitsMap = {
     frequency:     5,
     description:   'Detox de dopamina: meditação, reflexão e descanso mental',
     counts:        { [wKey]: 0 },
-    monthlyTotals: { [mKey]: 0 },
-    totalYear:     0,
+    monthlyTotals: { [H.jan]: 100, [H.feb]: 400, [H.mar]: 250, [mKey]: 0 },
+    totalYear:     750,   // 100 + 400 + 250
     goalFreq:      5,
     goalDuration:  50,
   },
@@ -100,7 +111,7 @@ export const DEFAULT_HABITS: HabitsMap = {
     frequency:        7,
     description:      'Desafio de 40 dias sem açúcar refinado',
     counts:           { [wKey]: 0 },
-    monthlyTotals:    { [mKey]: 0 },
+    monthlyTotals:    { [H.jan]: 0, [H.feb]: 0, [H.mar]: 0, [mKey]: 0 },
     totalYear:        0,
     currentStreak:    0,
     completedCycles:  0,

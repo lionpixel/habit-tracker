@@ -1,22 +1,24 @@
 'use client'
 
-import { useAppStore }       from '@/store/appStore'
-import { useHabits }         from '@/hooks/useHabits'
-import { HabitCard }         from './HabitCard'
-import { StatCard }          from '@/components/ui/StatCard'
-import { WeeklyChart }       from '@/components/charts/WeeklyChart'
-import { EvolutionChart }    from '@/components/charts/EvolutionChart'
-import { HeatmapSection }    from './HeatmapSection'
-import { RiskAlerts }        from './RiskAlerts'
-import { InsightCards }      from './InsightCards'
-import { FadeInUp } from '@/components/ui/Motion'
+import { useAppStore }            from '@/store/appStore'
+import { useHabits }              from '@/hooks/useHabits'
+import { useHistoricalInsights }  from '@/hooks/useHistoricalInsights'
+import { HabitCard }              from './HabitCard'
+import { StatCard }               from '@/components/ui/StatCard'
+import { WeeklyChart }            from '@/components/charts/WeeklyChart'
+import { EvolutionChart }         from '@/components/charts/EvolutionChart'
+import { MonthlyBarChart }        from '@/components/charts/MonthlyBarChart'
+import { HeatmapSection }         from './HeatmapSection'
+import { RiskAlerts }             from './RiskAlerts'
+import { InsightCards }           from './InsightCards'
+import { FadeInUp }               from '@/components/ui/Motion'
 import { getWeekDates, formatDate, formatTime } from '@/lib/helpers'
-import type { HabitKey } from '@/types/habit'
+import type { HabitKey }          from '@/types/habit'
 import {
   ChevronLeft, ChevronRight,
   Timer, CheckSquare, Zap, Award,
-  TrendingUp, Target, CalendarCheck,
-  Map, BarChart3,
+  TrendingUp, TrendingDown, Target, CalendarCheck,
+  Map, BarChart3, Trophy, AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 
@@ -37,6 +39,72 @@ function SectionTitle({
       <div>
         <h2 className="text-sm font-bold text-slate-100 leading-tight">{title}</h2>
         {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+      </div>
+    </div>
+  )
+}
+
+// ── Banner Q1 2026 ────────────────────────────
+function Q1Banner() {
+  const { quarterSummary, habitRanking, hiitAlert } = useHistoricalInsights()
+  const { bestMonthLabel, totalHours, momFebMar } = quarterSummary
+  const topHabit = habitRanking[0]
+
+  return (
+    <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.04] p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Trophy size={14} className="text-violet-400" />
+        <span className="text-xs font-bold text-violet-300 uppercase tracking-wider">
+          Resumo Q1 2026
+        </span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Total */}
+        <div className="text-center p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+          <div className="text-lg font-black text-slate-100 tabular-nums">{totalHours}h</div>
+          <div className="text-[10px] text-slate-500 font-semibold mt-0.5">Total acumulado</div>
+        </div>
+        {/* Melhor mês */}
+        <div className="text-center p-2.5 rounded-xl bg-violet-500/[0.06] border border-violet-500/20">
+          <div className="text-sm font-black text-violet-300">{bestMonthLabel}</div>
+          <div className="text-[10px] text-violet-400/70 font-semibold mt-0.5">Melhor mês</div>
+        </div>
+        {/* Hábito dominante */}
+        {topHabit && (
+          <div className="text-center p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+            <div className="text-sm font-black" style={{ color: topHabit.color }}>
+              {topHabit.name}
+            </div>
+            <div className="text-[10px] text-slate-500 font-semibold mt-0.5">{topHabit.pct}% do total</div>
+          </div>
+        )}
+        {/* HIIT alerta */}
+        <div className={cn(
+          'text-center p-2.5 rounded-xl border',
+          hiitAlert.isCritical
+            ? 'bg-red-500/[0.06] border-red-500/20'
+            : 'bg-white/[0.03] border-white/[0.05]',
+        )}>
+          <div className={cn(
+            'flex items-center justify-center gap-1 text-sm font-black',
+            hiitAlert.isCritical ? 'text-red-400' : 'text-slate-200',
+          )}>
+            {hiitAlert.isCritical && <AlertTriangle size={12} />}
+            HIIT {hiitAlert.dropPct}%
+          </div>
+          <div className="text-[10px] text-slate-500 font-semibold mt-0.5">queda em Mar</div>
+        </div>
+      </div>
+      {/* MoM trend */}
+      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.06]">
+        {momFebMar < 0
+          ? <TrendingDown size={12} className="text-red-400 flex-shrink-0" />
+          : <TrendingUp   size={12} className="text-emerald-400 flex-shrink-0" />}
+        <span className="text-[11px] text-slate-400">
+          {momFebMar < 0
+            ? `Queda de ${Math.abs(momFebMar)}% de Fevereiro para Março — retomada em Abril recomendada`
+            : `Alta de +${momFebMar}% em relação ao mês anterior`}
+        </span>
       </div>
     </div>
   )
@@ -159,17 +227,32 @@ export function WeeklyView() {
         </div>
       </FadeInUp>
 
+      {/* ── Q1 Banner ── */}
+      <FadeInUp delay={0.12}>
+        <Q1Banner />
+      </FadeInUp>
+
       {/* ── Charts row ── */}
       <FadeInUp delay={0.15}>
         <SectionTitle
           icon={<BarChart3 className="w-4 h-4" />}
           title="Gráficos"
-          subtitle="Progresso semanal e evolução de 8 semanas"
+          subtitle="Progresso semanal, evolução e comparativo Q1"
         />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <WeeklyChart />
           <EvolutionChart />
         </div>
+      </FadeInUp>
+
+      {/* ── Monthly Q1 chart ── */}
+      <FadeInUp delay={0.18}>
+        <SectionTitle
+          icon={<TrendingUp className="w-4 h-4" />}
+          title="Evolução Mensal — Q1 2026"
+          subtitle="Minutos acumulados por hábito em Janeiro, Fevereiro e Março"
+        />
+        <MonthlyBarChart />
       </FadeInUp>
 
       {/* ── Heatmap ── */}
