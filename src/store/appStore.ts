@@ -22,6 +22,7 @@ import {
 } from '@/services/habitsService'
 import { getWeekNumber } from '@/lib/helpers'
 import { APP_YEAR } from '@/lib/constants'
+import { HISTORICAL_MINUTES } from '@/data/historicalData'
 
 // ── Tipos do store ──────────────────────────
 
@@ -98,10 +99,39 @@ export const useAppStore = create<AppStore>()(
 
     // ── Hidratação (client-side only) ─────────
     hydrate() {
-      const data      = loadAppData(DEFAULT_APP_DATA)
+      const raw       = loadAppData(DEFAULT_APP_DATA)
       const sleepData = loadSleepData(DEFAULT_SLEEP_DATA)
       const pomoData  = loadPomoData(DEFAULT_POMO_DATA)
       const backups   = listBackups()
+
+      // Mescla dados históricos Q1 2026 no que vier do localStorage.
+      // Garante que monthlyTotals e totalYear estejam sempre corretos,
+      // independente do estado anterior do localStorage.
+      const habits = { ...raw.habits } as typeof raw.habits
+      ;(Object.keys(HISTORICAL_MINUTES) as HabitKey[]).forEach((key) => {
+        const historicalMonths = HISTORICAL_MINUTES[key]
+        const habit = habits[key]
+        if (!habit) return
+
+        const merged = { ...habit.monthlyTotals }
+        Object.entries(historicalMonths).forEach(([mk, min]) => {
+          // Só sobrescreve se o valor histórico for maior que o armazenado
+          // (protege sessões extras que o usuário possa ter registrado)
+          if ((merged[mk] ?? 0) < min) merged[mk] = min
+        })
+
+        // Recalcula totalYear como soma de todos os monthlyTotals
+        const totalYear = Object.values(merged).reduce((a, b) => a + b, 0)
+
+        ;(habits as unknown as Record<string, typeof habit>)[key] = {
+          ...habit,
+          monthlyTotals: merged,
+          totalYear,
+        }
+      })
+
+      const data = { ...raw, habits }
+      saveAppData(data)
       set({ data, sleepData, pomoData, backups, hydrated: true })
     },
 
