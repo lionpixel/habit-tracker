@@ -112,6 +112,9 @@ export function MonthlyPlannerView() {
           {mGoals.map((goal) => {
             const children  = weeklyGoals.filter((w) => goal.weeklyGoalIds.includes(w.id))
             const childDone = children.filter((w) => w.status === 'done').length
+            const perWeek = goal.targetValue ? (goal.targetValue / 4.33).toFixed(1) : null
+            const perDay  = goal.targetValue ? (goal.targetValue / 30).toFixed(1) : null
+            const unit    = goal.targetUnit ?? ''
             return (
               <StaggerItem key={goal.id}>
                 <GoalCard
@@ -123,6 +126,16 @@ export function MonthlyPlannerView() {
                   onEdit={() => { setEditTarget(goal); setFormOpen(true) }}
                   onDelete={() => deleteMonthlyGoal(goal.id)}
                 >
+                  {perWeek && (
+                    <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/[0.05]">
+                      <span className="text-[11px] font-semibold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md">
+                        {perWeek}{unit && ` ${unit}`}/semana
+                      </span>
+                      <span className="text-[11px] font-semibold text-slate-500 bg-white/[0.03] px-2 py-0.5 rounded-md">
+                        {perDay}{unit && ` ${unit}`}/dia
+                      </span>
+                    </div>
+                  )}
                   {children.map((w) => (
                     <div key={w.id} className="flex items-center gap-2 py-1.5 border-b border-white/[0.04] last:border-0">
                       <div className="text-[10px] font-bold text-emerald-400 w-10">Sem {w.week}</div>

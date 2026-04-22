@@ -5,13 +5,28 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, LayoutGrid, ChevronLeft, ChevronRight, CalendarDays, List } from 'lucide-react'
 import { useGoalsStore } from '@/store/goalsStore'
 import { GoalCard, TaskRow } from './GoalCard'
 import { GoalFormModal } from './GoalFormModal'
 import { FadeInUp, StaggerList, StaggerItem } from '@/components/ui/Motion'
-import { getWeekNumber } from '@/lib/helpers'
+import { getWeekNumber, cn } from '@/lib/helpers'
 import type { WeeklyGoal, DailyTask } from '@/types/goals'
+
+const DAY_NAMES = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+
+function getWeekDates(year: number, week: number): Date[] {
+  // Jan 4 is always in ISO week 1
+  const jan4 = new Date(year, 0, 4)
+  const day = jan4.getDay() || 7
+  const monday = new Date(jan4)
+  monday.setDate(jan4.getDate() - day + 1 + (week - 1) * 7)
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    return d
+  })
+}
 
 const CURRENT_YEAR = new Date().getFullYear()
 const CURRENT_WEEK = getWeekNumber(new Date())
@@ -25,6 +40,7 @@ export function WeeklyPlannerView() {
   const [editWeekly, setEditWeekly]   = useState<WeeklyGoal | null>(null)
   const [editTask,   setEditTask]     = useState<DailyTask | null>(null)
   const [activeWeeklyId, setActiveWeeklyId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'goal' | 'day'>('goal')
 
   function prevWeek() {
     if (week <= 1) { setWeek(52); setYear((y) => y - 1) }
@@ -48,11 +64,20 @@ export function WeeklyPlannerView() {
 
   // Unlinked tasks for this week (taskIds reference)
   const allWeekTaskIds = wGoals.flatMap((w) => w.taskIds)
-  const _weekTasks = dailyTasks.filter((t) => allWeekTaskIds.includes(t.id))
   const unlinkedTasks = dailyTasks.filter((t) => {
     const d = new Date(t.date + 'T12:00:00')
     return getWeekNumber(d) === week && d.getFullYear() === year && !allWeekTaskIds.includes(t.id)
   })
+
+  // Day-view helpers
+  const weekDates = getWeekDates(year, week)
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const goalTitleMap: Record<string, string> = {}
+  wGoals.forEach((g) => g.taskIds.forEach((tid) => { goalTitleMap[tid] = g.title }))
+  const allWeekTasks = [
+    ...dailyTasks.filter((t) => allWeekTaskIds.includes(t.id)),
+    ...unlinkedTasks,
+  ]
 
   const isCurrentWeek = week === CURRENT_WEEK && year === CURRENT_YEAR
 
@@ -70,6 +95,17 @@ export function WeeklyPlannerView() {
             </div>
           </div>
           <div className="flex gap-2">
+            {/* View toggle */}
+            <div className="flex bg-white/[0.04] rounded-xl p-0.5">
+              <button type="button" onClick={() => setViewMode('goal')}
+                className={cn('flex items-center gap-1.5 px-2.5 py-1.5 rounded-[10px] text-xs font-semibold transition-all', viewMode === 'goal' ? 'bg-emerald-500/20 text-emerald-300' : 'text-slate-500 hover:text-slate-300')}>
+                <List size={13} />
+              </button>
+              <button type="button" onClick={() => setViewMode('day')}
+                className={cn('flex items-center gap-1.5 px-2.5 py-1.5 rounded-[10px] text-xs font-semibold transition-all', viewMode === 'day' ? 'bg-emerald-500/20 text-emerald-300' : 'text-slate-500 hover:text-slate-300')}>
+                <CalendarDays size={13} />
+              </button>
+            </div>
             <button type="button" onClick={() => { setEditTask(null); setActiveWeeklyId(null); setTaskFormOpen(true) }}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/15 text-amber-300 text-xs font-semibold hover:bg-amber-500/25 transition-colors">
               <Plus size={14} /> Tarefa
@@ -98,8 +134,71 @@ export function WeeklyPlannerView() {
         </div>
       </FadeInUp>
 
+      {/* ── Day view (Mon–Sun) ── */}
+      {viewMode === 'day' && (
+        <FadeInUp delay={0.05}>
+          <div className="space-y-2">
+            {weekDates.map((date, i) => {
+              const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+              const dayTasks = allWeekTasks.filter((t) => t.date === dateStr).sort((a, b) => (a.dueTime ?? '').localeCompare(b.dueTime ?? ''))
+              const isToday = dateStr === todayStr
+              return (
+                <div
+                  key={dateStr}
+                  className={cn(
+                    'card p-3',
+                    isToday ? 'border-emerald-500/25 bg-emerald-500/[0.03]' : '',
+                  )}
+                >
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className={cn('text-xs font-bold w-7', isToday ? 'text-emerald-400' : 'text-slate-500')}>
+                      {DAY_NAMES[i]}
+                    </span>
+                    <span className="text-[11px] text-slate-600 tabular-nums">
+                      {date.getDate().toString().padStart(2, '0')}/{(date.getMonth() + 1).toString().padStart(2, '0')}
+                    </span>
+                    {isToday && <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 rounded-md">Hoje</span>}
+                    {dayTasks.length > 0 && (
+                      <span className="ml-auto text-[10px] text-slate-600 tabular-nums">
+                        {dayTasks.filter(t => t.status === 'done').length}/{dayTasks.length}
+                      </span>
+                    )}
+                  </div>
+                  {dayTasks.length === 0 ? (
+                    <p className="text-[11px] text-slate-700 italic pl-9">Nenhuma tarefa</p>
+                  ) : (
+                    <div className="space-y-0.5">
+                      {dayTasks.map((task) => (
+                        <div key={task.id} className="pl-9">
+                          {goalTitleMap[task.id] && (
+                            <div className="text-[10px] text-slate-600 mb-0.5">{goalTitleMap[task.id]}</div>
+                          )}
+                          <TaskRow
+                            title={task.title}
+                            status={task.status as 'not_started' | 'in_progress' | 'done' | 'cancelled'}
+                            priority={task.priority}
+                            dueTime={task.dueTime}
+                            onComplete={() =>
+                              task.status === 'done'
+                                ? uncompleteDailyTask(task.id)
+                                : completeDailyTask(task.id)
+                            }
+                            onEdit={() => { setEditTask(task); setActiveWeeklyId(goalTitleMap[task.id] ? (wGoals.find(g => g.taskIds.includes(task.id))?.id ?? null) : null); setTaskFormOpen(true) }}
+                            onDelete={() => deleteDailyTask(task.id)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </FadeInUp>
+      )}
+
       {/* Weekly goals + their tasks */}
-      {wGoals.length === 0 && unlinkedTasks.length === 0 ? (
+      {viewMode === 'goal' && (wGoals.length === 0 && unlinkedTasks.length === 0 ? (
         <FadeInUp delay={0.05}>
           <div className="card p-8 text-center">
             <LayoutGrid size={32} className="text-slate-700 mx-auto mb-3" />
@@ -181,7 +280,7 @@ export function WeeklyPlannerView() {
             </StaggerItem>
           )}
         </StaggerList>
-      )}
+      ))}
 
       {/* Weekly goal form */}
       <GoalFormModal

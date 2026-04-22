@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { cn, formatDate } from '@/lib/helpers'
 import { useAppStore } from '@/store/appStore'
+import { calculateFastingProgress } from '@/lib/fastingUtils'
 import { Button } from '@/components/ui/Button'
 import { ProgressBarAnimated } from '@/components/ui/Motion'
 import { X, Shield, Flame, Trophy, Calendar, Clock, CheckCircle2 } from 'lucide-react'
@@ -64,13 +65,20 @@ export function FastingEditorModal({ open, onClose }: FastingEditorModalProps) {
     setErrors((e) => { const n = { ...e }; delete n[key]; return n })
   }
 
-  const endDate     = form.fastingStartDate
+  const endDate = form.fastingStartDate
     ? computeEndDate(form.fastingStartDate, form.fastingDays)
     : null
-  const streak      = habit.currentStreak
-  const pct         = Math.min(100, Math.round((streak / form.fastingDays) * 100))
-  const daysLeft    = Math.max(0, form.fastingDays - streak)
-  const isComplete  = habit.fastingComplete ?? streak >= form.fastingDays
+
+  // Use time-based progress calculation
+  const fastingProgress = calculateFastingProgress({
+    ...habit,
+    fastingDays:      form.fastingDays,
+    fastingStartDate: form.fastingStartDate,
+  })
+  const streak     = fastingProgress.progressDays
+  const pct        = fastingProgress.pct
+  const daysLeft   = fastingProgress.daysLeft
+  const isComplete = fastingProgress.isComplete
 
   function handleSave() {
     const result = FastingFormSchema.safeParse(form)
@@ -97,9 +105,9 @@ export function FastingEditorModal({ open, onClose }: FastingEditorModalProps) {
   function handleMarkComplete() {
     const now = new Date().toISOString().slice(0, 10)
     updateHabit('fasting', {
-      fastingComplete:     true,
-      fastingCompletedAt:  now,
-      longestStreak:       Math.max(streak, habit.longestStreak ?? 0),
+      fastingComplete:    true,
+      fastingCompletedAt: now,
+      longestStreak:      Math.max(streak, habit.longestStreak ?? 0),
     } as Partial<FastingHabit>)
     toast.success('Parabéns! Jejum marcado como concluído!')
     setConfirmComplete(false)
@@ -107,26 +115,8 @@ export function FastingEditorModal({ open, onClose }: FastingEditorModalProps) {
   }
 
   function handleReset() {
-    updateHabit('fasting', {
-      fastingComplete:     false,
-      fastingCompletedAt:  undefined,
-      fastingStartDate:    new Date().toISOString().slice(0, 10),
-      longestStreak:       Math.max(streak, habit.longestStreak ?? 0),
-    } as Partial<FastingHabit>)
-    const { data: store } = useAppStore.getState()
-    const updated = {
-      ...store,
-      habits: {
-        ...store.habits,
-        fasting: {
-          ...store.habits.fasting,
-          currentStreak:   0,
-          completedCycles: (store.habits.fasting as FastingHabit).completedCycles + (isComplete ? 1 : 0),
-          lastReset:       new Date().toISOString().slice(0, 10),
-        },
-      },
-    }
-    useAppStore.setState({ data: updated })
+    const { resetFasting } = useAppStore.getState()
+    resetFasting()
     toast.info('Jejum reiniciado. Novo ciclo começou!')
     setConfirmReset(false)
     onClose()
@@ -422,7 +412,7 @@ export function FastingEditorModal({ open, onClose }: FastingEditorModalProps) {
                       </div>
                       <div>
                         <div className="text-xl font-black tabular-nums text-emerald-400">
-                          {Math.max(streak, habit.longestStreak ?? 0)}
+                          {habit.longestStreak ?? 0}
                         </div>
                         <div className="text-[10px] text-slate-600">maior streak</div>
                       </div>

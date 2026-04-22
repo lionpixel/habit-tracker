@@ -8,6 +8,7 @@ import { StatCard }               from '@/components/ui/StatCard'
 import { WeeklyChart }            from '@/components/charts/WeeklyChart'
 import { EvolutionChart }         from '@/components/charts/EvolutionChart'
 import { MonthlyBarChart }        from '@/components/charts/MonthlyBarChart'
+import { LifeScoreCard }          from './LifeScoreCard'
 import { HeatmapSection }         from './HeatmapSection'
 import { RiskAlerts }             from './RiskAlerts'
 import { InsightCards }           from './InsightCards'
@@ -18,7 +19,7 @@ import {
   ChevronLeft, ChevronRight,
   Timer, CheckSquare, Zap, Award,
   TrendingUp, TrendingDown, Target, CalendarCheck,
-  Map, BarChart3, Trophy, AlertTriangle,
+  Map, BarChart3, Trophy, AlertTriangle, Layers,
 } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 
@@ -230,6 +231,16 @@ export function WeeklyView() {
       {/* ── Q1 Banner ── */}
       <FadeInUp delay={0.12}>
         <Q1Banner />
+      </FadeInUp>
+
+      {/* ── Vida Score ── */}
+      <FadeInUp delay={0.14}>
+        <SectionTitle
+          icon={<Layers className="w-4 h-4" />}
+          title="Vida Score"
+          subtitle="Pontuação integrada — hábitos, metas, finanças, físico, sono e foco"
+        />
+        <LifeScoreCard />
       </FadeInUp>
 
       {/* ── Charts row ── */}

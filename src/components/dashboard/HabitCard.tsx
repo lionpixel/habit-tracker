@@ -9,8 +9,9 @@ import { Button }   from '@/components/ui/Button'
 import { Badge }    from '@/components/ui/Badge'
 import { HabitIcon } from '@/lib/habitIcons'
 import { HabitEditorModal }   from '@/components/habits/HabitEditorModal'
-import { FastingEditorModal } from '@/components/habits/FastingEditorModal'
-import { FastingProgressCard } from '@/components/habits/FastingProgressCard'
+import { FastingEditorModal }   from '@/components/habits/FastingEditorModal'
+import { FastingProgressCard }  from '@/components/habits/FastingProgressCard'
+import { FastingCalendarView }  from '@/components/habits/FastingCalendarView'
 import type { HabitKey, FastingHabit } from '@/types/habit'
 import { useHabits } from '@/hooks/useHabits'
 import {
@@ -91,7 +92,7 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
     )
   }
 
-  // Fasting gets its own premium card
+  // Fasting gets its own premium card + calendar
   if (isFasting && fastingHabit) {
     return (
       <>
@@ -99,6 +100,7 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
           habit={fastingHabit}
           onEdit={() => setFastingOpen(true)}
         />
+        <FastingCalendarView />
         <FastingEditorModal open={fastingOpen} onClose={() => setFastingOpen(false)} />
       </>
     )

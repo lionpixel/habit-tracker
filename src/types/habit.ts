@@ -121,6 +121,10 @@ export interface FastingHabit extends HabitBase {
   fastingComplete?: boolean
   fastingCompletedAt?: string // "YYYY-MM-DD"
   longestStreak?:   number
+  // ── Daily log ─────────────────────────
+  fastingLog?:      { date: string; completed: boolean }[] // legacy — kept for notes compat
+  fastingNotes?:    Record<string, string>                 // optional notes per day
+  fastingYearTotal?: number                                // computed: cycles*days + progress
 }
 
 export type Habit = HabitBase | EnglishHabit | FastingHabit

@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ImageIcon, DollarSign, Heart, MapPin, Star } from 'lucide-react'
+import { X, ImageIcon, DollarSign, Heart, MapPin, Star, Target } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 import type { Dream, DreamCategory, DreamStatus } from '@/types/dreams'
 import { DREAM_CATEGORIES } from '@/types/dreams'
 import { useDreamsStore } from '@/store/dreamsStore'
+import { useGoalsStore }  from '@/store/goalsStore'
 
 interface DreamFormModalProps {
   open:    boolean
@@ -15,54 +16,60 @@ interface DreamFormModalProps {
 }
 
 type FormState = {
-  title:            string
-  description:      string
-  category:         DreamCategory
-  imageUrl:         string
-  targetDate:       string
-  financialTarget:  string
-  financialCurrent: string
-  emotionalReason:  string
-  executionPlan:    string
-  progress:         number
-  status:           DreamStatus
+  title:              string
+  description:        string
+  category:           DreamCategory
+  imageUrl:           string
+  targetDate:         string
+  financialTarget:    string
+  financialCurrent:   string
+  emotionalReason:    string
+  executionPlan:      string
+  progress:           number
+  status:             DreamStatus
+  linkedAnnualGoalId: string
 }
 
 const EMPTY: FormState = {
-  title:            '',
-  description:      '',
-  category:         'estilo',
-  imageUrl:         '',
-  targetDate:       '',
-  financialTarget:  '',
-  financialCurrent: '',
-  emotionalReason:  '',
-  executionPlan:    '',
-  progress:         0,
-  status:           'active',
+  title:              '',
+  description:        '',
+  category:           'estilo',
+  imageUrl:           '',
+  targetDate:         '',
+  financialTarget:    '',
+  financialCurrent:   '',
+  emotionalReason:    '',
+  executionPlan:      '',
+  progress:           0,
+  status:             'active',
+  linkedAnnualGoalId: '',
 }
 
 export function DreamFormModal({ open, dream, onClose }: DreamFormModalProps) {
   const { addDream, updateDream } = useDreamsStore()
+  const { annualGoals, hydrated: gH, hydrate: gHydrate } = useGoalsStore()
   const [form, setForm] = useState<FormState>(EMPTY)
   const [error, setError] = useState('')
 
   const isEdit = !!dream
 
+  useEffect(() => { if (!gH) gHydrate() }, [gH, gHydrate])
+
   useEffect(() => {
     if (dream) {
       setForm({
-        title:            dream.title,
-        description:      dream.description,
-        category:         dream.category,
-        imageUrl:         dream.imageUrl ?? '',
-        targetDate:       dream.targetDate ?? '',
-        financialTarget:  dream.financialTarget ? String(dream.financialTarget) : '',
-        financialCurrent: dream.financialCurrent ? String(dream.financialCurrent) : '',
-        emotionalReason:  dream.emotionalReason,
-        executionPlan:    dream.executionPlan,
-        progress:         dream.progress,
-        status:           dream.status,
+        title:              dream.title,
+        description:        dream.description,
+        category:           dream.category,
+        imageUrl:           dream.imageUrl ?? '',
+        targetDate:         dream.targetDate ?? '',
+        financialTarget:    dream.financialTarget ? String(dream.financialTarget) : '',
+        financialCurrent:   dream.financialCurrent ? String(dream.financialCurrent) : '',
+        emotionalReason:    dream.emotionalReason,
+        executionPlan:      dream.executionPlan,
+        progress:           dream.progress,
+        status:             dream.status,
+        linkedAnnualGoalId: dream.linkedAnnualGoalId ?? '',
       })
     } else {
       setForm(EMPTY)
@@ -79,17 +86,18 @@ export function DreamFormModal({ open, dream, onClose }: DreamFormModalProps) {
     if (!form.emotionalReason.trim()) { setError('O motivo emocional é obrigatório.'); return }
 
     const payload = {
-      title:            form.title.trim(),
-      description:      form.description.trim(),
-      category:         form.category,
-      imageUrl:         form.imageUrl.trim() || undefined,
-      targetDate:       form.targetDate || undefined,
-      financialTarget:  form.financialTarget ? parseFloat(form.financialTarget) : undefined,
-      financialCurrent: form.financialCurrent ? parseFloat(form.financialCurrent) : undefined,
-      emotionalReason:  form.emotionalReason.trim(),
-      executionPlan:    form.executionPlan.trim(),
-      progress:         form.progress,
-      status:           form.status,
+      title:              form.title.trim(),
+      description:        form.description.trim(),
+      category:           form.category,
+      imageUrl:           form.imageUrl.trim() || undefined,
+      targetDate:         form.targetDate || undefined,
+      financialTarget:    form.financialTarget ? parseFloat(form.financialTarget) : undefined,
+      financialCurrent:   form.financialCurrent ? parseFloat(form.financialCurrent) : undefined,
+      emotionalReason:    form.emotionalReason.trim(),
+      executionPlan:      form.executionPlan.trim(),
+      progress:           form.progress,
+      status:             form.status,
+      linkedAnnualGoalId: form.linkedAnnualGoalId || undefined,
     }
 
     if (isEdit && dream) {
@@ -292,6 +300,28 @@ export function DreamFormModal({ open, dream, onClose }: DreamFormModalProps) {
                   rows={3}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-200 text-sm placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 transition-colors resize-none"
                 />
+              </div>
+
+              {/* Link to Annual Goal */}
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <Target className="w-3 h-3 text-violet-400" />
+                  Meta Anual vinculada
+                </label>
+                <select
+                  value={form.linkedAnnualGoalId}
+                  onChange={(e) => set('linkedAnnualGoalId', e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-200 text-sm focus:outline-none focus:border-violet-500/50 transition-colors [color-scheme:dark]"
+                >
+                  <option value="">— Nenhuma —</option>
+                  {annualGoals
+                    .filter((g) => g.year === new Date().getFullYear())
+                    .map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.title}
+                      </option>
+                    ))}
+                </select>
               </div>
 
               {/* Progress + Status (edit only) */}

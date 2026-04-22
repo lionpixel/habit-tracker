@@ -7,7 +7,7 @@
 
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import type { AppData, HabitKey } from '@/types/habit'
+import type { AppData, HabitKey, FastingHabit } from '@/types/habit'
 import type { SleepData }         from '@/types/sleep'
 import type { PomoDataMap }        from '@/types/focus'
 import { DEFAULT_HABITS }          from '@/data/mockHabits'
@@ -55,6 +55,10 @@ interface AppStore {
   unarchiveHabit: (key: HabitKey) => void
   duplicateHabit: (key: HabitKey) => void
   deleteHabitData:(key: HabitKey) => void   // resets counts/totals, keeps config
+
+  // Jejum
+  startFasting:   () => void
+  resetFasting:   () => void
 
   // Sono
   saveSleep: (data: SleepData) => void
@@ -129,6 +133,26 @@ export const useAppStore = create<AppStore>()(
           totalYear,
         }
       })
+
+      // Auto-complete fasting if enough calendar days have elapsed
+      const fastingHabit = habits.fasting as FastingHabit
+      if (fastingHabit.fastingStartDate && !fastingHabit.fastingComplete) {
+        const todayDate = new Date()
+        todayDate.setHours(0, 0, 0, 0)
+        const startDate = new Date(fastingHabit.fastingStartDate)
+        startDate.setHours(0, 0, 0, 0)
+        const daysElapsed = Math.floor((todayDate.getTime() - startDate.getTime()) / 86_400_000)
+        const totalDays   = fastingHabit.fastingDays ?? 40
+        if (daysElapsed >= totalDays) {
+          const todayStr = todayDate.toISOString().slice(0, 10)
+          ;(habits as unknown as Record<string, FastingHabit>)['fasting'] = {
+            ...fastingHabit,
+            fastingComplete:    true,
+            fastingCompletedAt: fastingHabit.fastingCompletedAt ?? todayStr,
+            longestStreak:      Math.max(totalDays, fastingHabit.longestStreak ?? 0),
+          }
+        }
+      }
 
       const data = { ...raw, habits }
       saveAppData(data)
@@ -277,6 +301,50 @@ export const useAppStore = create<AppStore>()(
       const restored = restoreBackup(key, fallback)
       saveAppData(restored)
       set({ data: restored })
+    },
+
+    // ── Jejum ─────────────────────────────────
+
+    startFasting() {
+      get().resetFasting()
+    },
+
+    resetFasting() {
+      const { data } = get()
+      const fasting  = data.habits.fasting
+      const today    = new Date().toISOString().slice(0, 10)
+
+      // Count this cycle as completed only if it was marked complete
+      const completedCycles = fasting.fastingComplete
+        ? fasting.completedCycles + 1
+        : fasting.completedCycles
+
+      // Preserve the best longestStreak from all previous cycles
+      const totalDays     = fasting.fastingDays ?? 40
+      const longestStreak = fasting.fastingComplete
+        ? Math.max(totalDays, fasting.longestStreak ?? 0)
+        : (fasting.longestStreak ?? 0)
+
+      const updated = {
+        ...data,
+        habits: {
+          ...data.habits,
+          fasting: {
+            ...fasting,
+            currentStreak:      0,
+            fastingStartDate:   today,
+            fastingEndDate:     undefined,
+            fastingComplete:    false,
+            fastingCompletedAt: undefined,
+            completedCycles,
+            longestStreak,
+            lastReset:  today,
+            lastUpdate: today,
+          },
+        },
+      }
+      saveAppData(updated)
+      set({ data: updated })
     },
   })),
 )
