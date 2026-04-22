@@ -20,6 +20,7 @@ import { useFinanceStore }  from '@/store/financeStore'
 import { useProfileStore }  from '@/store/profileStore'
 import { getWeekKey, getMonthKey } from '@/lib/helpers'
 import { calculateFastingProgress, calcFastingYearTotal } from '@/lib/fastingUtils'
+import { getTodayStr, addDaysToStr } from '@/lib/time'
 import type { FastingHabit } from '@/types/habit'
 import { totalIncome, savingsRate } from '@/types/finance'
 import type { HabitKey }    from '@/types/habit'
@@ -103,9 +104,7 @@ function computePhysicalScore(
   if (!history.length) return 50
 
   // Frequency: at least 1 check-in per 2 weeks in last 60 days
-  const cutoff    = new Date()
-  cutoff.setDate(cutoff.getDate() - 60)
-  const cutoffStr = cutoff.toISOString().slice(0, 10)
+  const cutoffStr = addDaysToStr(getTodayStr(), -60)
   const recent    = history.filter((e) => e.date >= cutoffStr)
   const freqScore = clamp((recent.length / 4) * 60, 0, 60)
 
@@ -129,9 +128,7 @@ function computeSleepScore(
   if (!keys.length) return 50
 
   // Last 7 days coverage
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  const cutoff    = sevenDaysAgo.toISOString().slice(0, 10)
+  const cutoff    = addDaysToStr(getTodayStr(), -7)
   const recent7   = keys.filter((k) => k >= cutoff)
   const coverage  = (recent7.length / 7) * 60  // max 60 from frequency
 
@@ -155,9 +152,7 @@ function computeSleepScore(
 }
 
 function computeFocusScore(pomoData: PomoDataMap): number {
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  const cutoff = sevenDaysAgo.toISOString().slice(0, 10)
+  const cutoff = addDaysToStr(getTodayStr(), -7)
 
   let totalPomos = 0
   Object.entries(pomoData).forEach(([key, val]) => {

@@ -10,26 +10,14 @@ import { useGoalsStore } from '@/store/goalsStore'
 import { GoalCard, TaskRow } from './GoalCard'
 import { GoalFormModal } from './GoalFormModal'
 import { FadeInUp, StaggerList, StaggerItem } from '@/components/ui/Motion'
-import { getWeekNumber, cn } from '@/lib/helpers'
+import { cn } from '@/lib/helpers'
+import { getBRTWeekNumber, getBRTYear, getWeekDaysBRT, getTodayStr } from '@/lib/time'
 import type { WeeklyGoal, DailyTask } from '@/types/goals'
 
 const DAY_NAMES = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
-function getWeekDates(year: number, week: number): Date[] {
-  // Jan 4 is always in ISO week 1
-  const jan4 = new Date(year, 0, 4)
-  const day = jan4.getDay() || 7
-  const monday = new Date(jan4)
-  monday.setDate(jan4.getDate() - day + 1 + (week - 1) * 7)
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday)
-    d.setDate(monday.getDate() + i)
-    return d
-  })
-}
-
-const CURRENT_YEAR = new Date().getFullYear()
-const CURRENT_WEEK = getWeekNumber(new Date())
+const CURRENT_YEAR = getBRTYear()
+const CURRENT_WEEK = getBRTWeekNumber()
 
 export function WeeklyPlannerView() {
   const { monthlyGoals, weeklyGoals, dailyTasks, deleteWeeklyGoal, completeDailyTask, uncompleteDailyTask, deleteDailyTask } = useGoalsStore()
@@ -66,12 +54,12 @@ export function WeeklyPlannerView() {
   const allWeekTaskIds = wGoals.flatMap((w) => w.taskIds)
   const unlinkedTasks = dailyTasks.filter((t) => {
     const d = new Date(t.date + 'T12:00:00')
-    return getWeekNumber(d) === week && d.getFullYear() === year && !allWeekTaskIds.includes(t.id)
+    return getBRTWeekNumber(d) === week && d.getFullYear() === year && !allWeekTaskIds.includes(t.id)
   })
 
   // Day-view helpers
-  const weekDates = getWeekDates(year, week)
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const weekDates = getWeekDaysBRT(year, week)
+  const todayStr  = getTodayStr()
   const goalTitleMap: Record<string, string> = {}
   wGoals.forEach((g) => g.taskIds.forEach((tid) => { goalTitleMap[tid] = g.title }))
   const allWeekTasks = [
@@ -138,8 +126,7 @@ export function WeeklyPlannerView() {
       {viewMode === 'day' && (
         <FadeInUp delay={0.05}>
           <div className="space-y-2">
-            {weekDates.map((date, i) => {
-              const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+            {weekDates.map((dateStr, i) => {
               const dayTasks = allWeekTasks.filter((t) => t.date === dateStr).sort((a, b) => (a.dueTime ?? '').localeCompare(b.dueTime ?? ''))
               const isToday = dateStr === todayStr
               return (
@@ -155,7 +142,7 @@ export function WeeklyPlannerView() {
                       {DAY_NAMES[i]}
                     </span>
                     <span className="text-[11px] text-slate-600 tabular-nums">
-                      {date.getDate().toString().padStart(2, '0')}/{(date.getMonth() + 1).toString().padStart(2, '0')}
+                      {dateStr.slice(8, 10)}/{dateStr.slice(5, 7)}
                     </span>
                     {isToday && <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 rounded-md">Hoje</span>}
                     {dayTasks.length > 0 && (

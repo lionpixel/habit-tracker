@@ -14,7 +14,8 @@ import { StatCard } from '@/components/ui/StatCard'
 import type { AnnualGoal } from '@/types/goals'
 import { TrendingUp, Target, CheckCircle2, AlertCircle } from 'lucide-react'
 
-const CURRENT_YEAR = new Date().getFullYear()
+import { getBRTYear } from '@/lib/time'
+const CURRENT_YEAR = getBRTYear()
 
 export function AnnualGoalsView() {
   const { annualGoals, quarterlyGoals, deleteAnnualGoal, setAnnualProgress } = useGoalsStore()

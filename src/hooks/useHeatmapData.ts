@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react'
 import { useAppStore } from '@/store/appStore'
-import { getWeekKey, getWeekNumber, getWeekDates } from '@/lib/helpers'
+import { getWeekKey, getWeekDates } from '@/lib/helpers'
+import { getBRTWeekNumber, addDaysToStr, getTodayStr } from '@/lib/time'
 import { HABIT_COLORS } from '@/lib/constants'
 import type { HabitKey } from '@/types/habit'
 
@@ -60,10 +61,10 @@ export function useHeatmapData(filter: HeatmapFilter = 'year') {
 
   const filteredCells = useMemo<HeatmapCell[]>(() => {
     if (filter === 'year') return allCells
-    const now  = new Date()
     const days = filter === '30d' ? 30 : 90
-    const cutoff = new Date(now)
-    cutoff.setDate(now.getDate() - days)
+    const cutoffStr = addDaysToStr(getTodayStr(), -days)
+    const [cy, cm, cd] = cutoffStr.split('-').map(Number)
+    const cutoff = new Date(Date.UTC(cy, cm - 1, cd))
     return allCells.filter((c) => c.startDate >= cutoff)
   }, [allCells, filter])
 
@@ -81,5 +82,5 @@ export function useHeatmapData(filter: HeatmapFilter = 'year') {
     return { totalSessions, activeWeeks, avgConsistency, bestWeek }
   }, [filteredCells])
 
-  return { cells: filteredCells, allCells, stats, currentWeekNum: getWeekNumber(new Date()) }
+  return { cells: filteredCells, allCells, stats, currentWeekNum: getBRTWeekNumber() }
 }

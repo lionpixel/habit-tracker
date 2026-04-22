@@ -9,13 +9,13 @@
 // totalYear = soma acumulada dos meses históricos
 
 import type { HabitsMap } from '@/types/habit'
-import { getWeekNumber, getWeekKey, getMonthKey } from '@/lib/helpers'
+import { getWeekKey, getMonthKey } from '@/lib/helpers'
+import { getBRTWeekNumber, getBRTMonth } from '@/lib/time'
 import { APP_YEAR } from '@/lib/constants'
 
-const now  = new Date()
-const week = getWeekNumber(now)
+const week = getBRTWeekNumber()
 const wKey = getWeekKey(APP_YEAR, week)
-const mKey = getMonthKey(APP_YEAR, now.getMonth() + 1)
+const mKey = getMonthKey(APP_YEAR, getBRTMonth())
 
 // Meses históricos já registrados
 const H = {

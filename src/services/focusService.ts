@@ -7,6 +7,7 @@ import type {
   FocusMetrics, FocusMonthlyData, RecentSession, PriorityCount,
 } from '@/types/focus'
 import { todayStr, genId } from '@/lib/helpers'
+import { getTodayStr, addDaysToStr, getBRTYear, getBRTMonth } from '@/lib/time'
 import { POMO_LIMITS, POMO_MAX_TOTAL, DEEP_WORK_THRESHOLD_MINUTES } from '@/lib/constants'
 
 const MINUTES_PER_POMO = 25
@@ -20,8 +21,7 @@ function getDayMinutes(all: PomoDataMap, dateStr: string): number {
 // ── Métricas globais ─────────────────────────
 
 export function calcFocusMetrics(all: PomoDataMap): FocusMetrics {
-  const today = todayStr()
-  const now   = new Date()
+  const today = getTodayStr()
 
   // Hoje
   const todayMin = getDayMinutes(all, today)
@@ -29,15 +29,13 @@ export function calcFocusMetrics(all: PomoDataMap): FocusMetrics {
   // Últimos 7 dias
   let weekMin = 0
   for (let i = 0; i < 7; i++) {
-    const d = new Date(now)
-    d.setDate(now.getDate() - i)
-    weekMin += getDayMinutes(all, d.toISOString().split('T')[0])
+    weekMin += getDayMinutes(all, addDaysToStr(today, -i))
   }
 
   // Mês atual
   let monthMin = 0
-  const year  = now.getFullYear()
-  const month = now.getMonth() + 1
+  const year  = getBRTYear()
+  const month = getBRTMonth()
   const prefix = `${year}-${String(month).padStart(2, '0')}`
   for (const [key, val] of Object.entries(all)) {
     if (key.startsWith(prefix) && key !== '__goal_hours__') {
@@ -57,9 +55,7 @@ export function calcFocusMetrics(all: PomoDataMap): FocusMetrics {
   // Streak (dias consecutivos com ≥1 pomodoro)
   let streak = 0
   for (let i = 0; i < 365; i++) {
-    const d = new Date(now)
-    d.setDate(now.getDate() - i)
-    const key = d.toISOString().split('T')[0]
+    const key = addDaysToStr(today, -i)
     if (all[key] && (all[key] as DayPomoData).total > 0) streak++
     else break
   }

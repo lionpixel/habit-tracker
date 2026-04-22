@@ -12,14 +12,14 @@ import { useFinanceStore } from '@/store/financeStore'
 import { useHabits } from '@/hooks/useHabits'
 import { FadeInUp } from '@/components/ui/Motion'
 import { StatCard } from '@/components/ui/StatCard'
-import { getWeekNumber, getMonthKey, formatTime } from '@/lib/helpers'
+import { getMonthKey, formatTime } from '@/lib/helpers'
+import { getBRTYear, getBRTMonth, getBRTWeekNumber, getTodayStr } from '@/lib/time'
 import { totalIncome, totalExpenses, savingsRate } from '@/types/finance'
 import { getQuarter } from '@/types/goals'
 
-const NOW   = new Date()
-const YEAR  = NOW.getFullYear()
-const MONTH = NOW.getMonth() + 1
-const WEEK  = getWeekNumber(NOW)
+const YEAR  = getBRTYear()
+const MONTH = getBRTMonth()
+const WEEK  = getBRTWeekNumber()
 const QUARTER = getQuarter(MONTH)
 
 function InsightCard({ icon, title, body, color, type }: {
@@ -72,7 +72,7 @@ export function ReviewView() {
   const currentQ    = quarterlyGoals.filter((g) => g.year === YEAR && g.quarter === QUARTER)
   const currentM    = monthlyGoals.filter((g) => g.year === YEAR && g.month === MONTH)
   const currentW    = weeklyGoals.filter((g) => g.year === YEAR && g.week === WEEK)
-  const todayTasks  = dailyTasks.filter((t) => t.date === NOW.toISOString().slice(0, 10))
+  const todayTasks  = dailyTasks.filter((t) => t.date === getTodayStr())
   const activeProjects = projects.filter((p) => p.status === 'in_progress')
 
   const annualAvg   = annualYear.length ? Math.round(annualYear.reduce((a, g) => a + g.progress, 0) / annualYear.length) : 0
@@ -180,7 +180,7 @@ export function ReviewView() {
           </div>
           <div>
             <h2 className="text-2xl font-black text-slate-100">Revisão Automática</h2>
-            <p className="text-slate-500 text-sm">Visão integrada de todas as áreas — {NOW.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            <p className="text-slate-500 text-sm">Visão integrada de todas as áreas — {new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</p>
           </div>
         </div>
       </FadeInUp>

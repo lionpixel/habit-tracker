@@ -7,6 +7,7 @@ import type {
   AdjustmentStep, SleepHistoryItem, SleepHistoryBadge,
 } from '@/types/sleep'
 import { timeToMinutes, minutesToTime, subtractMinutes } from '@/lib/helpers'
+import { getTodayStr, addDaysToStr } from '@/lib/time'
 import { SLEEP_DEFAULTS } from '@/lib/constants'
 
 // ── Plano de horários ────────────────────────
@@ -49,11 +50,9 @@ export function calculateEnergyScore(
 
   // Regularidade (0-30 pts) — dias consecutivos registrados × 6, max 30
   let streak = 0
-  const today = new Date()
+  const todayBRT = getTodayStr()
   for (let i = 0; i < 5; i++) {
-    const d = new Date(today)
-    d.setDate(today.getDate() - i)
-    const key = d.toISOString().split('T')[0]
+    const key = addDaysToStr(todayBRT, -i)
     if (log[key]) streak++
     else break
   }
@@ -73,16 +72,13 @@ export function buildAdjustmentChain(
   const STEP_MIN  = 30
 
   const steps: AdjustmentStep[] = []
-  const today = new Date()
+  const todayBRT2 = getTodayStr()
   let current = todayMin
 
   let idx = 0
   while (current > targetMin && idx < 14) {
-    const d = new Date(today)
-    d.setDate(today.getDate() + idx)
-    const dateStr = d.toISOString().split('T')[0]
     steps.push({
-      date:     dateStr,
+      date:     addDaysToStr(todayBRT2, idx),
       wakeTime: minutesToTime(current),
       status:   idx === 0 ? 'today' : current - STEP_MIN <= targetMin ? 'target' : 'future',
     })
@@ -92,10 +88,8 @@ export function buildAdjustmentChain(
 
   // Adiciona o alvo se não incluído
   if (!steps.find((s) => s.wakeTime === targetWakeStr)) {
-    const d = new Date(today)
-    d.setDate(today.getDate() + idx)
     steps.push({
-      date:     d.toISOString().split('T')[0],
+      date:     addDaysToStr(todayBRT2, idx),
       wakeTime: targetWakeStr,
       status:   'target',
     })
@@ -113,12 +107,10 @@ export function buildSleepHistory(
 ): SleepHistoryItem[] {
   const history: SleepHistoryItem[] = []
   const targetMin = timeToMinutes(targetWake)
-  const today = new Date()
+  const todayBRT3 = getTodayStr()
 
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(today.getDate() - i)
-    const key = d.toISOString().split('T')[0]
+    const key = addDaysToStr(todayBRT3, -i)
     const entry = log[key]
 
     if (!entry) continue

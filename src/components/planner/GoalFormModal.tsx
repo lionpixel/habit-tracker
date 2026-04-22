@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { X, Check } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { cn } from '@/lib/helpers'
+import { getBRTYear, getBRTMonth, getTodayStr } from '@/lib/time'
 import {
   GOAL_ICONS, GOAL_COLORS, GOAL_CATEGORY_OPTIONS,
   PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS,
@@ -108,9 +109,9 @@ export function GoalFormModal({ open, create, edit, onClose, onCreated }: GoalFo
   const [notes,       setNotes]       = useState('')
 
   // Level-specific
-  const [year,    setYear]    = useState(new Date().getFullYear())
+  const [year,    setYear]    = useState(getBRTYear())
   const [quarter, setQuarter] = useState<Quarter>(1)
-  const [month,   setMonth]   = useState(new Date().getMonth() + 1)
+  const [month,   setMonth]   = useState(getBRTMonth())
   const [week,    setWeek]    = useState(1)
   const [date,    setDate]    = useState('')
   const [dueTime, setDueTime] = useState('')
@@ -132,7 +133,7 @@ export function GoalFormModal({ open, create, edit, onClose, onCreated }: GoalFo
         setTargetUnit(g.targetUnit ?? '')
         setCurrentValue(g.currentValue != null ? String(g.currentValue) : '')
         setNotes(g.notes ?? '')
-        if ('year'    in g) setYear(g.year ?? new Date().getFullYear())
+        if ('year'    in g) setYear(g.year ?? getBRTYear())
         if ('quarter' in g) setQuarter((g as QuarterlyGoal).quarter ?? 1)
         if ('month'   in g) setMonth((g as MonthlyGoal).month ?? 1)
         if ('week'    in g) setWeek((g as WeeklyGoal).week ?? 1)
@@ -153,7 +154,7 @@ export function GoalFormModal({ open, create, edit, onClose, onCreated }: GoalFo
           if (ctx.week)    setWeek(ctx.week as number)
           if (ctx.date)    setDate(ctx.date as string)
         } else {
-          setDate(new Date().toISOString().slice(0, 10))
+          setDate(getTodayStr())
         }
       }
     }

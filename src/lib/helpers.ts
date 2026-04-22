@@ -5,26 +5,28 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { MONTH_NAMES } from './constants'
+import {
+  getTodayStr,
+  getBRTWeekNumber,
+  getWeekDatesBRT,
+  formatDateBRT,
+} from './time'
 
 // ── Tailwind merge utility ──────────────────
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// ── Datas ───────────────────────────────────
+// ── Datas — todos os cálculos usam BRT (America/Sao_Paulo) ──
 
-/** Retorna "YYYY-MM-DD" para hoje */
+/** "YYYY-MM-DD" de hoje no fuso de Brasília */
 export function todayStr(): string {
-  return new Date().toISOString().split('T')[0]
+  return getTodayStr()
 }
 
-/** Número da semana ISO (1-53) */
-export function getWeekNumber(date: Date): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-  const dayNum = d.getUTCDay() || 7
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+/** Número da semana ISO (1–53) no fuso de Brasília */
+export function getWeekNumber(date?: Date): number {
+  return getBRTWeekNumber(date)
 }
 
 /** Chave de semana: "2026-W03" */
@@ -37,23 +39,17 @@ export function getMonthKey(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, '0')}`
 }
 
-/** Retorna {start, end} da semana ISO */
+/** {start, end} da semana ISO (UTC-safe) */
 export function getWeekDates(year: number, week: number): { start: Date; end: Date } {
-  const jan4 = new Date(year, 0, 4)
-  const dayOfWeek = (jan4.getDay() + 6) % 7
-  const weekStart = new Date(jan4)
-  weekStart.setDate(jan4.getDate() - dayOfWeek + (week - 1) * 7)
-  const weekEnd = new Date(weekStart)
-  weekEnd.setDate(weekStart.getDate() + 6)
-  return { start: weekStart, end: weekEnd }
+  return getWeekDatesBRT(year, week)
 }
 
-/** Formata data como "DD/MM" */
+/** "DD/MM" em BRT */
 export function formatDate(date: Date): string {
-  return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
+  return formatDateBRT(date)
 }
 
-/** Formata data como "Mês YYYY" em português */
+/** "Mês YYYY" em português */
 export function formatMonthYear(year: number, month: number): string {
   return `${MONTH_NAMES[month - 1]} ${year}`
 }

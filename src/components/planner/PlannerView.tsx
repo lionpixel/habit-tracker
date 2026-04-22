@@ -14,6 +14,7 @@ import { DailyPlannerView }   from './DailyPlannerView'
 import { GoalCascadePanel }   from './GoalCascadePanel'
 import { FadeInUp } from '@/components/ui/Motion'
 import { cn } from '@/lib/helpers'
+import { getBRTYear, getBRTMonth, getBRTDay, daysInMonthBRT, getTodayStr } from '@/lib/time'
 import {
   Calendar, Layers, CalendarDays, LayoutGrid, Sun, GitBranch,
   TrendingUp, CheckCircle2, AlertCircle,
@@ -38,11 +39,10 @@ function TodayBreakdown() {
   const { monthlyGoals, dailyTasks } = useGoalsStore()
 
   const breakdown = useMemo(() => {
-    const now         = new Date()
-    const year        = now.getFullYear()
-    const month       = now.getMonth() + 1
-    const daysInMonth = new Date(year, month, 0).getDate()
-    const dayOfMonth  = now.getDate()
+    const year        = getBRTYear()
+    const month       = getBRTMonth()
+    const daysInMonth = daysInMonthBRT(year, month)
+    const dayOfMonth  = getBRTDay()
     const daysLeft    = daysInMonth - dayOfMonth + 1  // including today
 
     const goals = monthlyGoals.filter(
@@ -71,9 +71,8 @@ function TodayBreakdown() {
   }, [monthlyGoals])
 
   // Today's tasks done/total
-  const now         = new Date()
-  const _todayStr   = now.toISOString().slice(0, 10)
-  const todayTasks  = dailyTasks.filter((t) => t.date === _todayStr)
+  const _todayStr  = getTodayStr()
+  const todayTasks = dailyTasks.filter((t) => t.date === _todayStr)
   const todayDone      = todayTasks.filter((t) => t.status === 'done').length
 
   if (breakdown.length === 0 && todayTasks.length === 0) return null
@@ -87,7 +86,7 @@ function TodayBreakdown() {
             <Sun size={15} className="text-amber-400" />
             <span className="text-sm font-bold text-slate-200">Hoje</span>
             <span className="text-xs text-slate-600">
-              {now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}
+              {new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: 'numeric', month: 'short' }).format(new Date())}
             </span>
           </div>
           {todayTasks.length > 0 && (

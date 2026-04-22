@@ -26,16 +26,10 @@ import type { Dream } from '@/types/dreams'
 
 // ── Helpers ───────────────────────────────────
 
-const NOW   = new Date()
-const YEAR  = NOW.getFullYear()
-const MONTH = NOW.getMonth() + 1
-const WEEK  = (() => {
-  const d    = new Date(Date.UTC(NOW.getFullYear(), NOW.getMonth(), NOW.getDate()))
-  const day  = d.getUTCDay() || 7
-  d.setUTCDate(d.getUTCDate() + 4 - day)
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
-})()
+import { getBRTYear, getBRTMonth, getBRTWeekNumber, getTodayStr } from '@/lib/time'
+const YEAR  = getBRTYear()
+const MONTH = getBRTMonth()
+const WEEK  = getBRTWeekNumber()
 
 function progressColor(p: number): string {
   if (p >= 80) return '#10b981'
@@ -292,7 +286,7 @@ export function GoalCascadePanel() {
     : []
 
   // Daily tasks linked to selected weekly
-  const todayStr  = NOW.toISOString().slice(0, 10)
+  const todayStr  = getTodayStr()
   const tasks: DailyTask[] = selectedWeekly
     ? dailyTasks.filter((t) => t.weeklyGoalId === selectedWeekly && t.date === todayStr)
     : []
@@ -539,7 +533,7 @@ export function GoalCascadePanel() {
       {selectedWeekly && (
         <>
           <Connector />
-          <LevelCard icon={<Sun size={12} />} label={`Tarefas de Hoje — ${NOW.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}`} color="#f59e0b" depth={4}>
+          <LevelCard icon={<Sun size={12} />} label={`Tarefas de Hoje — ${new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: 'numeric', month: 'short' }).format(new Date())}`} color="#f59e0b" depth={4}>
             {tasks.length === 0 ? (
               <EmptySlot label="tarefa de hoje" color="#f59e0b" />
             ) : (

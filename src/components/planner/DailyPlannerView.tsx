@@ -11,6 +11,7 @@ import { TaskRow } from './GoalCard'
 import { GoalFormModal } from './GoalFormModal'
 import { FadeInUp } from '@/components/ui/Motion'
 import { todayStr } from '@/lib/helpers'
+import { addDaysToStr } from '@/lib/time'
 import { PRIORITY_COLORS } from '@/types/goals'
 import type { DailyTask } from '@/types/goals'
 import { Clock } from 'lucide-react'
@@ -31,16 +32,8 @@ export function DailyPlannerView() {
 
   const today = todayStr()
 
-  function prevDay() {
-    const d = new Date(date + 'T12:00:00')
-    d.setDate(d.getDate() - 1)
-    setDate(d.toISOString().slice(0, 10))
-  }
-  function nextDay() {
-    const d = new Date(date + 'T12:00:00')
-    d.setDate(d.getDate() + 1)
-    setDate(d.toISOString().slice(0, 10))
-  }
+  function prevDay() { setDate(addDaysToStr(date, -1)) }
+  function nextDay() { setDate(addDaysToStr(date, +1)) }
 
   const tasks = dailyTasks.filter((t) => t.date === date)
     .sort((a, b) => {

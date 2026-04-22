@@ -1,4 +1,5 @@
 import type { FastingHabit } from '@/types/habit'
+import { getTodayStr, diffInDays, addDaysToStr } from './time'
 
 export interface FastingProgress {
   totalDays:    number
@@ -27,26 +28,20 @@ export function calculateFastingProgress(habit: FastingHabit): FastingProgress {
     }
   }
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const start = new Date(habit.fastingStartDate)
-  start.setHours(0, 0, 0, 0)
-
-  const MS_PER_DAY   = 86_400_000
-  const daysElapsed  = Math.floor((today.getTime() - start.getTime()) / MS_PER_DAY)
-  const progressDays = Math.min(Math.max(0, daysElapsed), totalDays)
+  const todayBRT     = getTodayStr()
+  const daysElapsed  = Math.max(0, diffInDays(habit.fastingStartDate, todayBRT))
+  const progressDays = Math.min(daysElapsed, totalDays)
   const pct          = Math.round((progressDays / totalDays) * 100)
   const daysLeft     = Math.max(0, totalDays - progressDays)
   const isComplete   = habit.fastingComplete === true || progressDays >= totalDays
 
-  const endDate = new Date(start)
-  endDate.setDate(start.getDate() + totalDays)
+  const endDateStr   = addDaysToStr(habit.fastingStartDate, totalDays)
+  const [ey, em, ed] = endDateStr.split('-').map(Number)
+  const endDate      = new Date(Date.UTC(ey, em - 1, ed))
 
-  const now          = new Date()
   const daysUntilEnd = isComplete
     ? 0
-    : Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / MS_PER_DAY))
+    : Math.max(0, diffInDays(todayBRT, endDateStr))
 
   return { totalDays, progressDays, pct, daysLeft, isComplete, endDate, daysUntilEnd, hasStarted: true }
 }

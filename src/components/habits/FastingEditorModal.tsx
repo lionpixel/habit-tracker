@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { cn, formatDate } from '@/lib/helpers'
 import { useAppStore } from '@/store/appStore'
 import { calculateFastingProgress } from '@/lib/fastingUtils'
+import { getTodayStr } from '@/lib/time'
 import { Button } from '@/components/ui/Button'
 import { ProgressBarAnimated } from '@/components/ui/Motion'
 import { X, Shield, Flame, Trophy, Calendar, Clock, CheckCircle2 } from 'lucide-react'
@@ -39,7 +40,7 @@ export function FastingEditorModal({ open, onClose }: FastingEditorModalProps) {
     name:             habit.name,
     description:      habit.description,
     fastingDays:      habit.fastingDays ?? 40,
-    fastingStartDate: habit.fastingStartDate ?? new Date().toISOString().slice(0, 10),
+    fastingStartDate: habit.fastingStartDate ?? getTodayStr(),
   })
   const [errors, setErrors] = useState<Partial<Record<keyof FastingForm, string>>>({})
   const [confirmComplete, setConfirmComplete] = useState(false)
@@ -51,7 +52,7 @@ export function FastingEditorModal({ open, onClose }: FastingEditorModalProps) {
       name:             habit.name,
       description:      habit.description,
       fastingDays:      habit.fastingDays ?? 40,
-      fastingStartDate: habit.fastingStartDate ?? new Date().toISOString().slice(0, 10),
+      fastingStartDate: habit.fastingStartDate ?? getTodayStr(),
     })
     setErrors({})
     setConfirmComplete(false)
@@ -103,7 +104,7 @@ export function FastingEditorModal({ open, onClose }: FastingEditorModalProps) {
   }
 
   function handleMarkComplete() {
-    const now = new Date().toISOString().slice(0, 10)
+    const now = getTodayStr()
     updateHabit('fasting', {
       fastingComplete:    true,
       fastingCompletedAt: now,

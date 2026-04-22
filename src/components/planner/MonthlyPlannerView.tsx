@@ -15,8 +15,9 @@ import { TrendingUp, CheckCircle2, Clock, Target } from 'lucide-react'
 import type { MonthlyGoal } from '@/types/goals'
 
 const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-const CURRENT_YEAR  = new Date().getFullYear()
-const CURRENT_MONTH = new Date().getMonth() + 1
+import { getBRTYear, getBRTMonth } from '@/lib/time'
+const CURRENT_YEAR  = getBRTYear()
+const CURRENT_MONTH = getBRTMonth()
 
 export function MonthlyPlannerView() {
   const { quarterlyGoals, monthlyGoals, weeklyGoals, deleteMonthlyGoal } = useGoalsStore()

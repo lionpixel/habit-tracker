@@ -5,6 +5,7 @@ import { useAppStore }   from '@/store/appStore'
 import { formatDate }    from '@/lib/helpers'
 import { FadeInUp }      from '@/components/ui/Motion'
 import { calculateFastingProgress } from '@/lib/fastingUtils'
+import { getTodayStr, addDaysToStr } from '@/lib/time'
 import {
   CheckCircle2, Circle, Trophy, RotateCcw, Calendar,
   Flame, AlertTriangle, Zap,
@@ -31,15 +32,13 @@ interface DayCell {
 function buildCells(habit: FastingHabit): DayCell[] {
   const totalDays    = habit.fastingDays ?? 40
   const startDateStr = habit.fastingStartDate
-  const todayStr     = new Date().toISOString().slice(0, 10)
+  const todayStr     = getTodayStr()
   const cells: DayCell[] = []
 
   for (let i = 0; i < totalDays; i++) {
     let date = ''
     if (startDateStr) {
-      const d = new Date(startDateStr)
-      d.setDate(d.getDate() + i)
-      date = d.toISOString().slice(0, 10)
+      date = addDaysToStr(startDateStr, i)
     }
     const isToday = date !== '' && date === todayStr
     let status: DayStatus

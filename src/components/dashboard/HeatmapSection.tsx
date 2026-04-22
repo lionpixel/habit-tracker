@@ -2,7 +2,8 @@
 
 import { useMemo, useRef, useState } from 'react'
 import { useAppStore } from '@/store/appStore'
-import { getWeekKey, getWeekNumber, getWeekDates, formatDate } from '@/lib/helpers'
+import { getWeekKey, getWeekDates, formatDate } from '@/lib/helpers'
+import { getBRTWeekNumber } from '@/lib/time'
 import { HABIT_COLORS } from '@/lib/constants'
 import type { HabitKey } from '@/types/habit'
 import { cn } from '@/lib/helpers'
@@ -103,7 +104,7 @@ export function HeatmapSection() {
   const avgConsistency    = activeWeeks > 0
     ? Math.round(weeks.filter(w => w.sessions > 0).reduce((acc, w) => acc + w.consistency, 0) / activeWeeks)
     : 0
-  const currentWeekNum    = getWeekNumber(new Date())
+  const currentWeekNum    = getBRTWeekNumber()
   const _currentWeekCell   = weeks.find(w => w.weekNum === currentWeekNum)
 
   function handleCellEnter(e: React.MouseEvent, cell: WeekCell) {

@@ -20,8 +20,8 @@ import {
 import {
   toggleHabit, decreaseHabit, recalcMonthlyTotals,
 } from '@/services/habitsService'
-import { getWeekNumber } from '@/lib/helpers'
 import { APP_YEAR } from '@/lib/constants'
+import { getBRTWeekNumber, getBRTMonth, getTodayStr, diffInDays } from '@/lib/time'
 import { HISTORICAL_MINUTES } from '@/data/historicalData'
 
 // ── Tipos do store ──────────────────────────
@@ -84,9 +84,9 @@ const DEFAULT_POMO_DATA: PomoDataMap = {
 } as PomoDataMap
 
 const DEFAULT_APP_DATA: AppData = {
-  currentWeek:  getWeekNumber(new Date()),
+  currentWeek:  getBRTWeekNumber(),
   currentYear:  APP_YEAR,
-  currentMonth: new Date().getMonth() + 1,
+  currentMonth: getBRTMonth(),
   habits:       DEFAULT_HABITS,
 }
 
@@ -134,21 +134,17 @@ export const useAppStore = create<AppStore>()(
         }
       })
 
-      // Auto-complete fasting if enough calendar days have elapsed
+      // Auto-complete fasting if enough BRT calendar days have elapsed
       const fastingHabit = habits.fasting as FastingHabit
       if (fastingHabit.fastingStartDate && !fastingHabit.fastingComplete) {
-        const todayDate = new Date()
-        todayDate.setHours(0, 0, 0, 0)
-        const startDate = new Date(fastingHabit.fastingStartDate)
-        startDate.setHours(0, 0, 0, 0)
-        const daysElapsed = Math.floor((todayDate.getTime() - startDate.getTime()) / 86_400_000)
+        const todayBRT    = getTodayStr()
+        const daysElapsed = Math.max(0, diffInDays(fastingHabit.fastingStartDate, todayBRT))
         const totalDays   = fastingHabit.fastingDays ?? 40
         if (daysElapsed >= totalDays) {
-          const todayStr = todayDate.toISOString().slice(0, 10)
           ;(habits as unknown as Record<string, FastingHabit>)['fasting'] = {
             ...fastingHabit,
             fastingComplete:    true,
-            fastingCompletedAt: fastingHabit.fastingCompletedAt ?? todayStr,
+            fastingCompletedAt: fastingHabit.fastingCompletedAt ?? todayBRT,
             longestStreak:      Math.max(totalDays, fastingHabit.longestStreak ?? 0),
           }
         }
@@ -312,7 +308,7 @@ export const useAppStore = create<AppStore>()(
     resetFasting() {
       const { data } = get()
       const fasting  = data.habits.fasting
-      const today    = new Date().toISOString().slice(0, 10)
+      const today    = getTodayStr()
 
       // Count this cycle as completed only if it was marked complete
       const completedCycles = fasting.fastingComplete

@@ -14,8 +14,9 @@ import { cn } from '@/lib/helpers'
 import { getQuarter, getQuarterRange } from '@/types/goals'
 import type { QuarterlyGoal, Quarter } from '@/types/goals'
 
-const CURRENT_YEAR  = new Date().getFullYear()
-const CURRENT_MONTH = new Date().getMonth() + 1
+import { getBRTYear, getBRTMonth } from '@/lib/time'
+const CURRENT_YEAR  = getBRTYear()
+const CURRENT_MONTH = getBRTMonth()
 const CURRENT_Q     = getQuarter(CURRENT_MONTH)
 
 const QUARTER_COLORS: Record<Quarter, string> = {

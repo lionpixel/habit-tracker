@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ImageIcon, DollarSign, Heart, MapPin, Star, Target } from 'lucide-react'
 import { cn } from '@/lib/helpers'
+import { getBRTYear } from '@/lib/time'
 import type { Dream, DreamCategory, DreamStatus } from '@/types/dreams'
 import { DREAM_CATEGORIES } from '@/types/dreams'
 import { useDreamsStore } from '@/store/dreamsStore'
@@ -315,7 +316,7 @@ export function DreamFormModal({ open, dream, onClose }: DreamFormModalProps) {
                 >
                   <option value="">— Nenhuma —</option>
                   {annualGoals
-                    .filter((g) => g.year === new Date().getFullYear())
+                    .filter((g) => g.year === getBRTYear())
                     .map((g) => (
                       <option key={g.id} value={g.id}>
                         {g.title}

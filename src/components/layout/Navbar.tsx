@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Bell, Flame } from 'lucide-react'
 import { cn } from '@/lib/helpers'
+import { formatDisplayBRT, TZ } from '@/lib/time'
 import { useAppStore } from '@/store/appStore'
 import { useHabits } from '@/hooks/useHabits'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
@@ -31,11 +32,13 @@ export function Navbar() {
   useEffect(() => {
     function tick() {
       const now = new Date()
-      setTime(now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }))
-      setDate(now.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }))
+      setTime(formatDisplayBRT(now).time)
+      setDate(new Intl.DateTimeFormat('pt-BR', {
+        timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short',
+      }).format(now))
     }
     tick()
-    const id = setInterval(tick, 10000)
+    const id = setInterval(tick, 10_000)
     return () => clearInterval(id)
   }, [])
 
