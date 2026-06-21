@@ -31,8 +31,6 @@ export interface HabitAnalytics {
   totalMinutes:       number
 }
 
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
-
 // ── Local computation (replace with API calls) ──────────
 
 export const analyticsService = {
@@ -51,7 +49,7 @@ export const analyticsService = {
     let totalMinutes  = 0
     const breakdown = {} as Record<HabitKey, { sessions: number; minutes: number }>
 
-    HABIT_KEYS.forEach((key) => {
+    Object.keys(habits).filter((k) => !habits[k].archived).forEach((key) => {
       const habit    = habits[key]
       const sessions = habit.counts[weekKey] ?? 0
       const minutes  = sessions * habit.target
@@ -85,7 +83,7 @@ export const analyticsService = {
     currentWeek: number,
     weeksBack = 8,
   ): HabitAnalytics[] {
-    return HABIT_KEYS.map((key) => {
+    return Object.keys(habits).filter((k) => !habits[k].archived).map((key) => {
       const habit = habits[key]
 
       // Collect consistency per week

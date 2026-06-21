@@ -2,13 +2,9 @@
 //  Tipos: Hábitos
 // ─────────────────────────────────────────────
 
-export type HabitKey =
-  | 'reading'
-  | 'english'
-  | 'hiit'
-  | 'ppci'
-  | 'dopamine'
-  | 'fasting'
+// Widened to string to support user-created habits with dynamic keys.
+// The builtin keys are still valid string literals.
+export type HabitKey = string
 
 // ─────────────────────────────────────────────
 //  Recurrence
@@ -49,42 +45,47 @@ export interface HabitEditEntry {
   to:    string
 }
 
-export type HabitColor =
-  | '#6366f1'  // reading   – índigo
-  | '#10b981'  // english   – verde
-  | '#ef4444'  // hiit      – vermelho
-  | '#f59e0b'  // ppci      – âmbar
-  | '#8b5cf6'  // dopamine  – violeta
-  | '#06b6d4'  // fasting   – ciano
+// Widened to string to support custom colors beyond the original 6.
+export type HabitColor = string
 
-// Icon identifier for Lucide icon lookup (no emojis)
-export type HabitIconId =
-  | 'BookOpen'
-  | 'Languages'
-  | 'Dumbbell'
-  | 'Code2'
-  | 'Brain'
-  | 'Apple'
+// Widened to string; icon registry validates at render time via HabitIcon component.
+export type HabitIconId = string
+
+// ─────────────────────────────────────────────
+//  Meta type — controls label & tracking mode
+// ─────────────────────────────────────────────
+export type MetaType = 'sessoes' | 'tempo' | 'paginas' | 'streak'
 
 /** Registro por chave de semana "YYYY-WYYYY" */
 export type WeeklyCountMap = Record<string, number>
 
 /** Registro por chave de mês "YYYY-MM" */
 export type MonthlyTotalMap = Record<string, number>
+export type DailyCompletionMap = Record<string, number>
+
+export interface FastingHistoryEntry {
+  startedAt: string
+  endedAt: string
+  completed: boolean
+  reason: 'completed' | 'broken' | 'reset'
+  progressDays: number
+}
 
 export interface HabitBase {
   name:        string
   icon:        HabitIconId    // Lucide icon identifier
   color:       HabitColor
-  target:      number         // minutos por sessão
-  unit:        string         // ex: "min", "dias"
+  target:      number         // minutos por sessão (or pages/streak units)
+  unit:        string         // ex: "min", "dias", "páginas"
   frequency:   number         // vezes por semana
   description: string
   counts:      WeeklyCountMap
+  dailyLog?:   DailyCompletionMap
   monthlyTotals: MonthlyTotalMap
   totalYear:   number
   goalFreq?:      number      // 1-7 vezes/semana
-  goalDuration?:  number      // minutos
+  goalDuration?:  number      // minutos (or target unit)
+  metaType?:      MetaType    // controls display label in cards
 
   // ── Extended fields ──────────────────────
   category?:        string             // 'health' | 'learning' | 'mindset' | 'nutrition' | 'custom'
@@ -125,10 +126,13 @@ export interface FastingHabit extends HabitBase {
   fastingLog?:      { date: string; completed: boolean }[] // legacy — kept for notes compat
   fastingNotes?:    Record<string, string>                 // optional notes per day
   fastingYearTotal?: number                                // computed: cycles*days + progress
+  fastingHistory?:  FastingHistoryEntry[]
 }
 
 export type Habit = HabitBase | EnglishHabit | FastingHabit
 
+// Index signature allows user-created habits with dynamic string keys.
+// Named properties still have their specific types for builtin habits.
 export interface HabitsMap {
   reading: HabitBase
   english: EnglishHabit
@@ -136,6 +140,7 @@ export interface HabitsMap {
   ppci: HabitBase
   dopamine: HabitBase
   fasting: FastingHabit
+  [key: string]: Habit
 }
 
 // ─────────────────────────────────────────────

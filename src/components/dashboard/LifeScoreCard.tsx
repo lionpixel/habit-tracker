@@ -9,18 +9,19 @@ import React, { useMemo }    from 'react'
 import { useGoalsStore }     from '@/store/goalsStore'
 import { useFinanceStore }   from '@/store/financeStore'
 import { useProfileStore }   from '@/store/profileStore'
+import { useCalendarStore }  from '@/store/calendarStore'
 import { useSystemScore }    from '@/hooks/useSystemScore'
 import { cn }                from '@/lib/helpers'
 import {
   Flame, Target, TrendingUp, Dumbbell, Moon, Brain,
-  Star, Zap, ChevronUp, LucideProps,
+  Star, Zap, ChevronUp, LucideProps, CalendarDays,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { ScoreDimension } from '@/hooks/useSystemScore'
 
 // ── Icon registry ─────────────────────────────
 const ICONS: Record<string, ComponentType<LucideProps>> = {
-  Flame, Target, TrendingUp, Dumbbell, Moon, Brain, Star, Zap,
+  Flame, Target, TrendingUp, Dumbbell, Moon, Brain, Star, Zap, CalendarDays,
 }
 function DimIcon({ id, className, style }: { id: string; className?: string; style?: React.CSSProperties }) {
   const Icon = ICONS[id] ?? Flame
@@ -155,11 +156,13 @@ export function LifeScoreCard() {
   const { hydrated: gH, hydrate: gHydrate } = useGoalsStore()
   const { hydrated: fH, hydrate: fHydrate } = useFinanceStore()
   const { hydrated: pH, hydrate: pHydrate } = useProfileStore()
+  const { hydrated: cH, hydrate: cHydrate } = useCalendarStore()
 
   useMemo(() => {
     if (!gH) gHydrate()
     if (!fH) fHydrate()
     if (!pH) pHydrate()
+    if (!cH) cHydrate()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

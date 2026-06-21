@@ -12,6 +12,7 @@
 import { useAppStore } from './appStore'
 import type { HabitKey } from '@/types/habit'
 import { getWeekKey, getMonthKey } from '@/lib/helpers'
+import { calculateFastingProgress } from '@/lib/fastingUtils'
 
 // ── Raw slice selectors ──────────────────────
 
@@ -30,6 +31,7 @@ export const selectCurrentMonth = (s: ReturnType<typeof useAppStore.getState>) =
 // Actions
 export const selectIncrement    = (s: ReturnType<typeof useAppStore.getState>) => s.increment
 export const selectDecrement    = (s: ReturnType<typeof useAppStore.getState>) => s.decrement
+export const selectSetHabitCompletion = (s: ReturnType<typeof useAppStore.getState>) => s.setHabitCompletion
 export const selectSetHabitGoal = (s: ReturnType<typeof useAppStore.getState>) => s.setHabitGoal
 
 // ── Derived selectors (computed values) ──────
@@ -137,7 +139,15 @@ export const selectBestHabitThisMonth = (s: ReturnType<typeof useAppStore.getSta
  * Returns fasting current streak.
  */
 export const selectFastingStreak = (s: ReturnType<typeof useAppStore.getState>) =>
-  s.data.habits.fasting.currentStreak
+  calculateFastingProgress(s.data.habits.fasting).progressDays
+
+/**
+ * Returns keys of all non-archived habits in insertion order.
+ * Use this everywhere instead of the hardcoded HABIT_KEYS arrays
+ * so that user-created habits automatically appear in all views.
+ */
+export const selectActiveHabitKeys = (s: ReturnType<typeof useAppStore.getState>): string[] =>
+  Object.keys(s.data.habits).filter((k) => !s.data.habits[k].archived)
 
 // ── React hook wrappers ───────────────────────
 // Convenience hooks that wrap useAppStore with the selectors above.
@@ -157,4 +167,10 @@ export function useHabitWeekMinutes(key: HabitKey) {
 }
 export function useHabitMonthMinutes(key: HabitKey) {
   return useAppStore(selectHabitMonthMinutes(key))
+}
+export function useActiveHabitKeys() {
+  return useAppStore(selectActiveHabitKeys)
+}
+export function useSetHabitCompletion() {
+  return useAppStore(selectSetHabitCompletion)
 }

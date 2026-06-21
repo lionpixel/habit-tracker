@@ -10,14 +10,13 @@ import { ProgressBar } from '@/components/ui/ProgressBar'
 import { HabitIcon }   from '@/lib/habitIcons'
 import { FadeInUp, StaggerList, StaggerItem, AnimatedCard } from '@/components/ui/Motion'
 import { formatTime, getMonthKey } from '@/lib/helpers'
-import { HABIT_COLORS } from '@/lib/constants'
 import { Timer, CalendarDays, Trophy, Flame, Target } from 'lucide-react'
 import type { HabitKey } from '@/types/habit'
-
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
+import { useActiveHabitKeys } from '@/store/selectors'
 
 export function MetasView() {
   const { habits, currentYear, currentMonth, getMonthlyGoalInfo } = useHabits()
+  const HABIT_KEYS = useActiveHabitKeys()
 
   const mKey = getMonthKey(currentYear, currentMonth)
   const totalHoursMonth = HABIT_KEYS.reduce(
@@ -29,7 +28,7 @@ export function MetasView() {
     0,
   )
   const bestHabit = HABIT_KEYS.reduce((b, k) =>
-    habits[k].totalYear > habits[b].totalYear ? k : b, HABIT_KEYS[0])
+    habits[k].totalYear > habits[b].totalYear ? k : b, HABIT_KEYS[0] ?? 'reading')
 
   const fastingStreak = habits.fasting.currentStreak
 
@@ -65,7 +64,7 @@ export function MetasView() {
           {HABIT_KEYS.map((key) => {
             const habit = habits[key]
             const goal  = getMonthlyGoalInfo(key)
-            const color = HABIT_COLORS[key]
+            const color = habit.color
 
             return (
               <StaggerItem key={key}>

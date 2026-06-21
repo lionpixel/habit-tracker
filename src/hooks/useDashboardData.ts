@@ -23,8 +23,6 @@ import {
 import { getWeekKey } from '@/lib/helpers'
 import type { HabitKey, Insight, RiskAlert } from '@/types/habit'
 
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
-
 export interface DashboardData {
   // Navigation
   currentWeek:     number
@@ -69,7 +67,7 @@ export function useDashboardData(): DashboardData {
 
   const habitCounts = useMemo<Record<HabitKey, number>>(() => {
     const wKey = getWeekKey(currentYear, currentWeek)
-    return HABIT_KEYS.reduce((acc, key) => {
+    return Object.keys(habits).reduce((acc, key) => {
       acc[key] = habits[key].counts[wKey] ?? 0
       return acc
     }, {} as Record<HabitKey, number>)

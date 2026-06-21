@@ -83,6 +83,7 @@ export interface MonthlyGoal extends BaseGoal {
   month:            number   // 1-12
   quarterlyGoalId?: string   // parent
   weeklyGoalIds:    string[]
+  calendarEventId?: string
 }
 
 // ── Weekly ────────────────────────────────────
@@ -108,6 +109,9 @@ export interface DailyTask {
   category?:        string
   estimatedMinutes?: number
   actualMinutes?:   number
+  sortOrder?:       number
+  source?:          'manual' | 'calendar'
+  calendarEventId?: string
   notes?:           string
   tags?:            string[]
   createdAt:        string

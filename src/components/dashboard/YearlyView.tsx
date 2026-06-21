@@ -10,7 +10,8 @@ import { StatCard }   from '@/components/ui/StatCard'
 import { HabitIcon }  from '@/lib/habitIcons'
 import { FadeInUp, StaggerList, StaggerItem } from '@/components/ui/Motion'
 import { formatTime, getMonthKey } from '@/lib/helpers'
-import { MONTH_NAMES, HABIT_COLORS } from '@/lib/constants'
+import { MONTH_NAMES } from '@/lib/constants'
+import { useActiveHabitKeys } from '@/store/selectors'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -18,10 +19,6 @@ import {
 import { Timer, Trophy, Calendar, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 import type { TooltipProps } from 'recharts'
-import type { HabitKey } from '@/types/habit'
-
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
-
 function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null
   return (
@@ -48,20 +45,21 @@ interface MonthBlockProps {
 
 function MonthBlock({ monthIndex, monthName, currentYear, grandTotal }: MonthBlockProps) {
   const { habits } = useHabits()
+  const habitKeys  = useActiveHabitKeys()
   const [expanded, setExpanded] = useState(false)
 
   const mKey       = getMonthKey(currentYear, monthIndex + 1)
-  const monthTotal = HABIT_KEYS.reduce(
+  const monthTotal = habitKeys.reduce(
     (acc, k) => acc + (habits[k].monthlyTotals[mKey] ?? 0),
     0,
   )
   const yearPct    = grandTotal > 0 ? Math.round((monthTotal / grandTotal) * 100) : 0
 
-  const habitBreakdown = HABIT_KEYS.map((k) => ({
+  const habitBreakdown = habitKeys.map((k) => ({
     key:     k,
     habit:   habits[k],
     minutes: habits[k].monthlyTotals[mKey] ?? 0,
-    color:   HABIT_COLORS[k],
+    color:   habits[k].color,
   })).filter((h) => h.minutes > 0)
 
   const hasData = monthTotal > 0
@@ -112,7 +110,7 @@ function MonthBlock({ monthIndex, monthName, currentYear, grandTotal }: MonthBlo
           {/* Stacked mini bars per habit */}
           {hasData && (
             <div className="flex gap-0.5 h-2 rounded-full overflow-hidden">
-              {HABIT_KEYS.map((k) => {
+              {habitKeys.map((k) => {
                 const min = habits[k].monthlyTotals[mKey] ?? 0
                 const pct = monthTotal > 0 ? (min / monthTotal) * 100 : 0
                 if (pct === 0) return null
@@ -120,7 +118,7 @@ function MonthBlock({ monthIndex, monthName, currentYear, grandTotal }: MonthBlo
                   <div
                     key={k}
                     className="h-full transition-all duration-500"
-                    style={{ width: `${pct}%`, backgroundColor: HABIT_COLORS[k], opacity: 0.8 }}
+                    style={{ width: `${pct}%`, backgroundColor: habits[k].color, opacity: 0.8 }}
                     title={`${habits[k].name}: ${formatTime(min)}`}
                   />
                 )
@@ -178,14 +176,15 @@ function MonthBlock({ monthIndex, monthName, currentYear, grandTotal }: MonthBlo
 
 export function YearlyView() {
   const { habits, currentYear } = useHabits()
+  const HABIT_KEYS = useActiveHabitKeys()
 
   const yearTotals = HABIT_KEYS.reduce(
     (acc, k) => ({ ...acc, [k]: habits[k].totalYear }),
-    {} as Record<HabitKey, number>,
+    {} as Record<string, number>,
   )
 
   const grandTotal = Object.values(yearTotals).reduce((a, b) => a + b, 0)
-  const bestHabit  = HABIT_KEYS.reduce((b, k) => yearTotals[k] > yearTotals[b] ? k : b, HABIT_KEYS[0])
+  const bestHabit  = HABIT_KEYS.reduce((b, k) => yearTotals[k] > yearTotals[b] ? k : b, HABIT_KEYS[0] ?? 'reading')
 
   const lineData = MONTH_NAMES.map((name, i) => {
     const mKey  = getMonthKey(currentYear, i + 1)
@@ -253,9 +252,9 @@ export function YearlyView() {
                   key={k}
                   type="monotone"
                   dataKey={habits[k].name}
-                  stroke={HABIT_COLORS[k]}
+                  stroke={habits[k].color}
                   strokeWidth={2}
-                  dot={{ r: 3, fill: HABIT_COLORS[k] }}
+                  dot={{ r: 3, fill: habits[k].color }}
                   activeDot={{ r: 5, strokeWidth: 0 }}
                 />
               ))}
@@ -300,7 +299,7 @@ export function YearlyView() {
               .sort((a, b) => yearTotals[b] - yearTotals[a])
               .map((k, rank) => {
                 const pct   = grandTotal > 0 ? (yearTotals[k] / grandTotal) * 100 : 0
-                const color = HABIT_COLORS[k]
+                const color = habits[k].color
                 return (
                   <div key={k} className="flex items-center gap-3">
                     <span className="text-[10px] font-bold text-slate-600 w-4 text-center tabular-nums">

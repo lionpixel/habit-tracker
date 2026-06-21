@@ -10,9 +10,8 @@ import { Badge }    from '@/components/ui/Badge'
 import { HabitIcon } from '@/lib/habitIcons'
 import { HabitEditorModal }   from '@/components/habits/HabitEditorModal'
 import { FastingEditorModal }   from '@/components/habits/FastingEditorModal'
-import { FastingProgressCard }  from '@/components/habits/FastingProgressCard'
 import { FastingCalendarView }  from '@/components/habits/FastingCalendarView'
-import type { HabitKey, FastingHabit } from '@/types/habit'
+import type { HabitKey } from '@/types/habit'
 import { useHabits } from '@/hooks/useHabits'
 import {
   Plus, Minus, Settings2, CheckCircle2,
@@ -54,7 +53,6 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
   const isFull   = count >= habit.frequency
   const isEnglish = habitKey === 'english'
   const isFasting = habitKey === 'fasting'
-  const fastingHabit = isFasting ? (habit as FastingHabit) : null
 
   const [editorOpen,  setEditorOpen]  = useState(false)
   const [fastingOpen, setFastingOpen] = useState(false)
@@ -93,14 +91,10 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
   }
 
   // Fasting gets its own premium card + calendar
-  if (isFasting && fastingHabit) {
+  if (isFasting) {
     return (
       <>
-        <FastingProgressCard
-          habit={fastingHabit}
-          onEdit={() => setFastingOpen(true)}
-        />
-        <FastingCalendarView />
+        <FastingCalendarView onEdit={() => setFastingOpen(true)} />
         <FastingEditorModal open={fastingOpen} onClose={() => setFastingOpen(false)} />
       </>
     )

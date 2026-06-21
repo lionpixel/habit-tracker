@@ -5,8 +5,6 @@ import {
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
 import { useHabits }      from '@/hooks/useHabits'
-import { HABIT_COLORS }   from '@/lib/constants'
-import type { HabitKey }  from '@/types/habit'
 import { formatTime }     from '@/lib/helpers'
 import { EmptyState }     from '@/components/ui/EmptyState'
 import { BarChart3 }      from 'lucide-react'
@@ -108,12 +106,12 @@ function CustomBar(props: CustomBarProps) {
 export function WeeklyChart() {
   const { habits, currentWeek, currentYear, getWeekMinutes, getWeekProgress } = useHabits()
 
-  const data = (Object.keys(habits) as HabitKey[]).map((key) => ({
+  const data = Object.keys(habits).filter((k) => !habits[k].archived).map((key) => ({
     name:     habits[key].name,
     key,
     minutes:  getWeekMinutes(key),
     progress: getWeekProgress(key),
-    color:    HABIT_COLORS[key],
+    color:    habits[key].color,
     target:   habits[key].target * habits[key].frequency,
   }))
 

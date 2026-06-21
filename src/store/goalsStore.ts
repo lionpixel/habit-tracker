@@ -10,8 +10,11 @@ import type {
 } from '@/types/goals'
 import { computeProgressFromChildren, deriveStatus } from '@/types/goals'
 import { safeParse } from '@/lib/helpers'
+import { getWeekDaysBRT } from '@/lib/time'
 
 const GOALS_KEY = 'hdb_goals'
+const LEGACY_PLANNER_BOARD_KEY = 'hdb_planner_board'
+const LEGACY_PLANNER_MIGRATION_KEY = 'hdb_planner_board_migrated_v1'
 
 function uid(): string {
   return Math.random().toString(36).slice(2, 11)
@@ -38,6 +41,91 @@ const DEFAULT: GoalsStore = {
   weeklyGoals:    [],
   dailyTasks:     [],
   projects:       [],
+}
+
+type LegacyPlannerDayKey =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday'
+
+interface LegacyPlannerTask {
+  id: string
+  text: string
+  done: boolean
+}
+
+interface LegacyPlannerWeekData {
+  monday: { habits: LegacyPlannerTask[]; tasks: LegacyPlannerTask[] }
+  tuesday: { habits: LegacyPlannerTask[]; tasks: LegacyPlannerTask[] }
+  wednesday: { habits: LegacyPlannerTask[]; tasks: LegacyPlannerTask[] }
+  thursday: { habits: LegacyPlannerTask[]; tasks: LegacyPlannerTask[] }
+  friday: { habits: LegacyPlannerTask[]; tasks: LegacyPlannerTask[] }
+  saturday: { habits: LegacyPlannerTask[]; tasks: LegacyPlannerTask[] }
+  sunday: { habits: LegacyPlannerTask[]; tasks: LegacyPlannerTask[] }
+}
+
+const LEGACY_DAY_INDEX: Record<LegacyPlannerDayKey, number> = {
+  monday: 0,
+  tuesday: 1,
+  wednesday: 2,
+  thursday: 3,
+  friday: 4,
+  saturday: 5,
+  sunday: 6,
+}
+
+function migrateLegacyPlannerTasks(data: GoalsStore): GoalsStore {
+  if (typeof window === 'undefined') return data
+  if (localStorage.getItem(LEGACY_PLANNER_MIGRATION_KEY)) return data
+
+  const legacy = safeParse<Record<string, LegacyPlannerWeekData>>(
+    localStorage.getItem(LEGACY_PLANNER_BOARD_KEY),
+    {},
+  )
+
+  let changed = false
+  const nextTasks = [...data.dailyTasks]
+
+  Object.entries(legacy).forEach(([weekKey, weekData]) => {
+    const [yearStr, weekStr] = weekKey.split('-W')
+    const year = Number(yearStr)
+    const week = Number(weekStr)
+    if (!year || !week) return
+
+    const weekDates = getWeekDaysBRT(year, week)
+    ;(Object.keys(LEGACY_DAY_INDEX) as LegacyPlannerDayKey[]).forEach((dayKey) => {
+      const date = weekDates[LEGACY_DAY_INDEX[dayKey]]
+      const legacyTasks = weekData[dayKey]?.tasks ?? []
+
+      legacyTasks.forEach((task, index) => {
+        const title = task.text.trim()
+        if (!title) return
+
+        const exists = nextTasks.some((current) => current.date === date && current.title === title)
+        if (exists) return
+
+        changed = true
+        nextTasks.push({
+          id: uid(),
+          title,
+          date,
+          priority: 'medium',
+          status: task.done ? 'done' : 'not_started',
+          createdAt: now(),
+          completedAt: task.done ? now() : undefined,
+          source: 'manual',
+          sortOrder: index,
+        })
+      })
+    })
+  })
+
+  localStorage.setItem(LEGACY_PLANNER_MIGRATION_KEY, '1')
+  return changed ? { ...data, dailyTasks: nextTasks } : data
 }
 
 // ── Store interface ───────────────────────────
@@ -171,8 +259,9 @@ export const useGoalsStore = create<GoalsStoreState>()(
       hydrated: false,
 
       hydrate() {
-        const data = load(DEFAULT)
+        const data = migrateLegacyPlannerTasks(load(DEFAULT))
         const bubbled = bubbleProgress(data)
+        save(bubbled)
         set({ ...bubbled, hydrated: true })
       },
 

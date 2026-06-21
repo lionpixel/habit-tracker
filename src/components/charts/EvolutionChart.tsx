@@ -7,11 +7,8 @@ import {
 } from 'recharts'
 import { useAppStore }  from '@/store/appStore'
 import { getWeekKey, getWeekDates, formatTime } from '@/lib/helpers'
-import type { HabitKey } from '@/types/habit'
 import { EmptyState }   from '@/components/ui/EmptyState'
 import { TrendingUp }   from 'lucide-react'
-
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
 
 interface WeekPoint {
   label: string
@@ -78,7 +75,7 @@ export function EvolutionChart() {
       let totalPossible = 0
       let totalMinutes  = 0
 
-      HABIT_KEYS.forEach((key) => {
+      Object.keys(habits).filter((k) => !habits[k].archived).forEach((key) => {
         const habit = habits[key]
         const done  = habit.counts[wKey] ?? 0
         totalDone     += done

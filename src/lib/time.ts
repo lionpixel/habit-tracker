@@ -88,6 +88,30 @@ export function getWeekDaysBRT(year: number, week: number): string[] {
   })
 }
 
+/** Converte "YYYY-MM-DD" em ano + semana ISO */
+export function getWeekInfoFromDateStr(dateStr: string): { year: number; week: number } {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const utc    = new Date(Date.UTC(year, month - 1, day))
+  const dayNum = utc.getUTCDay() || 7
+  utc.setUTCDate(utc.getUTCDate() + 4 - dayNum)
+  const isoYear = utc.getUTCFullYear()
+  const yearStart = new Date(Date.UTC(isoYear, 0, 1))
+  const week = Math.ceil(((utc.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7)
+  return { year: isoYear, week }
+}
+
+/** Dia da semana de "YYYY-MM-DD" no padrão JS: 0=Dom ... 6=Sáb */
+export function getDayOfWeekFromDateStr(dateStr: string): number {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+}
+
+/** Número de dias em "YYYY-MM" */
+export function daysInMonthFromStr(dateStr: string): number {
+  const [year, month] = dateStr.split('-').map(Number)
+  return daysInMonthBRT(year, month)
+}
+
 // ── Date arithmetic (string-based, timezone-safe) ─
 
 /** Diferença em dias completos entre duas strings "YYYY-MM-DD" */

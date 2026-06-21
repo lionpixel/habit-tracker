@@ -13,19 +13,17 @@ import { StatCard }   from '@/components/ui/StatCard'
 import { HabitIcon }  from '@/lib/habitIcons'
 import { FadeInUp, StaggerList, StaggerItem } from '@/components/ui/Motion'
 import { formatTime, formatDate, getWeekDates, formatMonthYear } from '@/lib/helpers'
-import { HABIT_COLORS } from '@/lib/constants'
 import {
   FileText, Download, CalendarDays, CalendarRange, User,
 } from 'lucide-react'
-import type { HabitKey } from '@/types/habit'
-
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
+import { useActiveHabitKeys } from '@/store/selectors'
 
 type ReportType = 'weekly' | 'monthly'
 
 export function ReportView() {
   useAppStore()
   const { habits, currentWeek, currentYear, currentMonth, getWeekMinutes, getMonthMinutes } = useHabits()
+  const HABIT_KEYS = useActiveHabitKeys()
 
   const [rptType,  setRptType]  = useState<ReportType>('weekly')
   const [userName, setUserName] = useState('')
@@ -35,7 +33,7 @@ export function ReportView() {
     key,
     habit:   habits[key],
     minutes: rptType === 'weekly' ? getWeekMinutes(key) : getMonthMinutes(key),
-    color:   HABIT_COLORS[key],
+    color:   habits[key].color,
   }))
 
   const total = previewData.reduce((acc, d) => acc + d.minutes, 0)

@@ -18,11 +18,11 @@ import {
   createBackup, listBackups, restoreBackup,
 } from '@/services/storageService'
 import {
-  toggleHabit, decreaseHabit, recalcMonthlyTotals,
+  toggleHabit, decreaseHabit, recalcMonthlyTotals, setHabitCompletionForDate,
 } from '@/services/habitsService'
-import { APP_YEAR } from '@/lib/constants'
-import { getBRTWeekNumber, getBRTMonth, getTodayStr, diffInDays } from '@/lib/time'
+import { getBRTWeekNumber, getBRTMonth, getBRTYear, getTodayStr, diffInDays } from '@/lib/time'
 import { HISTORICAL_MINUTES } from '@/data/historicalData'
+import { calculateFastingProgress } from '@/lib/fastingUtils'
 
 // ── Tipos do store ──────────────────────────
 
@@ -45,10 +45,13 @@ interface AppStore {
   // Ações de hábitos
   increment: (key: HabitKey) => void
   decrement:  (key: HabitKey) => void
+  setHabitCompletion: (key: HabitKey, date: string, done: boolean) => void
   setHabitGoal: (key: HabitKey, freq: number, duration: number) => void
 
   // CRUD completo de hábitos
   updateHabit:    (key: HabitKey, patch: Partial<import('@/types/habit').HabitBase>) => void
+  addHabit:       (key: string, habit: import('@/types/habit').HabitBase) => void
+  removeHabit:    (key: string) => void     // hard delete — only for non-builtin habits
   pauseHabit:     (key: HabitKey) => void
   resumeHabit:    (key: HabitKey) => void
   archiveHabit:   (key: HabitKey) => void
@@ -59,6 +62,7 @@ interface AppStore {
   // Jejum
   startFasting:   () => void
   resetFasting:   () => void
+  breakFasting:   () => void
 
   // Sono
   saveSleep: (data: SleepData) => void
@@ -85,7 +89,7 @@ const DEFAULT_POMO_DATA: PomoDataMap = {
 
 const DEFAULT_APP_DATA: AppData = {
   currentWeek:  getBRTWeekNumber(),
-  currentYear:  APP_YEAR,
+  currentYear:  getBRTYear(),
   currentMonth: getBRTMonth(),
   habits:       DEFAULT_HABITS,
 }
@@ -150,6 +154,12 @@ export const useAppStore = create<AppStore>()(
         }
       }
 
+      const fastingProgress = calculateFastingProgress(habits.fasting as FastingHabit)
+      ;(habits as unknown as Record<string, FastingHabit>)['fasting'] = {
+        ...(habits.fasting as FastingHabit),
+        currentStreak: fastingProgress.progressDays,
+      }
+
       const data = { ...raw, habits }
       saveAppData(data)
       set({ data, sleepData, pomoData, backups, hydrated: true })
@@ -171,6 +181,14 @@ export const useAppStore = create<AppStore>()(
     decrement(key) {
       const { data } = get()
       const habits   = decreaseHabit(data.habits, key, data.currentYear, data.currentWeek)
+      const updated  = recalcMonthlyTotals({ ...data, habits })
+      saveAppData(updated)
+      set({ data: updated })
+    },
+
+    setHabitCompletion(key, date, done) {
+      const { data } = get()
+      const habits   = setHabitCompletionForDate(data.habits, key, date, done)
       const updated  = recalcMonthlyTotals({ ...data, habits })
       saveAppData(updated)
       set({ data: updated })
@@ -220,6 +238,24 @@ export const useAppStore = create<AppStore>()(
           },
         },
       }
+      saveAppData(updated)
+      set({ data: updated })
+    },
+
+    // ── addHabit ──────────────────────────────
+    addHabit(key, habit) {
+      const { data } = get()
+      if (data.habits[key]) return  // key already exists, use updateHabit
+      const updated = { ...data, habits: { ...data.habits, [key]: habit } }
+      saveAppData(updated)
+      set({ data: updated })
+    },
+
+    // ── removeHabit ───────────────────────────
+    removeHabit(key) {
+      const { data } = get()
+      const { [key]: _removed, ...rest } = data.habits as Record<string, import('@/types/habit').Habit>
+      const updated = { ...data, habits: rest as typeof data.habits }
       saveAppData(updated)
       set({ data: updated })
     },
@@ -309,17 +345,25 @@ export const useAppStore = create<AppStore>()(
       const { data } = get()
       const fasting  = data.habits.fasting
       const today    = getTodayStr()
+      const progress = calculateFastingProgress(fasting)
 
-      // Count this cycle as completed only if it was marked complete
+      const shouldAppendHistory = Boolean(fasting.fastingStartDate)
+      const historyEntry = shouldAppendHistory
+        ? {
+            startedAt: fasting.fastingStartDate!,
+            endedAt: fasting.fastingCompletedAt ?? today,
+            completed: Boolean(fasting.fastingComplete),
+            reason: fasting.fastingComplete ? ('completed' as const) : ('reset' as const),
+            progressDays: progress.progressDays,
+          }
+        : null
+
       const completedCycles = fasting.fastingComplete
         ? fasting.completedCycles + 1
         : fasting.completedCycles
 
-      // Preserve the best longestStreak from all previous cycles
       const totalDays     = fasting.fastingDays ?? 40
-      const longestStreak = fasting.fastingComplete
-        ? Math.max(totalDays, fasting.longestStreak ?? 0)
-        : (fasting.longestStreak ?? 0)
+      const longestStreak = Math.max(progress.progressDays, fasting.longestStreak ?? 0, fasting.fastingComplete ? totalDays : 0)
 
       const updated = {
         ...data,
@@ -336,6 +380,51 @@ export const useAppStore = create<AppStore>()(
             longestStreak,
             lastReset:  today,
             lastUpdate: today,
+            fastingHistory: historyEntry
+              ? [...(fasting.fastingHistory ?? []), historyEntry]
+              : (fasting.fastingHistory ?? []),
+          },
+        },
+      }
+      saveAppData(updated)
+      set({ data: updated })
+    },
+
+    breakFasting() {
+      const { data } = get()
+      const fasting  = data.habits.fasting
+      const today    = getTodayStr()
+      const progress = calculateFastingProgress(fasting)
+
+      const historyEntry = fasting.fastingStartDate
+        ? {
+            startedAt: fasting.fastingStartDate,
+            endedAt: today,
+            completed: false,
+            reason: 'broken' as const,
+            progressDays: progress.progressDays,
+          }
+        : null
+
+      const longestStreak = Math.max(progress.progressDays, fasting.longestStreak ?? 0)
+
+      const updated = {
+        ...data,
+        habits: {
+          ...data.habits,
+          fasting: {
+            ...fasting,
+            currentStreak:      0,
+            fastingStartDate:   today,
+            fastingEndDate:     undefined,
+            fastingComplete:    false,
+            fastingCompletedAt: undefined,
+            longestStreak,
+            lastReset:  today,
+            lastUpdate: today,
+            fastingHistory: historyEntry
+              ? [...(fasting.fastingHistory ?? []), historyEntry]
+              : (fasting.fastingHistory ?? []),
           },
         },
       }

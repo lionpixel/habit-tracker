@@ -10,7 +10,8 @@ import { StatCard }     from '@/components/ui/StatCard'
 import { HabitIcon }    from '@/lib/habitIcons'
 import { FadeInUp, StaggerList, StaggerItem, AnimatedCard } from '@/components/ui/Motion'
 import { formatTime, formatMonthYear } from '@/lib/helpers'
-import { MONTH_NAMES, HABIT_COLORS } from '@/lib/constants'
+import { MONTH_NAMES } from '@/lib/constants'
+import { useActiveHabitKeys } from '@/store/selectors'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
@@ -19,9 +20,6 @@ import {
   Timer, Trophy, Calendar, ChevronLeft, ChevronRight, BarChart3,
 } from 'lucide-react'
 import type { TooltipProps } from 'recharts'
-import type { HabitKey } from '@/types/habit'
-
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
 
 function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null
@@ -39,15 +37,16 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
 export function MonthlyView() {
   useAppStore()
   const { habits, currentYear, currentMonth, getMonthMinutes } = useHabits()
+  const HABIT_KEYS = useActiveHabitKeys()
 
   const totalMonthMin = HABIT_KEYS.reduce((acc, k) => acc + getMonthMinutes(k), 0)
   const bestHabitKey  = HABIT_KEYS.reduce((best, k) =>
-    getMonthMinutes(k) > getMonthMinutes(best) ? k : best, HABIT_KEYS[0])
+    getMonthMinutes(k) > getMonthMinutes(best) ? k : best, HABIT_KEYS[0] ?? 'reading')
 
   const chartData = HABIT_KEYS.map((k) => ({
     name:    habits[k].name,
     minutes: getMonthMinutes(k),
-    color:   HABIT_COLORS[k],
+    color:   habits[k].color,
   }))
 
   function navigate(dir: 'prev' | 'next') {
@@ -151,7 +150,7 @@ export function MonthlyView() {
           {HABIT_KEYS.map((key) => {
             const habit = habits[key]
             const min   = getMonthMinutes(key)
-            const color = HABIT_COLORS[key]
+            const color = habit.color
             const pctVal = totalMonthMin > 0 ? Math.round((min / totalMonthMin) * 100) : 0
             return (
               <StaggerItem key={key}>

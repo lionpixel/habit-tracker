@@ -9,6 +9,7 @@ import { Plus, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useGoalsStore } from '@/store/goalsStore'
 import { GoalCard } from './GoalCard'
 import { GoalFormModal } from './GoalFormModal'
+import { MonthlyCalendar } from '@/components/calendar/MonthlyCalendar'
 import { FadeInUp, StaggerList, StaggerItem } from '@/components/ui/Motion'
 import { StatCard } from '@/components/ui/StatCard'
 import { TrendingUp, CheckCircle2, Clock, Target } from 'lucide-react'
@@ -83,6 +84,10 @@ export function MonthlyPlannerView() {
             <ChevronRight size={16} />
           </button>
         </div>
+      </FadeInUp>
+
+      <FadeInUp delay={0.045}>
+        <MonthlyCalendar year={year} month={month} />
       </FadeInUp>
 
       {/* Stats */}

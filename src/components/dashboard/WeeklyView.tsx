@@ -14,26 +14,27 @@ import { RiskAlerts }             from './RiskAlerts'
 import { InsightCards }           from './InsightCards'
 import { FadeInUp }               from '@/components/ui/Motion'
 import { getWeekDates, formatDate, formatTime } from '@/lib/helpers'
-import type { HabitKey }          from '@/types/habit'
+import { useActiveHabitKeys }     from '@/store/selectors'
+import { NewHabitModal }          from '@/components/habits/NewHabitModal'
+import { useState }               from 'react'
 import {
   ChevronLeft, ChevronRight,
   Timer, CheckSquare, Zap, Award,
   TrendingUp, TrendingDown, Target, CalendarCheck,
-  Map, BarChart3, Trophy, AlertTriangle, Layers,
+  Map, BarChart3, Trophy, AlertTriangle, Layers, Plus,
 } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
-
 function SectionTitle({
-  icon, title, subtitle,
+  icon, title, subtitle, className,
 }: {
   icon: React.ReactNode
   title: string
   subtitle?: string
+  className?: string
 }) {
   return (
-    <div className="flex items-center gap-3 mb-5">
+    <div className={cn('flex items-center gap-3 mb-5', className)}>
       <div className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.06] flex items-center justify-center text-slate-400 flex-shrink-0">
         {icon}
       </div>
@@ -117,15 +118,17 @@ export function WeeklyView() {
     habits, currentWeek, currentYear,
     getWeekMinutes, getWeekCount, getWeekProgress,
   } = useHabits()
+  const HABIT_KEYS    = useActiveHabitKeys()
+  const [newHabitOpen, setNewHabitOpen] = useState(false)
 
   const { start, end } = getWeekDates(currentYear, currentWeek)
   const dateRange = `${formatDate(start)} – ${formatDate(end)}`
 
   const totalMinutes   = HABIT_KEYS.reduce((acc, k) => acc + getWeekMinutes(k), 0)
   const totalSessions  = HABIT_KEYS.reduce((acc, k) => acc + getWeekCount(k), 0)
-  const avgConsistency = Math.round(
-    HABIT_KEYS.reduce((acc, k) => acc + getWeekProgress(k), 0) / HABIT_KEYS.length,
-  )
+  const avgConsistency = HABIT_KEYS.length > 0
+    ? Math.round(HABIT_KEYS.reduce((acc, k) => acc + getWeekProgress(k), 0) / HABIT_KEYS.length)
+    : 0
   const habitsOnTrack  = HABIT_KEYS.filter((k) => getWeekProgress(k) >= 80).length
   const maxSessions    = HABIT_KEYS.reduce((acc, k) => acc + habits[k].frequency, 0)
 
@@ -216,17 +219,34 @@ export function WeeklyView() {
 
       {/* ── Habit cards ── */}
       <FadeInUp delay={0.1}>
-        <SectionTitle
-          icon={<Target className="w-4 h-4" />}
-          title="Seus Hábitos"
-          subtitle="Clique em + para registrar uma sessão"
-        />
+        <div className="flex items-center justify-between mb-5">
+          <SectionTitle
+            icon={<Target className="w-4 h-4" />}
+            title="Seus Hábitos"
+            subtitle="Clique em + para registrar uma sessão"
+            className="mb-0"
+          />
+          <button
+            onClick={() => setNewHabitOpen(true)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold',
+              'bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 hover:text-violet-200',
+              'border border-violet-500/20 hover:border-violet-500/30',
+              'transition-all duration-200 active:scale-95 flex-shrink-0',
+            )}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Novo Hábito
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {HABIT_KEYS.map((key, i) => (
             <HabitCard key={key} habitKey={key} index={i} />
           ))}
         </div>
       </FadeInUp>
+
+      <NewHabitModal open={newHabitOpen} onClose={() => setNewHabitOpen(false)} />
 
       {/* ── Q1 Banner ── */}
       <FadeInUp delay={0.12}>

@@ -5,12 +5,13 @@
 //  Cross-module analytics — Vida Score 0-100
 //
 //  Dimensões e pesos:
-//    Hábitos    30%  — consistência semanal + progresso anual
-//    Metas      25%  — progresso médio das metas anuais
-//    Finanças   15%  — taxa de poupança mensal
-//    Físico     10%  — frequência de check-ins + proximidade às metas
-//    Sono       10%  — entradas no log dos últimos 7 dias
-//    Foco       10%  — pomodoros na semana
+//    Hábitos       25% — consistência semanal + progresso anual
+//    Metas         20% — progresso médio das metas anuais
+//    Planejamento  10% — calendário mensal + execução das tarefas do mês
+//    Finanças      15% — taxa de poupança mensal
+//    Físico        10% — frequência de check-ins + proximidade às metas
+//    Sono          10% — entradas no log dos últimos 7 dias
+//    Foco          10% — pomodoros na semana
 // ─────────────────────────────────────────────
 
 import { useMemo }          from 'react'
@@ -18,15 +19,13 @@ import { useAppStore }      from '@/store/appStore'
 import { useGoalsStore }    from '@/store/goalsStore'
 import { useFinanceStore }  from '@/store/financeStore'
 import { useProfileStore }  from '@/store/profileStore'
+import { useCalendarStore } from '@/store/calendarStore'
 import { getWeekKey, getMonthKey } from '@/lib/helpers'
 import { calculateFastingProgress, calcFastingYearTotal } from '@/lib/fastingUtils'
 import { getTodayStr, addDaysToStr } from '@/lib/time'
 import type { FastingHabit } from '@/types/habit'
 import { totalIncome, savingsRate } from '@/types/finance'
-import type { HabitKey }    from '@/types/habit'
 import type { PomoDataMap } from '@/types/focus'
-
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
 
 // ── Gamification thresholds ───────────────────
 const XP_PER_LEVEL  = 1000
@@ -50,14 +49,14 @@ function computeHabitScore(
   const wKey = getWeekKey(currentYear, currentWeek)
   let done = 0
   let possible = 0
-  HABIT_KEYS.forEach((k) => {
+  Object.keys(habits).filter((k) => !habits[k].archived).forEach((k) => {
     done     += habits[k].counts[wKey] ?? 0
     possible += habits[k].frequency
   })
   const weekly = possible > 0 ? (done / possible) * 100 : 50
 
   // Bonus from Q1 year total — more than 50h ≈ strong annual consistency
-  const totalYearMin = HABIT_KEYS.reduce((a, k) => a + habits[k].totalYear, 0)
+  const totalYearMin = Object.keys(habits).reduce((a, k) => a + habits[k].totalYear, 0)
   const annualBonus  = Math.min(15, (totalYearMin / 6000) * 15) // max +15 at 100h
 
   // Fasting bonus — time-based: progress (discipline) + year total (consistency)
@@ -80,6 +79,27 @@ function computeGoalsScore(
   if (!yearGoals.length) return 50
   const avg = yearGoals.reduce((a, g) => a + g.progress, 0) / yearGoals.length
   return clamp(Math.round(avg))
+}
+
+function computePlanningScore(
+  events: ReturnType<typeof useCalendarStore.getState>['events'],
+  dailyTasks: ReturnType<typeof useGoalsStore.getState>['dailyTasks'],
+  year: number,
+  month: number,
+): number {
+  const prefix = `${year}-${String(month).padStart(2, '0')}`
+  const monthEvents = events.filter((event) => event.date.startsWith(prefix))
+  const monthTasks = dailyTasks.filter((task) => task.date.startsWith(prefix))
+
+  if (!monthEvents.length && !monthTasks.length) return 50
+
+  const linkedItems = monthEvents.filter((event) => event.linkedGoalId || event.linkedTaskId).length
+  const eventDensity = Math.min(25, monthEvents.length * 3)
+  const linkageScore = monthEvents.length ? Math.round((linkedItems / monthEvents.length) * 25) : 10
+  const taskDone = monthTasks.filter((task) => task.status === 'done').length
+  const executionScore = monthTasks.length ? Math.round((taskDone / monthTasks.length) * 50) : 25
+
+  return clamp(eventDensity + linkageScore + executionScore)
 }
 
 function computeFinanceScore(
@@ -176,7 +196,7 @@ function computeXP(
   pomoData: PomoDataMap,
 ): { totalXP: number; level: number; xpToNext: number; xpThisLevel: number } {
   // Habit XP — total minutes × 1
-  const habitXP = HABIT_KEYS.reduce((a, k) => a + habits[k].totalYear, 0) * XP_HABIT_MIN
+  const habitXP = Object.keys(habits).reduce((a, k) => a + habits[k].totalYear, 0) * XP_HABIT_MIN
 
   // Goals XP
   const goalsXP = annualGoals.filter((g) => g.status === 'done').length * XP_GOAL_DONE
@@ -233,6 +253,7 @@ export function useSystemScore(): SystemScore {
   const { annualGoals, dailyTasks, hydrated: gH } = useGoalsStore()
   const { months, hydrated: fH }      = useFinanceStore()
   const { history, profile, hydrated: pH } = useProfileStore()
+  const { events, hydrated: cH } = useCalendarStore()
 
   const { habits, currentYear, currentWeek, currentMonth } = data
 
@@ -240,6 +261,7 @@ export function useSystemScore(): SystemScore {
     // Compute individual scores
     const habitScore    = computeHabitScore(habits, currentYear, currentWeek)
     const goalsScore    = gH ? computeGoalsScore(annualGoals, currentYear) : 50
+    const planningScore = cH && gH ? computePlanningScore(events, dailyTasks, currentYear, currentMonth) : 50
     const financeScore  = fH ? computeFinanceScore(months, currentYear, currentMonth) : 50
     const physicalScore = pH ? computePhysicalScore(history, profile) : 50
     const sleepScore    = computeSleepScore(sleepData.log, sleepData.config.targetWake)
@@ -247,8 +269,9 @@ export function useSystemScore(): SystemScore {
 
     // Weighted vida score
     const vidaScore = Math.round(
-      habitScore   * 0.30 +
-      goalsScore   * 0.25 +
+      habitScore   * 0.25 +
+      goalsScore   * 0.20 +
+      planningScore * 0.10 +
       financeScore * 0.15 +
       physicalScore * 0.10 +
       sleepScore   * 0.10 +
@@ -256,8 +279,9 @@ export function useSystemScore(): SystemScore {
     )
 
     const dimensions: ScoreDimension[] = [
-      { key: 'habits',   label: 'Hábitos',   score: habitScore,    weight: 0.30, color: '#6366f1', icon: 'Flame'      },
-      { key: 'goals',    label: 'Metas',     score: goalsScore,    weight: 0.25, color: '#10b981', icon: 'Target'     },
+      { key: 'habits',   label: 'Hábitos',      score: habitScore,    weight: 0.25, color: '#6366f1', icon: 'Flame'        },
+      { key: 'goals',    label: 'Metas',        score: goalsScore,    weight: 0.20, color: '#10b981', icon: 'Target'       },
+      { key: 'planning', label: 'Planejamento', score: planningScore, weight: 0.10, color: '#22c55e', icon: 'CalendarDays' },
       { key: 'finance',  label: 'Finanças',  score: financeScore,  weight: 0.15, color: '#f59e0b', icon: 'TrendingUp' },
       { key: 'physical', label: 'Físico',    score: physicalScore, weight: 0.10, color: '#ef4444', icon: 'Dumbbell'   },
       { key: 'sleep',    label: 'Sono',      score: sleepScore,    weight: 0.10, color: '#8b5cf6', icon: 'Moon'       },
@@ -270,6 +294,7 @@ export function useSystemScore(): SystemScore {
   }, [
     habits, currentYear, currentWeek, currentMonth,
     annualGoals, dailyTasks, gH,
+    events, cH,
     months, fH,
     history, profile, pH,
     sleepData, pomoData,

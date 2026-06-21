@@ -124,7 +124,7 @@ export const HABIT_RANKING = TRACKED_KEYS
     rank:     i + 1,
     key,
     name:     HABIT_LABELS[key],
-    color:    HABIT_COLORS[key],
+    color:    (HABIT_COLORS as Record<string, string>)[key] ?? '#6366f1',
     totalMin: HABIT_TOTALS[key],
     pct:      GRAND_TOTAL_MINUTES > 0
       ? Math.round((HABIT_TOTALS[key] / GRAND_TOTAL_MINUTES) * 100)

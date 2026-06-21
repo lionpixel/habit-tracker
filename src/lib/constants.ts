@@ -14,6 +14,18 @@ export const APP_NAME    = 'HabitDB'
 export const APP_YEAR    = 2026
 export const APP_VERSION = '0.1.0'
 
+// The 6 original builtin habit keys — always present, cannot be hard-deleted.
+export const BUILTIN_HABIT_KEYS = [
+  'reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting',
+] as const
+export type BuiltinHabitKey = typeof BUILTIN_HABIT_KEYS[number]
+
+// Palette for new user-created habits (cycles through when no color is picked)
+export const CUSTOM_HABIT_COLORS = [
+  '#7c3aed', '#0ea5e9', '#f97316', '#84cc16', '#ec4899',
+  '#14b8a6', '#a78bfa', '#fb923c', '#f43f5e', '#34d399',
+] as const
+
 // Nomes dos meses em português
 export const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março',    'Abril',

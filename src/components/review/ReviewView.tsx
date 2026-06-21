@@ -86,7 +86,7 @@ export function ReviewView() {
   const rate        = savingsRate(month)
 
   // Habits — week consistency
-  const habitKeys = Object.keys(habits) as (keyof typeof habits)[]
+  const habitKeys = Object.keys(habits) as string[]
   const _mKey2     = getMonthKey(currentYear, MONTH)
   const weekHabitMinutes = habitKeys.reduce((a, k) => {
     const h = habits[k]

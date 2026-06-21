@@ -4,10 +4,7 @@ import { useMemo } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { getWeekKey, getWeekDates } from '@/lib/helpers'
 import { getBRTWeekNumber, addDaysToStr, getTodayStr } from '@/lib/time'
-import { HABIT_COLORS } from '@/lib/constants'
 import type { HabitKey } from '@/types/habit'
-
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
 
 export interface HeatmapCell {
   weekNum:       number
@@ -39,12 +36,12 @@ export function useHeatmapData(filter: HeatmapFilter = 'year') {
       const wKey = getWeekKey(currentYear, w)
       let done = 0, possible = 0
 
-      const breakdown = HABIT_KEYS.map((key) => {
+      const breakdown = Object.keys(habits).filter((k) => !habits[k].archived).map((key) => {
         const habit  = habits[key]
         const d      = habit.counts[wKey] ?? 0
         done     += d
         possible += habit.frequency
-        return { key, name: habit.name, color: HABIT_COLORS[key], done: d, max: habit.frequency }
+        return { key, name: habit.name, color: habit.color, done: d, max: habit.frequency }
       })
 
       cells.push({

@@ -3,9 +3,6 @@
 import { useMemo } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { getWeekKey } from '@/lib/helpers'
-import type { HabitKey } from '@/types/habit'
-
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
 
 export interface EvolutionPoint {
   label:        string     // "S14"
@@ -30,7 +27,7 @@ export function useEvolutionData(weeksBack = 8) {
       const wKey = getWeekKey(y, w)
       let done = 0, possible = 0, minutes = 0
 
-      HABIT_KEYS.forEach((key) => {
+      Object.keys(habits).filter((k) => !habits[k].archived).forEach((key) => {
         const habit = habits[key]
         const d     = habit.counts[wKey] ?? 0
         done     += d

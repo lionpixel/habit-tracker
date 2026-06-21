@@ -4,11 +4,8 @@ import { useMemo, useRef, useState } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { getWeekKey, getWeekDates, formatDate } from '@/lib/helpers'
 import { getBRTWeekNumber } from '@/lib/time'
-import { HABIT_COLORS } from '@/lib/constants'
 import type { HabitKey } from '@/types/habit'
 import { cn } from '@/lib/helpers'
-
-const HABIT_KEYS: HabitKey[] = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting']
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 const DAYS_PT   = ['D','S','T','Q','Q','S','S']
 
@@ -59,13 +56,14 @@ export function HeatmapSection() {
 
       let totalDone     = 0
       let totalPossible = 0
-      const breakdown = HABIT_KEYS.map((key) => {
+      const activeKeys = Object.keys(habits).filter((k) => !habits[k].archived)
+      const breakdown = activeKeys.map((key) => {
         const habit = habits[key]
         const done  = habit.counts[wKey] ?? 0
         const max   = habit.frequency
         totalDone     += done
         totalPossible += max
-        return { key, name: habit.name, color: HABIT_COLORS[key], done, max }
+        return { key, name: habit.name, color: habit.color, done, max }
       })
 
       const consistency = totalPossible > 0

@@ -2,8 +2,223 @@
 //  Service: Lógica de Hábitos
 // ─────────────────────────────────────────────
 
-import type { AppData, HabitKey, HabitsMap, RiskAlert, RiskLevel, Insight } from '@/types/habit'
+import type {
+  AppData,
+  Habit,
+  HabitBase,
+  HabitKey,
+  HabitsMap,
+  RiskAlert,
+  RiskLevel,
+  Insight,
+  DayOfWeek,
+} from '@/types/habit'
 import { getWeekKey, getMonthKey } from '@/lib/helpers'
+import {
+  addDaysToStr,
+  daysInMonthBRT,
+  getDayOfWeekFromDateStr,
+  getTodayStr,
+  getWeekInfoFromDateStr,
+  getWeekDaysBRT,
+} from '@/lib/time'
+
+const DEFAULT_WEEK_DISTRIBUTION: Record<number, DayOfWeek[]> = {
+  1: [1],
+  2: [1, 4],
+  3: [1, 3, 5],
+  4: [1, 2, 4, 5],
+  5: [1, 2, 3, 4, 5],
+  6: [1, 2, 3, 4, 5, 6],
+  7: [1, 2, 3, 4, 5, 6, 0],
+}
+
+function normalizeDays(days: DayOfWeek[]): DayOfWeek[] {
+  return [...new Set(days)].sort((a, b) => a - b) as DayOfWeek[]
+}
+
+function getFallbackSchedule(frequency: number): DayOfWeek[] {
+  return DEFAULT_WEEK_DISTRIBUTION[Math.max(1, Math.min(7, frequency))] ?? [1, 3, 5]
+}
+
+function getMonthlyCadenceDays(timesPerMonth: number, year: number, month: number): number[] {
+  const safeTimes = Math.max(1, Math.min(timesPerMonth, 31))
+  const totalDays = daysInMonthBRT(year, month)
+  if (safeTimes >= totalDays) {
+    return Array.from({ length: totalDays }, (_, i) => i + 1)
+  }
+
+  const step = totalDays / safeTimes
+  const picks = Array.from({ length: safeTimes }, (_, i) =>
+    Math.min(totalDays, Math.max(1, Math.round(1 + i * step))),
+  )
+  return [...new Set(picks)].sort((a, b) => a - b)
+}
+
+export function getHabitScheduledDays(habit: Habit): DayOfWeek[] {
+  if (habit.archived || habit.paused) return []
+
+  const recurrence = habit.recurrence
+  if (!recurrence) return getFallbackSchedule(habit.frequency)
+
+  switch (recurrence.type) {
+    case 'daily':
+      return [1, 2, 3, 4, 5, 6, 0]
+    case 'weekdays':
+      return [1, 2, 3, 4, 5]
+    case 'weekends':
+      return [6, 0]
+    case 'custom_week':
+      return normalizeDays(recurrence.daysOfWeek ?? getFallbackSchedule(habit.frequency))
+    case 'times_per_week':
+      return getFallbackSchedule(recurrence.timesPerWeek ?? habit.frequency)
+    case 'times_per_month':
+      return [1, 2, 3, 4, 5, 6, 0]
+    default:
+      return getFallbackSchedule(habit.frequency)
+  }
+}
+
+export function isHabitScheduledForDate(habit: HabitBase, dateStr: string): boolean {
+  if (habit.archived || habit.paused) return false
+  if (habit.startDate && dateStr < habit.startDate) return false
+  if (habit.endDate && dateStr > habit.endDate) return false
+
+  const recurrence = habit.recurrence
+  if (recurrence?.type === 'times_per_month') {
+    const [year, month, day] = dateStr.split('-').map(Number)
+    return getMonthlyCadenceDays(recurrence.timesPerMonth ?? habit.frequency, year, month).includes(day)
+  }
+
+  const dayOfWeek = getDayOfWeekFromDateStr(dateStr) as DayOfWeek
+  return getHabitScheduledDays(habit).includes(dayOfWeek)
+}
+
+function buildResolvedWeekDates(habit: HabitBase, year: number, week: number): string[] {
+  const wKey = getWeekKey(year, week)
+  const weekDates = getWeekDaysBRT(year, week)
+  const scheduledDates = weekDates.filter((date) => isHabitScheduledForDate(habit, date))
+  const explicitDates = scheduledDates.filter((date) => (habit.dailyLog?.[date] ?? 0) > 0)
+  const cappedCount = Math.min(habit.counts[wKey] ?? 0, scheduledDates.length)
+
+  if (explicitDates.length >= cappedCount) {
+    return explicitDates.sort()
+  }
+
+  const merged = new Set(explicitDates)
+  for (const date of scheduledDates) {
+    if (merged.size >= cappedCount) break
+    merged.add(date)
+  }
+
+  return [...merged].sort()
+}
+
+function materializeWeek(habit: HabitBase, year: number, week: number): HabitBase {
+  const resolved = buildResolvedWeekDates(habit, year, week)
+  const wKey = getWeekKey(year, week)
+  const nextLog = { ...(habit.dailyLog ?? {}) }
+  let changed = (habit.counts[wKey] ?? 0) !== resolved.length
+
+  resolved.forEach((date) => {
+    if ((nextLog[date] ?? 0) === 0) changed = true
+    nextLog[date] = 1
+  })
+
+  if (!changed) return habit
+
+  return {
+    ...habit,
+    dailyLog: nextLog,
+    counts: { ...habit.counts, [wKey]: resolved.length },
+  }
+}
+
+function replaceHabit(habits: HabitsMap, key: HabitKey, habit: HabitBase): HabitsMap {
+  return { ...habits, [key]: habit as HabitsMap[HabitKey] }
+}
+
+export function getHabitCompletionDatesForWeek(
+  habits: HabitsMap,
+  key: HabitKey,
+  year: number,
+  week: number,
+): string[] {
+  if (key === 'fasting') return []
+  return buildResolvedWeekDates(habits[key], year, week)
+}
+
+export function isHabitDoneOnDate(
+  habits: HabitsMap,
+  key: HabitKey,
+  dateStr: string,
+): boolean {
+  if (key === 'fasting') return false
+  const { year, week } = getWeekInfoFromDateStr(dateStr)
+  return buildResolvedWeekDates(habits[key], year, week).includes(dateStr)
+}
+
+export function getHabitStreak(habits: HabitsMap, key: HabitKey, anchorDate: string): number {
+  if (key === 'fasting') return 0
+
+  const habit = habits[key]
+  let streak = 0
+  let cursor = anchorDate
+  let foundCompletedBlock = false
+
+  for (let i = 0; i < 400; i++) {
+    if (habit.startDate && cursor < habit.startDate) break
+
+    if (isHabitScheduledForDate(habit, cursor)) {
+      const done = isHabitDoneOnDate(habits, key, cursor)
+
+      if (!foundCompletedBlock && !done) {
+        cursor = addDaysToStr(cursor, -1)
+        continue
+      }
+
+      foundCompletedBlock = true
+      if (!done) break
+      streak += 1
+    }
+
+    cursor = addDaysToStr(cursor, -1)
+  }
+
+  return streak
+}
+
+export function setHabitCompletionForDate(
+  habits: HabitsMap,
+  key: HabitKey,
+  dateStr: string,
+  done: boolean,
+): HabitsMap {
+  if (key === 'fasting') return habits
+
+  const current = habits[key]
+  const { year, week } = getWeekInfoFromDateStr(dateStr)
+  const wKey = getWeekKey(year, week)
+  const habit = materializeWeek(current, year, week)
+
+  if (!isHabitScheduledForDate(habit, dateStr)) return habits
+
+  const nextLog = { ...(habit.dailyLog ?? {}) }
+  const isDone = (nextLog[dateStr] ?? 0) > 0
+  if (isDone === done) return replaceHabit(habits, key, habit)
+
+  if (done) nextLog[dateStr] = 1
+  else delete nextLog[dateStr]
+
+  const weekDates = getWeekDaysBRT(year, week)
+  const weekCount = weekDates.reduce((total, date) => total + ((nextLog[date] ?? 0) > 0 ? 1 : 0), 0)
+
+  return replaceHabit(habits, key, {
+    ...habit,
+    dailyLog: nextLog,
+    counts: { ...habit.counts, [wKey]: weekCount },
+  })
+}
 
 // ── Incremento / Decremento ──────────────────
 
@@ -13,16 +228,24 @@ export function toggleHabit(
   year: number,
   week: number,
 ): HabitsMap {
-  const habit   = habits[key]
-  const wKey    = getWeekKey(year, week)
-  const current = habit.counts[wKey] ?? 0
-  if (current >= habit.frequency) return habits
+  if (key === 'fasting') return habits
 
-  const updated = {
-    ...habit,
-    counts: { ...habit.counts, [wKey]: current + 1 },
+  const habit = materializeWeek(habits[key], year, week)
+  const scheduledDates = getWeekDaysBRT(year, week).filter((date) => isHabitScheduledForDate(habit, date))
+  const currentDone = new Set(buildResolvedWeekDates(habit, year, week))
+  if (currentDone.size >= Math.min(habit.frequency, scheduledDates.length)) {
+    return replaceHabit(habits, key, habit)
   }
-  return { ...habits, [key]: updated }
+
+  const today = getTodayStr()
+  const preferred = scheduledDates.find((date) => date === today && !currentDone.has(date))
+    ?? [...scheduledDates].reverse().find((date) => date < today && !currentDone.has(date))
+    ?? scheduledDates.find((date) => date > today && !currentDone.has(date))
+    ?? scheduledDates.find((date) => !currentDone.has(date))
+
+  return preferred
+    ? setHabitCompletionForDate(replaceHabit(habits, key, habit), key, preferred, true)
+    : replaceHabit(habits, key, habit)
 }
 
 export function decreaseHabit(
@@ -31,16 +254,15 @@ export function decreaseHabit(
   year: number,
   week: number,
 ): HabitsMap {
-  const habit   = habits[key]
-  const wKey    = getWeekKey(year, week)
-  const current = habit.counts[wKey] ?? 0
-  if (current <= 0) return habits
+  if (key === 'fasting') return habits
 
-  const updated = {
-    ...habit,
-    counts: { ...habit.counts, [wKey]: current - 1 },
-  }
-  return { ...habits, [key]: updated }
+  const habit = materializeWeek(habits[key], year, week)
+  const resolved = buildResolvedWeekDates(habit, year, week)
+  const targetDate = resolved[resolved.length - 1]
+
+  return targetDate
+    ? setHabitCompletionForDate(replaceHabit(habits, key, habit), key, targetDate, false)
+    : replaceHabit(habits, key, habit)
 }
 
 // ── Totais mensais ───────────────────────────
@@ -50,7 +272,7 @@ export function recalcMonthlyTotals(data: AppData): AppData {
 
   for (const key of Object.keys(habits) as HabitKey[]) {
     const habit    = habits[key]
-    const mTotals: Record<string, number> = {}
+    const mTotals: Record<string, number> = { ...habit.monthlyTotals }
 
     for (const [wKey, count] of Object.entries(habit.counts)) {
       const [yearStr, weekStr] = wKey.split('-W')
@@ -58,10 +280,16 @@ export function recalcMonthlyTotals(data: AppData): AppData {
       const week = parseInt(weekStr)
       const { start } = getWeekDates(year, week)
       const mKey = getMonthKey(start.getFullYear(), start.getMonth() + 1)
-      mTotals[mKey] = (mTotals[mKey] ?? 0) + count * habit.target
+      const computed = count * habit.target
+      mTotals[mKey] = Math.max(mTotals[mKey] ?? 0, computed)
     }
 
-    ;(habits as unknown as Record<string, typeof habit>)[key] = { ...habit, monthlyTotals: mTotals }
+    const totalYear = Object.values(mTotals).reduce((acc, value) => acc + value, 0)
+    ;(habits as unknown as Record<string, typeof habit>)[key] = {
+      ...habit,
+      monthlyTotals: mTotals,
+      totalYear,
+    }
   }
 
   return { ...data, habits }
@@ -168,7 +396,7 @@ export function detectRisks(
         habitName:  habit.name,
         level,
         message:    buildRiskMessage(habit.name, level, last3),
-        suggestion: RISK_SUGGESTIONS[key][level],
+        suggestion: RISK_SUGGESTIONS[key]?.[level] ?? 'Mantenha o foco e retome a consistência.',
       })
     }
   }

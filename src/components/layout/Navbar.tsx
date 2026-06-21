@@ -7,6 +7,7 @@ import { cn } from '@/lib/helpers'
 import { formatDisplayBRT, TZ } from '@/lib/time'
 import { useAppStore } from '@/store/appStore'
 import { useHabits } from '@/hooks/useHabits'
+import { useActiveHabitKeys } from '@/store/selectors'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
@@ -42,9 +43,8 @@ export function Navbar() {
     return () => clearInterval(id)
   }, [])
 
-  // Streak-like metric: count habits at ≥80% this week
-  const habitKeys = ['reading', 'english', 'hiit', 'ppci', 'dopamine', 'fasting'] as const
-  const onFire = habitKeys.filter((k) => getWeekProgress(k) >= 80).length
+  const activeHabitKeys = useActiveHabitKeys()
+  const onFire = activeHabitKeys.filter((k) => getWeekProgress(k) >= 80).length
 
   return (
     <header
