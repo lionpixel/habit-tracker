@@ -10,6 +10,7 @@ import { StatCard }     from '@/components/ui/StatCard'
 import { HabitIcon }    from '@/lib/habitIcons'
 import { FadeInUp, StaggerList, StaggerItem, AnimatedCard } from '@/components/ui/Motion'
 import { formatTime, formatMonthYear } from '@/lib/helpers'
+import { getBRTMonth, getBRTYear } from '@/lib/time'
 import { MONTH_NAMES } from '@/lib/constants'
 import { useActiveHabitKeys } from '@/store/selectors'
 import {
@@ -37,7 +38,10 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
 export function MonthlyView() {
   useAppStore()
   const { habits, currentYear, currentMonth, getMonthMinutes } = useHabits()
-  const HABIT_KEYS = useActiveHabitKeys()
+  const HABIT_KEYS      = useActiveHabitKeys()
+  const todayMonth      = getBRTMonth()
+  const todayYear       = getBRTYear()
+  const isCurrentMonth  = currentMonth === todayMonth && currentYear === todayYear
 
   const totalMonthMin = HABIT_KEYS.reduce((acc, k) => acc + getMonthMinutes(k), 0)
   const bestHabitKey  = HABIT_KEYS.reduce((best, k) =>
@@ -70,11 +74,21 @@ export function MonthlyView() {
           >
             <ChevronLeft size={18} />
           </button>
-          <div className="text-center">
+          <div className="flex flex-col items-center gap-1.5 flex-1">
             <div className="font-bold text-slate-100 text-lg">
               {formatMonthYear(currentYear, currentMonth)}
             </div>
             <div className="text-slate-500 text-xs">Visão Mensal</div>
+            {!isCurrentMonth && (
+              <button
+                onClick={() => useAppStore.setState({
+                  data: { ...useAppStore.getState().data, currentMonth: todayMonth, currentYear: todayYear },
+                })}
+                className="px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 hover:text-violet-300 border border-violet-500/20 transition-all"
+              >
+                Hoje
+              </button>
+            )}
           </div>
           <button
             onClick={() => navigate('next')}

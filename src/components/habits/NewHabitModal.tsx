@@ -185,10 +185,10 @@ export function NewHabitModal({ open, onClose }: NewHabitModalProps) {
             <div className="sm:hidden flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-white/20" />
             </div>
-            <div className="glass sm:rounded-2xl rounded-t-2xl border border-white/10 shadow-card p-5 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto max-h-[88vh]">
+            <div className="glass sm:rounded-2xl rounded-t-2xl border border-white/10 shadow-card flex flex-col max-h-[90vh]">
 
-              {/* Header */}
-              <div className="flex items-center justify-between">
+              {/* Header — fixed, doesn't scroll */}
+              <div className="shrink-0 flex items-center justify-between px-5 sm:px-6 pt-5 pb-4 border-b border-white/[0.06]">
                 <div>
                   <h2 className="text-base font-bold text-slate-100">Novo Hábito</h2>
                   <p className="text-xs text-slate-500 mt-0.5">Configure e adicione à sua rotina</p>
@@ -200,6 +200,9 @@ export function NewHabitModal({ open, onClose }: NewHabitModalProps) {
                   <X className="w-4 h-4" />
                 </button>
               </div>
+
+              {/* Body — scrolls */}
+              <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 space-y-4">
 
               {/* Preview strip */}
               <div
@@ -375,8 +378,10 @@ export function NewHabitModal({ open, onClose }: NewHabitModalProps) {
                 )}
               </div>
 
-              {/* Actions — sticky on mobile */}
-              <div className="flex gap-3 pt-1 sticky bottom-0 bg-transparent pb-safe">
+              </div>{/* end body */}
+
+              {/* Footer — fixed, doesn't scroll */}
+              <div className="shrink-0 flex gap-3 px-5 sm:px-6 py-4 border-t border-white/[0.06] pb-safe">
                 <Button variant="ghost" onClick={handleClose} className="flex-1 min-h-[44px]">
                   Cancelar
                 </Button>

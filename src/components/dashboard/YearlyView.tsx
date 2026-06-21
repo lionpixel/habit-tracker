@@ -10,13 +10,15 @@ import { StatCard }   from '@/components/ui/StatCard'
 import { HabitIcon }  from '@/lib/habitIcons'
 import { FadeInUp, StaggerList, StaggerItem } from '@/components/ui/Motion'
 import { formatTime, getMonthKey } from '@/lib/helpers'
+import { getBRTYear } from '@/lib/time'
+import { useAppStore } from '@/store/appStore'
 import { MONTH_NAMES } from '@/lib/constants'
 import { useActiveHabitKeys } from '@/store/selectors'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
-import { Timer, Trophy, Calendar, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react'
+import { Timer, Trophy, Calendar, TrendingUp, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 import type { TooltipProps } from 'recharts'
 function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
@@ -176,7 +178,15 @@ function MonthBlock({ monthIndex, monthName, currentYear, grandTotal }: MonthBlo
 
 export function YearlyView() {
   const { habits, currentYear } = useHabits()
-  const HABIT_KEYS = useActiveHabitKeys()
+  const HABIT_KEYS    = useActiveHabitKeys()
+  const todayYear     = getBRTYear()
+  const isCurrentYear = currentYear === todayYear
+
+  function navigateYear(dir: 'prev' | 'next') {
+    const store = useAppStore.getState()
+    const y = store.data.currentYear + (dir === 'next' ? 1 : -1)
+    useAppStore.setState({ data: { ...store.data, currentYear: y } })
+  }
 
   const yearTotals = HABIT_KEYS.reduce(
     (acc, k) => ({ ...acc, [k]: habits[k].totalYear }),
@@ -198,15 +208,40 @@ export function YearlyView() {
   return (
     <div className="space-y-8">
 
-      {/* Header */}
+      {/* Header + year navigator */}
       <FadeInUp>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-violet-500/15 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-violet-500/15 flex items-center justify-center flex-shrink-0">
             <Calendar size={20} className="text-violet-400" />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <h2 className="text-2xl font-black text-slate-100">Visão Anual</h2>
             <p className="text-slate-500 text-sm">{currentYear} — clique em um mês para expandir</p>
+          </div>
+          {/* Year nav */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              onClick={() => navigateYear('prev')}
+              className="w-8 h-8 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200 border border-white/[0.06] flex items-center justify-center transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            {!isCurrentYear && (
+              <button
+                onClick={() => useAppStore.setState({
+                  data: { ...useAppStore.getState().data, currentYear: todayYear },
+                })}
+                className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 hover:text-violet-300 border border-violet-500/20 transition-all"
+              >
+                Hoje
+              </button>
+            )}
+            <button
+              onClick={() => navigateYear('next')}
+              className="w-8 h-8 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200 border border-white/[0.06] flex items-center justify-center transition-all"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </FadeInUp>

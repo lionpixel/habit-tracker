@@ -14,6 +14,7 @@ import { RiskAlerts }             from './RiskAlerts'
 import { InsightCards }           from './InsightCards'
 import { FadeInUp }               from '@/components/ui/Motion'
 import { getWeekDates, formatDate, formatTime } from '@/lib/helpers'
+import { getBRTWeekNumber, getBRTYear } from '@/lib/time'
 import { useActiveHabitKeys }     from '@/store/selectors'
 import { NewHabitModal }          from '@/components/habits/NewHabitModal'
 import { useState }               from 'react'
@@ -118,8 +119,11 @@ export function WeeklyView() {
     habits, currentWeek, currentYear,
     getWeekMinutes, getWeekCount, getWeekProgress,
   } = useHabits()
-  const HABIT_KEYS    = useActiveHabitKeys()
+  const HABIT_KEYS     = useActiveHabitKeys()
   const [newHabitOpen, setNewHabitOpen] = useState(false)
+  const todayWeek      = getBRTWeekNumber()
+  const todayYear      = getBRTYear()
+  const isCurrentWeek  = currentWeek === todayWeek && currentYear === todayYear
 
   const { start, end } = getWeekDates(currentYear, currentWeek)
   const dateRange = `${formatDate(start)} – ${formatDate(end)}`
@@ -146,11 +150,11 @@ export function WeeklyView() {
 
       {/* ── Week navigator ── */}
       <FadeInUp delay={0}>
-        <div className="card p-4 flex items-center justify-between gap-4">
+        <div className="card p-4 flex items-center justify-between gap-3">
           <button
             onClick={() => navigate('prev')}
             className={cn(
-              'w-9 h-9 rounded-xl flex items-center justify-center',
+              'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
               'bg-white/[0.05] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200',
               'border border-white/[0.06] hover:border-white/[0.1]',
               'transition-all duration-200 active:scale-90',
@@ -158,16 +162,28 @@ export function WeeklyView() {
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <div className="text-center">
+
+          <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
             <div className="text-sm font-bold text-slate-100">
               Semana <span className="text-gradient-brand">{currentWeek}</span>
             </div>
             <div className="text-xs text-slate-500">{dateRange} · {currentYear}</div>
+            {!isCurrentWeek && (
+              <button
+                onClick={() => useAppStore.setState({
+                  data: { ...useAppStore.getState().data, currentWeek: todayWeek, currentYear: todayYear },
+                })}
+                className="mt-0.5 px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 hover:text-violet-300 border border-violet-500/20 transition-all"
+              >
+                Hoje
+              </button>
+            )}
           </div>
+
           <button
             onClick={() => navigate('next')}
             className={cn(
-              'w-9 h-9 rounded-xl flex items-center justify-center',
+              'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
               'bg-white/[0.05] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200',
               'border border-white/[0.06] hover:border-white/[0.1]',
               'transition-all duration-200 active:scale-90',
