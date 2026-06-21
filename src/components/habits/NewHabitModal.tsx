@@ -166,15 +166,26 @@ export function NewHabitModal({ open, onClose }: NewHabitModalProps) {
             onClick={handleClose}
           />
 
-          {/* Panel */}
+          {/* Panel — bottom sheet on mobile, centered modal on desktop */}
           <motion.div
-            className="fixed inset-x-4 top-[10%] bottom-auto z-modal mx-auto max-w-lg"
-            initial={{ opacity: 0, y: -24, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.98 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+            className={[
+              'fixed z-modal',
+              /* mobile: bottom sheet */
+              'bottom-0 left-0 right-0',
+              /* desktop: centered modal */
+              'sm:bottom-auto sm:top-[8%] sm:inset-x-4 sm:mx-auto sm:max-w-lg',
+            ].join(' ')}
+            initial={{ opacity: 0, y: '100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: '100%' }}
+            transition={{ type: 'spring', damping: 32, stiffness: 300 }}
+            style={{ willChange: 'transform' }}
           >
-            <div className="glass rounded-2xl border border-white/10 shadow-card p-6 space-y-5">
+            {/* Handle — mobile only */}
+            <div className="sm:hidden flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+            <div className="glass sm:rounded-2xl rounded-t-2xl border border-white/10 shadow-card p-5 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto max-h-[88vh]">
 
               {/* Header */}
               <div className="flex items-center justify-between">
@@ -224,7 +235,7 @@ export function NewHabitModal({ open, onClose }: NewHabitModalProps) {
                   placeholder="Ex: Tocar Violão"
                   maxLength={50}
                   className={cn(
-                    'w-full bg-white/[0.05] border rounded-xl px-3 py-2.5 text-sm text-slate-100',
+                    'w-full bg-white/[0.05] border rounded-xl px-3 py-3 text-sm text-slate-100',
                     'placeholder:text-slate-600 focus:outline-none focus:ring-1',
                     errors.name
                       ? 'border-red-500/50 focus:ring-red-500/50'
@@ -245,7 +256,7 @@ export function NewHabitModal({ open, onClose }: NewHabitModalProps) {
                   onChange={(e) => patch('description', e.target.value)}
                   placeholder="Breve descrição do hábito"
                   maxLength={200}
-                  className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/30"
+                  className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/30"
                 />
               </div>
 
@@ -338,7 +349,7 @@ export function NewHabitModal({ open, onClose }: NewHabitModalProps) {
                     onChange={(e) => patch('metaValue', parseInt(e.target.value) || 1)}
                     placeholder={metaCfg.placeholder}
                     className={cn(
-                      'w-full bg-white/[0.05] border rounded-xl px-3 py-2.5 text-sm text-slate-100',
+                      'w-full bg-white/[0.05] border rounded-xl px-3 py-3 text-sm text-slate-100',
                       'focus:outline-none focus:ring-1',
                       errors.metaValue
                         ? 'border-red-500/50 focus:ring-red-500/50'
@@ -358,18 +369,18 @@ export function NewHabitModal({ open, onClose }: NewHabitModalProps) {
                       min={1} max={7}
                       value={form.frequency}
                       onChange={(e) => patch('frequency', parseInt(e.target.value) || 1)}
-                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/30"
+                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-3 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/30"
                     />
                   </div>
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-3 pt-1">
-                <Button variant="ghost" onClick={handleClose} className="flex-1">
+              {/* Actions — sticky on mobile */}
+              <div className="flex gap-3 pt-1 sticky bottom-0 bg-transparent pb-safe">
+                <Button variant="ghost" onClick={handleClose} className="flex-1 min-h-[44px]">
                   Cancelar
                 </Button>
-                <Button onClick={handleCreate} className="flex-1">
+                <Button onClick={handleCreate} className="flex-1 min-h-[44px]">
                   Criar Hábito
                 </Button>
               </div>

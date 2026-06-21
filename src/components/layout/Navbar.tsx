@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Bell, Flame } from 'lucide-react'
+import { Bell, Flame, Menu } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 import { formatDisplayBRT, TZ } from '@/lib/time'
 import { useAppStore } from '@/store/appStore'
@@ -20,7 +20,7 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/report':  { title: 'Relatório Geral',    subtitle: 'Insights detalhados do seu progresso' },
 }
 
-export function Navbar() {
+export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname()
   const [time, setTime] = useState('')
   const [date, setDate] = useState('')
@@ -55,12 +55,26 @@ export function Navbar() {
       )}
       style={{ left: 'var(--sidebar-w)' }}
     >
+      {/* Hamburger — mobile only */}
+      <button
+        onClick={onMenuClick}
+        className={cn(
+          'lg:hidden w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
+          'text-slate-400 hover:text-slate-200',
+          'bg-white/[0.04] hover:bg-white/[0.08]',
+          'border border-white/[0.06] transition-all duration-200',
+        )}
+        aria-label="Abrir menu"
+      >
+        <Menu className="w-4 h-4" />
+      </button>
+
       {/* Page title */}
       <div className="flex-1 min-w-0">
         <h1 className="text-sm font-bold text-slate-100 truncate leading-tight">
           {pageInfo.title}
         </h1>
-        <p className="text-xs text-slate-500 truncate">{pageInfo.subtitle}</p>
+        <p className="hidden sm:block text-xs text-slate-500 truncate">{pageInfo.subtitle}</p>
       </div>
 
       {/* Right cluster */}

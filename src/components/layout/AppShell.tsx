@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { Sidebar } from './Sidebar'
 import { Navbar } from './Navbar'
@@ -11,14 +11,12 @@ import { Activity } from 'lucide-react'
 function LoadingScreen() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#080b14]">
-      {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-violet-500/10 rounded-full blur-[120px]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/08 rounded-full blur-[80px]" />
       </div>
 
       <div className="relative flex flex-col items-center gap-6">
-        {/* Logo */}
         <div className="relative w-16 h-16">
           <div className="absolute inset-0 rounded-2xl bg-violet-gradient opacity-90 animate-pulse-glow" />
           <div className="absolute inset-0 rounded-2xl flex items-center justify-center">
@@ -27,18 +25,15 @@ function LoadingScreen() {
           <div className="absolute inset-0 rounded-2xl bg-violet-500/30 blur-xl scale-150 -z-10" />
         </div>
 
-        {/* Wordmark */}
         <div className="text-center">
           <div className="text-2xl font-bold text-gradient-brand tracking-tight">HabitDB</div>
           <div className="text-sm text-slate-500 mt-1">Carregando seu perfil...</div>
         </div>
 
-        {/* Loading bar */}
         <div className="w-48 h-0.5 bg-white/5 rounded-full overflow-hidden">
           <div className="h-full w-full bg-gradient-to-r from-violet-500 to-cyan-500 rounded-full animate-shimmer" />
         </div>
 
-        {/* Skeleton cards */}
         <div className="flex gap-3 mt-2">
           {[40, 56, 40].map((w, i) => (
             <div
@@ -55,6 +50,7 @@ function LoadingScreen() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { hydrate, hydrated } = useAppStore()
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
     hydrate()
@@ -66,8 +62,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar — desktop only */}
+      {/* Sidebar — desktop only (lg+) */}
       <Sidebar className="hidden lg:flex" />
+
+      {/* Mobile drawer */}
+      <>
+        {/* Overlay */}
+        {drawerOpen && (
+          <div
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden"
+            onClick={() => setDrawerOpen(false)}
+          />
+        )}
+        {/* Drawer panel */}
+        <div
+          className={[
+            'fixed top-0 left-0 h-full z-[70] lg:hidden',
+            'transition-transform duration-300 ease-in-out',
+            drawerOpen ? 'translate-x-0' : '-translate-x-full',
+          ].join(' ')}
+        >
+          <Sidebar onClose={() => setDrawerOpen(false)} />
+        </div>
+      </>
 
       {/* Main content area */}
       <div
@@ -75,7 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         style={{ marginLeft: 'var(--sidebar-w)' }}
       >
         {/* Top navbar */}
-        <Navbar />
+        <Navbar onMenuClick={() => setDrawerOpen(true)} />
 
         {/* Page content */}
         <main
@@ -86,9 +103,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
 
-        {/* FAB export */}
         <ExportButton />
-        {/* Mobile bottom nav */}
         <MobileNav />
       </div>
     </div>
@@ -102,11 +117,11 @@ import { cn } from '@/lib/helpers'
 import { LayoutDashboard, Calendar, Briefcase, DollarSign, Star } from 'lucide-react'
 
 const MOBILE_TABS = [
-  { href: '/weekly',   icon: LayoutDashboard, label: 'Hábitos' },
-  { href: '/planner',  icon: Calendar,        label: 'Planner' },
-  { href: '/projects', icon: Briefcase,       label: 'Projetos'},
-  { href: '/finance',  icon: DollarSign,      label: 'Finanças'},
-  { href: '/dreams',   icon: Star,            label: 'Sonhos'  },
+  { href: '/weekly',   icon: LayoutDashboard, label: 'Hábitos'  },
+  { href: '/planner',  icon: Calendar,        label: 'Planner'  },
+  { href: '/projects', icon: Briefcase,       label: 'Projetos' },
+  { href: '/finance',  icon: DollarSign,      label: 'Finanças' },
+  { href: '/dreams',   icon: Star,            label: 'Sonhos'   },
 ] as const
 
 function MobileNav() {
@@ -122,10 +137,8 @@ function MobileNav() {
               key={href}
               href={href}
               className={cn(
-                'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200',
-                isActive
-                  ? 'text-violet-400'
-                  : 'text-slate-500 hover:text-slate-300',
+                'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[44px] min-h-[44px] justify-center',
+                isActive ? 'text-violet-400' : 'text-slate-500 hover:text-slate-300',
               )}
             >
               <div

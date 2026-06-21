@@ -47,6 +47,13 @@
   --sidebar-collapsed: 72px;
 }
 
+/* On mobile/tablet the sidebar is hidden — zero out the offset */
+@media (max-width: 1023px) {
+  :root {
+    --sidebar-w: 0px;
+  }
+}
+
 /* ── Reset ──────────────────────────────────────────────── */
 @layer base {
   *, *::before, *::after {
@@ -285,6 +292,10 @@
     background-clip: text;
     color: transparent;
   }
+
+  /* Safe area for iOS notch/home bar */
+  .safe-area-bottom  { padding-bottom: env(safe-area-inset-bottom, 8px); }
+  .pb-safe           { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
 
   /* Glow effects */
   .glow-violet  { filter: drop-shadow(0 0 12px rgba(124,58,237,0.6)); }

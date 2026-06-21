@@ -67,9 +67,10 @@ const NAV_ITEMS = [
 
 interface SidebarProps {
   className?: string
+  onClose?: () => void
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, onClose }: SidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -115,6 +116,7 @@ export function Sidebar({ className }: SidebarProps) {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      onClick={onClose}
                       className={cn(
                         'sidebar-item group w-full',
                         isActive && 'active',
