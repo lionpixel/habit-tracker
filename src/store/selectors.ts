@@ -123,16 +123,19 @@ export const selectMonthTotalMinutes = (s: ReturnType<typeof useAppStore.getStat
 }
 
 /**
- * Returns the habit key with the highest month total.
+ * Returns the active habit key with the highest month total.
+ * Returns null if there are no active habits.
  */
-export const selectBestHabitThisMonth = (s: ReturnType<typeof useAppStore.getState>) => {
+export const selectBestHabitThisMonth = (s: ReturnType<typeof useAppStore.getState>): string | null => {
   const { currentYear, currentMonth, habits } = s.data
-  const mKey = getMonthKey(currentYear, currentMonth)
-  return (Object.keys(habits) as HabitKey[]).reduce((best, key) =>
+  const mKey       = getMonthKey(currentYear, currentMonth)
+  const activeKeys = Object.keys(habits).filter((k) => !habits[k].archived)
+  if (activeKeys.length === 0) return null
+  return activeKeys.reduce((best, key) =>
     (habits[key].monthlyTotals[mKey] ?? 0) > (habits[best].monthlyTotals[mKey] ?? 0)
       ? key
       : best,
-    'reading' as HabitKey,
+    activeKeys[0],
   )
 }
 

@@ -194,7 +194,9 @@ export function YearlyView() {
   )
 
   const grandTotal = Object.values(yearTotals).reduce((a, b) => a + b, 0)
-  const bestHabit  = HABIT_KEYS.reduce((b, k) => yearTotals[k] > yearTotals[b] ? k : b, HABIT_KEYS[0] ?? 'reading')
+  const bestHabit  = HABIT_KEYS.length > 0
+    ? HABIT_KEYS.reduce((b, k) => yearTotals[k] > yearTotals[b] ? k : b, HABIT_KEYS[0])
+    : null
 
   const lineData = MONTH_NAMES.map((name, i) => {
     const mKey  = getMonthKey(currentYear, i + 1)
@@ -250,7 +252,7 @@ export function YearlyView() {
       <FadeInUp delay={0.05}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard icon={<Timer size={18} />}       value={formatTime(grandTotal)}    label="Total no Ano"    color="#6366f1" />
-          <StatCard icon={<Trophy size={18} />}       value={habits[bestHabit].name}    label="Hábito Destaque" color="#10b981" />
+          <StatCard icon={<Trophy size={18} />}       value={bestHabit ? habits[bestHabit].name : '—'} label="Hábito Destaque" color="#10b981" />
           <StatCard icon={<Calendar size={18} />}     value={String(currentYear)}       label="Ano Atual"       color="#8b5cf6" />
           <StatCard icon={<TrendingUp size={18} />}   value={`${Math.round(grandTotal / 60)}h`} label="Horas Totais" color="#0ea5e9" />
         </div>

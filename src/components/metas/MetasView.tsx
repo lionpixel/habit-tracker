@@ -27,8 +27,9 @@ export function MetasView() {
     (acc, k) => acc + habits[k].totalYear / 60,
     0,
   )
-  const bestHabit = HABIT_KEYS.reduce((b, k) =>
-    habits[k].totalYear > habits[b].totalYear ? k : b, HABIT_KEYS[0] ?? 'reading')
+  const bestHabit = HABIT_KEYS.length > 0
+    ? HABIT_KEYS.reduce((b, k) => habits[k].totalYear > habits[b].totalYear ? k : b, HABIT_KEYS[0])
+    : null
 
   const fastingStreak = habits.fasting.currentStreak
 
@@ -53,7 +54,7 @@ export function MetasView() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard icon={<Timer size={18} />}       value={`${Math.round(totalHoursMonth)}h`} label="Horas no Mês"  color="#6366f1" />
           <StatCard icon={<CalendarDays size={18} />} value={`${Math.round(totalHoursYear)}h`}  label="Horas no Ano"  color="#10b981" />
-          <StatCard icon={<Trophy size={18} />}       value={habits[bestHabit].name}             label="Melhor Hábito" color="#8b5cf6" />
+          <StatCard icon={<Trophy size={18} />}       value={bestHabit ? habits[bestHabit].name : '—'} label="Melhor Hábito" color="#8b5cf6" />
           <StatCard icon={<Flame size={18} />}        value={`${fastingStreak} dias`}             label="Streak Atual"  color="#06b6d4" />
         </div>
       </FadeInUp>

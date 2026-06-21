@@ -44,8 +44,9 @@ export function MonthlyView() {
   const isCurrentMonth  = currentMonth === todayMonth && currentYear === todayYear
 
   const totalMonthMin = HABIT_KEYS.reduce((acc, k) => acc + getMonthMinutes(k), 0)
-  const bestHabitKey  = HABIT_KEYS.reduce((best, k) =>
-    getMonthMinutes(k) > getMonthMinutes(best) ? k : best, HABIT_KEYS[0] ?? 'reading')
+  const bestHabitKey  = HABIT_KEYS.length > 0
+    ? HABIT_KEYS.reduce((best, k) => getMonthMinutes(k) > getMonthMinutes(best) ? k : best, HABIT_KEYS[0])
+    : null
 
   const chartData = HABIT_KEYS.map((k) => ({
     name:    habits[k].name,
@@ -110,7 +111,7 @@ export function MonthlyView() {
           />
           <StatCard
             icon={<Trophy size={18} />}
-            value={habits[bestHabitKey].name}
+            value={bestHabitKey ? habits[bestHabitKey].name : '—'}
             label="Melhor Hábito"
             color="#10b981"
           />
