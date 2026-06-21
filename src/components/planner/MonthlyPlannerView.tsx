@@ -5,20 +5,90 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, CalendarDays, ChevronLeft, ChevronRight, Activity } from 'lucide-react'
 import { useGoalsStore } from '@/store/goalsStore'
 import { GoalCard } from './GoalCard'
 import { GoalFormModal } from './GoalFormModal'
 import { MonthlyCalendar } from '@/components/calendar/MonthlyCalendar'
 import { FadeInUp, StaggerList, StaggerItem } from '@/components/ui/Motion'
 import { StatCard } from '@/components/ui/StatCard'
+import { HabitIcon } from '@/lib/habitIcons'
 import { TrendingUp, CheckCircle2, Clock, Target } from 'lucide-react'
 import type { MonthlyGoal } from '@/types/goals'
+import { useHabits } from '@/hooks/useHabits'
+import { useActiveHabitKeys } from '@/store/selectors'
+import { pct, getMonthKey } from '@/lib/helpers'
+import { cn } from '@/lib/helpers'
 
 const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 import { getBRTYear, getBRTMonth } from '@/lib/time'
 const CURRENT_YEAR  = getBRTYear()
 const CURRENT_MONTH = getBRTMonth()
+
+// ── Widget de progresso de hábitos do mês ────
+
+function HabitMonthlyWidget({ year, month }: { year: number; month: number }) {
+  const { habits, getMonthlyGoalInfo } = useHabits()
+  const activeKeys = useActiveHabitKeys()
+
+  const mKey = getMonthKey(year, month)
+
+  const rows = activeKeys.map((key) => {
+    const habit    = habits[key]
+    const mTotal   = habit.monthlyTotals?.[mKey] ?? 0
+    const goalInfo = getMonthlyGoalInfo(key)
+    const progress = goalInfo.progress
+    return { key, habit, mTotal, progress, goalInfo }
+  })
+
+  if (rows.length === 0) return null
+
+  return (
+    <FadeInUp delay={0.06}>
+      <div className="card p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Activity size={14} className="text-sky-400" />
+          <span className="text-sm font-bold text-slate-200">Hábitos — {MONTH_NAMES[month - 1]}</span>
+        </div>
+        <div className="space-y-2">
+          {rows.map(({ key, habit, progress, goalInfo }) => (
+            <div key={key} className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${habit.color}20` }}
+                >
+                  <HabitIcon id={habit.icon ?? 'Star'} className="w-3 h-3" style={{ color: habit.color }} />
+                </div>
+                <span className="text-xs font-semibold text-slate-300 flex-1 truncate">{habit.name}</span>
+                <span className={cn(
+                  'text-xs font-black tabular-nums',
+                  progress >= 100 ? 'text-emerald-400' : progress >= 50 ? 'text-violet-400' : 'text-slate-500',
+                )}>
+                  {progress}%
+                </span>
+                <span className="text-[10px] text-slate-600 tabular-nums w-14 text-right">
+                  {goalInfo.sessionsDone}/{goalInfo.sessionsPerMonth} sess
+                </span>
+              </div>
+              <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden ml-7">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width:      `${Math.min(100, progress)}%`,
+                    background: progress >= 100 ? '#10b981' : habit.color,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </FadeInUp>
+  )
+}
+
+// ── View principal ────────────────────────────
 
 export function MonthlyPlannerView() {
   const { quarterlyGoals, monthlyGoals, weeklyGoals, deleteMonthlyGoal } = useGoalsStore()
@@ -102,8 +172,11 @@ export function MonthlyPlannerView() {
         </FadeInUp>
       )}
 
+      {/* Progresso de hábitos do mês — fonte única appStore */}
+      <HabitMonthlyWidget year={year} month={month} />
+
       {mGoals.length === 0 ? (
-        <FadeInUp delay={0.06}>
+        <FadeInUp delay={0.07}>
           <div className="card p-8 text-center">
             <CalendarDays size={32} className="text-slate-700 mx-auto mb-3" />
             <p className="text-slate-500 font-semibold">Nenhuma meta para {MONTH_NAMES[month - 1]}</p>
