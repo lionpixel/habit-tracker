@@ -11,7 +11,8 @@ import { QuarterlyView }      from './QuarterlyView'
 import { MonthlyPlannerView } from './MonthlyPlannerView'
 import { WeeklyPlannerView }  from './WeeklyPlannerView'
 import { DailyPlannerView }   from './DailyPlannerView'
-import { GoalCascadePanel }   from './GoalCascadePanel'
+import { GoalCascadePanel }        from './GoalCascadePanel'
+import { GoogleCalendarPanel }     from './GoogleCalendarPanel'
 import { FadeInUp } from '@/components/ui/Motion'
 import { cn } from '@/lib/helpers'
 import { getBRTYear, getBRTMonth, getBRTDay, daysInMonthBRT, getTodayStr } from '@/lib/time'
@@ -185,6 +186,9 @@ export function PlannerView() {
 
       {/* Today's Breakdown */}
       <TodayBreakdown />
+
+      {/* Google Calendar */}
+      <GoogleCalendarPanel />
 
       {/* Tab bar */}
       <FadeInUp delay={0.03}>
