@@ -54,6 +54,15 @@ export function formatMonthYear(year: number, month: number): string {
   return `${MONTH_NAMES[month - 1]} ${year}`
 }
 
+/** Total de minutos de um hábito em um ano específico, via monthlyTotals */
+export function getYearTotal(monthlyTotals: Record<string, number>, year: number): number {
+  let total = 0
+  for (let m = 1; m <= 12; m++) {
+    total += monthlyTotals[getMonthKey(year, m)] ?? 0
+  }
+  return total
+}
+
 // ── Tempo ────────────────────────────────────
 
 /**
