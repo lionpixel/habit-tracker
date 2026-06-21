@@ -10,6 +10,7 @@
 // ─────────────────────────────────────────────
 
 import { useAppStore } from './appStore'
+import { useShallow } from 'zustand/react/shallow'
 import type { HabitKey } from '@/types/habit'
 import { getWeekKey, getMonthKey } from '@/lib/helpers'
 import { calculateFastingProgress } from '@/lib/fastingUtils'
@@ -169,7 +170,7 @@ export function useHabitMonthMinutes(key: HabitKey) {
   return useAppStore(selectHabitMonthMinutes(key))
 }
 export function useActiveHabitKeys() {
-  return useAppStore(selectActiveHabitKeys)
+  return useAppStore(useShallow(selectActiveHabitKeys))
 }
 export function useSetHabitCompletion() {
   return useAppStore(selectSetHabitCompletion)
