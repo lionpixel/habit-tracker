@@ -1,18 +1,16 @@
 'use client'
 
 // ─────────────────────────────────────────────
-//  Gráfico: Evolução Mensal Q1 2026
-//  Barras empilhadas por hábito — Jan / Fev / Mar
+//  Gráfico: Evolução Mensal por Hábito
+//  Barras empilhadas — dinâmico, lê do appStore
 // ─────────────────────────────────────────────
 
-import { useMemo } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
-import { MONTHLY_BAR_DATA } from '@/data/historicalData'
-import { HABIT_COLORS }     from '@/lib/constants'
-import { formatTime }       from '@/lib/helpers'
+import { useMonthlyBarData } from '@/hooks/useMonthlyBarData'
+import { formatTime }        from '@/lib/helpers'
 import { BarChart3, TrendingDown, TrendingUp } from 'lucide-react'
 
 interface TooltipPayloadEntry {
@@ -62,20 +60,19 @@ function CustomTooltip({
   )
 }
 
-const HABIT_BARS: { key: string; label: string; color: string }[] = [
-  { key: 'english',  label: 'Inglês',  color: HABIT_COLORS.english  },
-  { key: 'ppci',     label: 'PPCI',    color: HABIT_COLORS.ppci     },
-  { key: 'reading',  label: 'Leitura', color: HABIT_COLORS.reading  },
-  { key: 'dopamine', label: 'Detox',   color: HABIT_COLORS.dopamine },
-  { key: 'hiit',     label: 'HIIT',    color: HABIT_COLORS.hiit     },
-]
-
 export function MonthlyBarChart() {
-  const data = useMemo(() => MONTHLY_BAR_DATA, [])
+  const { bars, data, momLastTwo, bestMonth } = useMonthlyBarData()
 
-  const momFebMar = Math.round(
-    ((data[2].total - data[1].total) / data[1].total) * 100,
-  )
+  if (!data.length || !bars.length) return null
+
+  const lastTwo = data.length >= 2
+    ? `${data[data.length - 2].month}→${data[data.length - 1].month}`
+    : null
+
+  // Label for header: range of months shown
+  const rangeLabel = data.length === 1
+    ? data[0].month
+    : `${data[0].month} · … · ${data[data.length - 1].month}`
 
   return (
     <div className="card p-5">
@@ -86,53 +83,54 @@ export function MonthlyBarChart() {
             <BarChart3 size={16} className="text-violet-400" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-100">Evolução Q1 2026</h3>
-            <p className="text-xs text-slate-500">Janeiro · Fevereiro · Março por hábito</p>
+            <h3 className="text-sm font-bold text-slate-100">Evolução Mensal</h3>
+            <p className="text-xs text-slate-500">{rangeLabel} — por hábito</p>
           </div>
         </div>
 
-        {/* MoM badge */}
-        <div className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-xl ${
-          momFebMar >= 0
-            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-            : 'bg-red-500/10 text-red-400 border border-red-500/20'
-        }`}>
-          {momFebMar >= 0
-            ? <TrendingUp className="w-3 h-3" />
-            : <TrendingDown className="w-3 h-3" />}
-          Fev→Mar {momFebMar > 0 ? '+' : ''}{momFebMar}%
-        </div>
+        {/* MoM badge — last two months */}
+        {momLastTwo !== null && lastTwo && (
+          <div className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-xl ${
+            momLastTwo >= 0
+              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+              : 'bg-red-500/10 text-red-400 border border-red-500/20'
+          }`}>
+            {momLastTwo >= 0
+              ? <TrendingUp className="w-3 h-3" />
+              : <TrendingDown className="w-3 h-3" />}
+            {lastTwo} {momLastTwo > 0 ? '+' : ''}{momLastTwo}%
+          </div>
+        )}
       </div>
 
-      {/* Totals row */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
-        {data.map((d) => (
-          <div
-            key={d.month}
-            className={`rounded-xl p-3 border text-center ${
-              d.month === 'Fevereiro'
-                ? 'border-violet-500/30 bg-violet-500/[0.06]'
-                : 'border-white/[0.06] bg-white/[0.02]'
-            }`}
-          >
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{d.month}</div>
-            <div className={`text-sm font-black mt-0.5 tabular-nums ${
-              d.month === 'Fevereiro' ? 'text-violet-300' : 'text-slate-200'
-            }`}>
-              {formatTime(d.total)}
+      {/* Totals row — last 3 months max */}
+      <div className={`grid gap-3 mb-5`} style={{ gridTemplateColumns: `repeat(${Math.min(data.length, 3)}, 1fr)` }}>
+        {data.slice(-3).map((d) => {
+          const isBest = bestMonth?.monthKey === d.monthKey
+          return (
+            <div
+              key={d.monthKey}
+              className={`rounded-xl p-3 border text-center ${
+                isBest
+                  ? 'border-violet-500/30 bg-violet-500/[0.06]'
+                  : 'border-white/[0.06] bg-white/[0.02]'
+              }`}
+            >
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{d.month}</div>
+              <div className={`text-sm font-black mt-0.5 tabular-nums ${isBest ? 'text-violet-300' : 'text-slate-200'}`}>
+                {formatTime(d.total)}
+              </div>
+              {isBest && <div className="text-[9px] text-violet-400/80 font-semibold mt-0.5">Melhor mês</div>}
             </div>
-            {d.month === 'Fevereiro' && (
-              <div className="text-[9px] text-violet-400/80 font-semibold mt-0.5">Melhor mês</div>
-            )}
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Chart */}
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 4, right: 4, left: -12, bottom: 0 }} barCategoryGap="28%">
           <defs>
-            {HABIT_BARS.map((h) => (
+            {bars.map((h) => (
               <linearGradient key={h.key} id={`grad-m-${h.key}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%"   stopColor={h.color} stopOpacity={0.9} />
                 <stop offset="100%" stopColor={h.color} stopOpacity={0.55} />
@@ -160,14 +158,14 @@ export function MonthlyBarChart() {
             iconSize={7}
             wrapperStyle={{ fontSize: '10px', color: '#64748b', paddingTop: '12px' }}
           />
-          {HABIT_BARS.map((h) => (
+          {bars.map((h, i) => (
             <Bar
               key={h.key}
               dataKey={h.key}
               name={h.label}
               stackId="a"
               fill={`url(#grad-m-${h.key})`}
-              radius={h.key === 'hiit' ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+              radius={i === bars.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
             />
           ))}
         </BarChart>

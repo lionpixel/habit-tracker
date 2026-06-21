@@ -82,21 +82,23 @@ function Q1Banner() {
           </div>
         )}
         {/* HIIT alerta */}
-        <div className={cn(
-          'text-center p-2.5 rounded-xl border',
-          hiitAlert.isCritical
-            ? 'bg-red-500/[0.06] border-red-500/20'
-            : 'bg-white/[0.03] border-white/[0.05]',
-        )}>
+        {hiitAlert && (
           <div className={cn(
-            'flex items-center justify-center gap-1 text-sm font-black',
-            hiitAlert.isCritical ? 'text-red-400' : 'text-slate-200',
+            'text-center p-2.5 rounded-xl border',
+            hiitAlert.isCritical
+              ? 'bg-red-500/[0.06] border-red-500/20'
+              : 'bg-white/[0.03] border-white/[0.05]',
           )}>
-            {hiitAlert.isCritical && <AlertTriangle size={12} />}
-            HIIT {hiitAlert.dropPct}%
+            <div className={cn(
+              'flex items-center justify-center gap-1 text-sm font-black',
+              hiitAlert.isCritical ? 'text-red-400' : 'text-slate-200',
+            )}>
+              {hiitAlert.isCritical && <AlertTriangle size={12} />}
+              HIIT {hiitAlert.dropPct}%
+            </div>
+            <div className="text-[10px] text-slate-500 font-semibold mt-0.5">queda em Mar</div>
           </div>
-          <div className="text-[10px] text-slate-500 font-semibold mt-0.5">queda em Mar</div>
-        </div>
+        )}
       </div>
       {/* MoM trend */}
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.06]">
