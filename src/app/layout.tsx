@@ -2,9 +2,10 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Toaster } from 'sonner'
 import './globals.css'
-import { AppShell }    from '@/components/layout/AppShell'
-import { ThemeProvider } from '@/contexts/ThemeContext'
-import { AuthProvider }  from '@/providers/AuthProvider'
+import { AppShell }      from '@/components/layout/AppShell'
+import { ThemeProvider }  from '@/contexts/ThemeContext'
+import { AuthProvider }   from '@/providers/AuthProvider'
+import { ErrorBoundary }  from '@/components/ErrorBoundary'
 
 const inter = Inter({
   subsets:  ['latin'],
@@ -53,13 +54,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${inter.variable} dark`} suppressHydrationWarning>
       <body className="antialiased">
-        <ThemeProvider>
-          <AuthProvider>
-            <AppShell>
-              {children}
-            </AppShell>
-          </AuthProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <AuthProvider>
+              <AppShell>
+                {children}
+              </AppShell>
+            </AuthProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
 
         <Toaster
           position="top-right"

@@ -21,6 +21,7 @@ import {
   toggleHabit, decreaseHabit, recalcMonthlyTotals, setHabitCompletionForDate,
 } from '@/services/habitsService'
 import { getBRTWeekNumber, getBRTMonth, getBRTYear, getTodayStr, diffInDays } from '@/lib/time'
+import { STORAGE_KEY } from '@/lib/constants'
 import { HISTORICAL_MINUTES } from '@/data/historicalData'
 import { calculateFastingProgress } from '@/lib/fastingUtils'
 
@@ -107,15 +108,58 @@ export const useAppStore = create<AppStore>()(
 
     // ── Hidratação (client-side only) ─────────
     hydrate() {
-      const raw       = loadAppData(DEFAULT_APP_DATA)
+      let raw: AppData
+      try {
+        raw = loadAppData(DEFAULT_APP_DATA)
+      } catch {
+        // Storage corrompido — limpa e usa defaults
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(STORAGE_KEY)
+        }
+        raw = DEFAULT_APP_DATA
+      }
       const sleepData = loadSleepData(DEFAULT_SLEEP_DATA)
       const pomoData  = loadPomoData(DEFAULT_POMO_DATA)
       const backups   = listBackups()
 
+      // Migração de schema: garante que todos os campos adicionados após o
+      // widening de HabitKey existam em dados antigos do localStorage.
+      // Roda antes de qualquer acesso a campos opcionais.
+      const habits = (() => {
+        const h = { ...DEFAULT_HABITS } as typeof raw.habits
+        // Sobrepõe com o que veio do localStorage, preenchendo campos ausentes
+        // com o default de cada hábito builtin.
+        ;(Object.keys(raw.habits) as string[]).forEach((key) => {
+          const stored  = (raw.habits as Record<string, import('@/types/habit').Habit>)[key]
+          const def     = (DEFAULT_HABITS as Record<string, import('@/types/habit').Habit>)[key]
+          ;(h as Record<string, import('@/types/habit').Habit>)[key] = {
+            ...(def ?? {}),
+            ...stored,
+            // Campos obrigatórios com fallback seguro
+            color:    stored?.color    ?? def?.color    ?? '#6366f1',
+            icon:     stored?.icon     ?? def?.icon     ?? 'Star',
+            archived: stored?.archived ?? false,
+            counts:   stored?.counts   ?? {},
+            monthlyTotals: stored?.monthlyTotals ?? {},
+            totalYear:     stored?.totalYear     ?? 0,
+            frequency:     stored?.frequency     ?? def?.frequency ?? 1,
+            target:        stored?.target        ?? def?.target    ?? 0,
+            unit:          stored?.unit          ?? def?.unit      ?? 'min',
+          }
+        })
+        // Garante que os 6 hábitos builtin sempre existam
+        if (!h.fasting) h.fasting = DEFAULT_HABITS.fasting
+        if (!h.reading) h.reading = DEFAULT_HABITS.reading
+        if (!h.english) h.english = DEFAULT_HABITS.english
+        if (!h.hiit)    h.hiit    = DEFAULT_HABITS.hiit
+        if (!h.ppci)    h.ppci    = DEFAULT_HABITS.ppci
+        if (!h.dopamine) h.dopamine = DEFAULT_HABITS.dopamine
+        return h
+      })()
+
       // Mescla dados históricos Q1 2026 no que vier do localStorage.
       // Garante que monthlyTotals e totalYear estejam sempre corretos,
       // independente do estado anterior do localStorage.
-      const habits = { ...raw.habits } as typeof raw.habits
       ;(Object.keys(HISTORICAL_MINUTES) as HabitKey[]).forEach((key) => {
         const historicalMonths = HISTORICAL_MINUTES[key]
         const habit = habits[key]
