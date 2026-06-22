@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { ScientificPillsRow } from '@/components/insights/ScientificPill'
 import { SCIENTIFIC_FACTS, BENCHMARKS } from '@/lib/benchmarks'
+import { HabitAnalysisModal } from '@/components/openai/HabitAnalysisModal'
 
 interface HabitCardProps {
   habitKey: HabitKey
@@ -56,8 +57,9 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
   const isEnglish = habitKey === 'english'
   const isFasting = habitKey === 'fasting'
 
-  const [editorOpen,  setEditorOpen]  = useState(false)
-  const [fastingOpen, setFastingOpen] = useState(false)
+  const [editorOpen,   setEditorOpen]   = useState(false)
+  const [fastingOpen,  setFastingOpen]  = useState(false)
+  const [analysisOpen, setAnalysisOpen] = useState(false)
 
   // Archived habits render minimised
   if (habit.archived) {
@@ -338,6 +340,20 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
               </Button>
             </motion.div>
           </div>
+
+          {/* ── Analisar hábito (IA) ── */}
+          <motion.button
+            onClick={() => setAnalysisOpen(true)}
+            whileTap={{ scale: 0.97 }}
+            className={cn(
+              'mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all',
+              'bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/[0.10]',
+              'text-slate-500 hover:text-slate-300',
+            )}
+          >
+            <TrendingUp className="w-3 h-3" />
+            Analisar com IA
+          </motion.button>
         </div>
       </motion.article>
 
@@ -346,6 +362,13 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
         habitKey={habitKey}
         open={editorOpen}
         onClose={() => setEditorOpen(false)}
+      />
+
+      {/* Análise IA modal */}
+      <HabitAnalysisModal
+        habitKey={habitKey}
+        open={analysisOpen}
+        onClose={() => setAnalysisOpen(false)}
       />
     </>
   )

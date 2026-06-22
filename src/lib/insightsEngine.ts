@@ -111,15 +111,15 @@ export function buildUserSnapshot(params: {
 
 export async function generateInsight(ctx: MetricContext): Promise<string> {
   try {
-    const res = await fetch('/api/insights', {
+    const res = await fetch('/api/openai/insight', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ metricContext: ctx }),
     })
 
-    if (res.status === 429) return 'Limite de requisições atingido. Aguarde 1 minuto.'
-    if (res.status === 503) return 'Configure ANTHROPIC_API_KEY no servidor para ativar insights.'
-    if (!res.ok)            return 'Não foi possível gerar insight no momento.'
+    if (res.status === 429) return 'Muitas requisições. Aguarde 1 minuto.'
+    if (res.status === 503) return 'Configure OPENAI_API_KEY no servidor para ativar insights.'
+    if (!res.ok)            return 'Não foi possível gerar insight agora.'
 
     const data = await res.json()
     return (data.insight ?? '').trim() || 'Insight indisponível.'

@@ -27,6 +27,7 @@ import {
 import { cn } from '@/lib/helpers'
 import { DreamVisionMosaic }  from '@/components/home/DreamVisionMosaic'
 import { InsightsDashboard }  from '@/components/insights/InsightsDashboard'
+import { WeeklyReportModal }  from '@/components/openai/WeeklyReportModal'
 
 function SectionTitle({
   icon, title, subtitle, className,
@@ -124,7 +125,8 @@ export function WeeklyView() {
     getWeekMinutes, getWeekCount, getWeekProgress,
   } = useHabits()
   const HABIT_KEYS     = useActiveHabitKeys()
-  const [newHabitOpen, setNewHabitOpen] = useState(false)
+  const [newHabitOpen,    setNewHabitOpen]    = useState(false)
+  const [reportModalOpen, setReportModalOpen] = useState(false)
   const todayWeek      = getBRTWeekNumber()
   const todayYear      = getBRTYear()
   const isCurrentWeek  = currentWeek === todayWeek && currentYear === todayYear
@@ -340,12 +342,27 @@ export function WeeklyView() {
 
       {/* ── Diagnóstico Integrado ── */}
       <FadeInUp delay={0.26}>
-        <SectionTitle
-          icon={<Sparkles className="w-4 h-4" />}
-          title="Diagnóstico Integrado"
-          subtitle="Análise cruzada de todos os módulos via IA"
-        />
+        <div className="flex items-center justify-between mb-5">
+          <SectionTitle
+            icon={<Sparkles className="w-4 h-4" />}
+            title="Diagnóstico Integrado"
+            subtitle="Análise cruzada de todos os módulos via IA"
+            className="mb-0"
+          />
+          <button
+            onClick={() => setReportModalOpen(true)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold flex-shrink-0',
+              'bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 hover:text-violet-200',
+              'border border-violet-500/20 hover:border-violet-500/30 transition-all duration-200 active:scale-95',
+            )}
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            Relatório da Semana
+          </button>
+        </div>
         <InsightsDashboard />
+        <WeeklyReportModal open={reportModalOpen} onClose={() => setReportModalOpen(false)} />
       </FadeInUp>
 
       {/* ── Vision Board ── */}
