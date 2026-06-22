@@ -7,6 +7,9 @@
 import { useState }    from 'react'
 import { toast }       from 'sonner'
 import { useSleep }    from '@/hooks/useSleep'
+import { useProfileStore } from '@/store/profileStore'
+import { useAppStore }     from '@/store/appStore'
+import { useActiveHabitKeys } from '@/store/selectors'
 import { Button }      from '@/components/ui/Button'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { FadeInUp } from '@/components/ui/Motion'
@@ -15,6 +18,7 @@ import type { SleepHistoryBadge, SleepHistoryItem } from '@/types/sleep'
 import {
   Moon, Clock, Zap, CalendarDays, AlarmClock,
   MonitorOff, BedDouble, CheckCircle2, TrendingUp, BarChart3,
+  Brain, Loader2, Star,
 } from 'lucide-react'
 import { ScientificPillsRow } from '@/components/insights/ScientificPill'
 import { BenchmarkBar } from '@/components/insights/BenchmarkBar'
@@ -104,23 +108,59 @@ const BADGE_LABELS: Record<SleepHistoryBadge, string> = {
 
 export function SleepView() {
   const {
-    config, todayEntry, plan, energyScore,
+    config, todayEntry, plan, sleepRules, energyScore,
     adjustmentChain, history, registerWakeTime, setTargetWake,
   } = useSleep()
+  const bigFiveHistory = useProfileStore((s) => s.bigFiveHistory)
+  const habits         = useAppStore((s) => s.data.habits)
+  const activeKeys     = useActiveHabitKeys()
 
-  const [wakeInput,   setWakeInput]   = useState(todayEntry?.wakeTime  ?? '06:00')
-  const [sleepInput,  setSleepInput]  = useState(todayEntry?.sleepTime ?? '')
-  const [targetInput, setTargetInput] = useState(config.targetWake)
+  const [wakeInput,    setWakeInput]    = useState(todayEntry?.wakeTime  ?? '06:00')
+  const [sleepInput,   setSleepInput]   = useState(todayEntry?.sleepTime ?? '')
+  const [targetInput,  setTargetInput]  = useState(config.targetWake)
+  const [quality,      setQuality]      = useState<1|2|3|4|5|undefined>(todayEntry?.quality)
+  const [notes,        setNotes]        = useState(todayEntry?.notes ?? '')
+
+  const [aiAnalysis,   setAiAnalysis]   = useState<Record<string,string> | null>(null)
+  const [aiLoading,    setAiLoading]    = useState(false)
 
   function handleRegister() {
     if (!wakeInput) { toast.error('Informe o horário de acordar.'); return }
-    registerWakeTime(wakeInput, sleepInput || undefined)
+    registerWakeTime(wakeInput, sleepInput || undefined, quality, notes)
     toast.success('Horários registrados!')
   }
 
   function handleSetTarget() {
     setTargetWake(targetInput)
     toast.success(`Meta: acordar às ${targetInput}`)
+  }
+
+  async function handleSleepAnalysis() {
+    if (!history.length) { toast.error('Registre ao menos uma noite de sono antes de analisar.'); return }
+    setAiLoading(true)
+    setAiAnalysis(null)
+    try {
+      const habitsSummary = activeKeys
+        .map((k) => `${habits[k].name}`)
+        .join(', ')
+      const res = await fetch('/api/openai/sleep-analysis', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          sleepHistory:  history.slice(0, 30),
+          targetWake:    config.targetWake,
+          bigFive:       bigFiveHistory[0] ?? null,
+          habitsSummary: habitsSummary || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (data.analysis) setAiAnalysis(data.analysis)
+      else toast.error(data.error ?? 'Erro ao gerar análise.')
+    } catch {
+      toast.error('Erro de conexão.')
+    } finally {
+      setAiLoading(false)
+    }
   }
 
   return (
@@ -175,6 +215,45 @@ export function SleepView() {
             </div>
           </div>
 
+          {/* Qualidade + notas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="text-xs text-slate-400 block mb-2">Qualidade do sono</label>
+              <div className="flex gap-2">
+                {([1,2,3,4,5] as const).map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setQuality((prev) => prev === n ? undefined : n)}
+                    className={cn(
+                      'flex items-center justify-center w-9 h-9 rounded-xl border text-sm font-bold transition-all',
+                      quality !== undefined && n <= quality
+                        ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                        : 'bg-white/[0.04] border-white/[0.08] text-slate-600 hover:border-white/20',
+                    )}
+                  >
+                    <Star size={14} className={quality !== undefined && n <= quality ? 'fill-amber-400 text-amber-400' : ''} />
+                  </button>
+                ))}
+                {quality !== undefined && (
+                  <span className="text-[11px] text-slate-500 self-center ml-1">
+                    {['','Péssimo','Ruim','Médio','Bom','Ótimo'][quality]}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-slate-400 block mb-1.5">Notas (opcional)</label>
+              <input
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Ex: acordei 2x durante a noite"
+                className="input w-full text-sm"
+              />
+            </div>
+          </div>
+
           {/* Target wake time */}
           <div className="flex items-center gap-3 pt-3 border-t border-white/5">
             <AlarmClock size={15} className="text-slate-500" />
@@ -191,24 +270,33 @@ export function SleepView() {
         </div>
       </FadeInUp>
 
-      {/* Day plan */}
+      {/* Day plan — 5 regras de sono */}
       {plan && (
         <FadeInUp delay={0.1}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {[
-              { label: 'Desligar Telas', time: plan.shutdown, icon: MonitorOff, color: '#f59e0b' },
-              { label: 'Dormir',         time: plan.bedtime,  icon: BedDouble,  color: '#8b5cf6' },
-              { label: 'Acordar',        time: plan.nextWake, icon: AlarmClock, color: '#10b981' },
-            ].map(({ label, time, icon: Icon, color }) => (
-              <div key={label} className="card p-6 text-center">
+              { label: 'Desligar Telas', sublabel: 'Hoje',   time: plan.screenOff,   icon: MonitorOff, color: '#f59e0b' },
+              { label: 'Dormir',         sublabel: 'Hoje',   time: plan.bedtime,     icon: BedDouble,  color: '#8b5cf6' },
+              { label: 'Acordar',        sublabel: 'Amanhã', time: plan.nextWake,    icon: AlarmClock, color: '#10b981' },
+              { label: 'Dormir',         sublabel: 'Amanhã', time: plan.nextBedtime, icon: BedDouble,  color: '#6366f1' },
+              {
+                label: sleepRules?.onGoal ? 'Na meta!' : `${sleepRules?.daysToGoal ?? 0} dias`,
+                sublabel: 'Para regularizar',
+                time: config.targetWake,
+                icon: AlarmClock,
+                color: sleepRules?.onGoal ? '#10b981' : '#06b6d4',
+              },
+            ].map(({ label, sublabel, time, icon: Icon, color }) => (
+              <div key={`${label}-${sublabel}`} className="card p-4 text-center">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2"
                   style={{ backgroundColor: `${color}18` }}
                 >
-                  <Icon size={22} style={{ color }} />
+                  <Icon size={18} style={{ color }} />
                 </div>
-                <div className="text-4xl font-black tabular-nums" style={{ color }}>{time}</div>
-                <div className="text-slate-400 text-sm mt-2">{label}</div>
+                <div className="text-2xl font-black tabular-nums leading-none" style={{ color }}>{time}</div>
+                <div className="text-slate-100 text-xs font-semibold mt-1.5">{label}</div>
+                <div className="text-slate-600 text-[10px] mt-0.5">{sublabel}</div>
               </div>
             ))}
           </div>
@@ -389,6 +477,73 @@ export function SleepView() {
                 )
               })}
             </div>
+          </div>
+        </FadeInUp>
+      )}
+
+      {/* IA de análise do sono */}
+      {history.length > 0 && (
+        <FadeInUp delay={0.35}>
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-violet-500/15 flex items-center justify-center">
+                  <Brain size={15} className="text-violet-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-100">Análise IA do Sono</p>
+                  <p className="text-[11px] text-slate-500">Conecta padrões com hábitos e personalidade</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSleepAnalysis}
+                disabled={aiLoading}
+                className="flex-shrink-0"
+              >
+                {aiLoading
+                  ? <><Loader2 size={12} className="animate-spin mr-1.5" />Analisando...</>
+                  : <><Brain size={12} className="mr-1.5" />{aiAnalysis ? 'Reanalisar' : 'Analisar meu sono'}</>
+                }
+              </Button>
+            </div>
+
+            {aiAnalysis && (
+              <div className="space-y-4">
+                {[
+                  { key: 'padrao',             label: 'Padrão identificado',      color: 'sky' },
+                  { key: 'impacto_aprendizado', label: 'Impacto no aprendizado',  color: 'violet' },
+                  { key: 'conexao_exercicio',   label: 'Conexão com exercício',   color: 'emerald' },
+                  { key: 'plano_regulacao',     label: 'Plano de regulação (7d)', color: 'amber' },
+                ].map(({ key, label, color }) => aiAnalysis[key] ? (
+                  <div key={key} className={cn(
+                    'p-3 rounded-xl border-l-2',
+                    color === 'sky'     && 'bg-sky-500/5 border-sky-500/40',
+                    color === 'violet'  && 'bg-violet-500/5 border-violet-500/40',
+                    color === 'emerald' && 'bg-emerald-500/5 border-emerald-500/40',
+                    color === 'amber'   && 'bg-amber-500/5 border-amber-500/40',
+                  )}>
+                    <p className={cn(
+                      'text-[10px] font-bold uppercase tracking-wider mb-1',
+                      color === 'sky'     && 'text-sky-400',
+                      color === 'violet'  && 'text-violet-400',
+                      color === 'emerald' && 'text-emerald-400',
+                      color === 'amber'   && 'text-amber-400',
+                    )}>{label}</p>
+                    <p className="text-[12px] text-slate-300 leading-relaxed">{aiAnalysis[key]}</p>
+                  </div>
+                ) : null)}
+              </div>
+            )}
+
+            {aiLoading && !aiAnalysis && (
+              <div className="space-y-2 mt-2">
+                {[1,2,3,4].map((i) => (
+                  <div key={i} className="h-14 rounded-xl bg-white/[0.04] animate-pulse" />
+                ))}
+              </div>
+            )}
           </div>
         </FadeInUp>
       )}

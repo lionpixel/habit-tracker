@@ -3,9 +3,11 @@
 // ─────────────────────────────────────────────
 
 export interface SleepEntry {
-  wakeTime: string        // "HH:MM"
+  wakeTime:  string           // "HH:MM"
   sleepTime: string | null
-  timestamp: string       // ISO string
+  timestamp: string           // ISO string
+  quality?:  1 | 2 | 3 | 4 | 5
+  notes?:    string
 }
 
 /** Chave: "YYYY-MM-DD" */
@@ -21,10 +23,18 @@ export interface SleepData {
 }
 
 export interface SleepPlan {
-  wake: string
-  shutdown: string
-  bedtime: string
-  nextWake: string
+  wake:        string   // hoje acordou
+  bedtime:     string   // hoje dormir (wake + 16h)
+  screenOff:   string   // desligar telas (bedtime - 2h)
+  nextWake:    string   // amanhã acordar (wake - 30min)
+  nextBedtime: string   // amanhã dormir (nextWake + 16h)
+  shutdown:    string   // alias de screenOff para compatibilidade
+}
+
+export interface SleepRulesResult {
+  plan:       SleepPlan
+  daysToGoal: number   // dias até atingir meta de acordar
+  onGoal:     boolean  // já na meta
 }
 
 export interface SleepEnergyScore {

@@ -28,6 +28,7 @@ import { RadialProgressChart } from '@/components/charts/RadialProgressChart'
 import { WeeklyHeatmapStrip } from '@/components/charts/WeeklyHeatmapStrip'
 import { StatusBadge, type StatusBadgeKind } from '@/components/ui/StatusBadge'
 import { DreamVisionMosaic } from '@/components/home/DreamVisionMosaic'
+import { NoteDrawerFAB } from '@/components/notes/NoteBlock'
 import { useAppStore } from '@/store/appStore'
 import { getWeekDates } from '@/lib/helpers'
 import { CHART_THEME, CHART_TOOLTIP_STYLE, CHART_AXIS_TICK, CHART_MARGIN } from '@/components/charts/chartTheme'
@@ -683,6 +684,8 @@ export function HomeView() {
           </div>
         </section>
       </FadeInUp>
+
+      <NoteDrawerFAB />
     </div>
   )
 }

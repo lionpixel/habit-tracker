@@ -25,12 +25,15 @@ import {
   Timer, CheckSquare, Zap, Award,
   TrendingUp, TrendingDown, Target, CalendarCheck,
   Map, BarChart3, Trophy, AlertTriangle, Layers, Plus, Sparkles,
-  CalendarDays,
+  CalendarDays, LayoutGrid,
 } from 'lucide-react'
 import { cn } from '@/lib/helpers'
-import { DreamVisionMosaic }  from '@/components/home/DreamVisionMosaic'
-import { InsightsDashboard }  from '@/components/insights/InsightsDashboard'
-import { WeeklyReportModal }  from '@/components/openai/WeeklyReportModal'
+import { DreamVisionMosaic }    from '@/components/home/DreamVisionMosaic'
+import { InsightsDashboard }    from '@/components/insights/InsightsDashboard'
+import { WeeklyReportModal }    from '@/components/openai/WeeklyReportModal'
+import { MonthlyGoalsBlock }    from '@/components/metas/MonthlyGoalsBlock'
+import { WeekRhythmBlock }      from '@/components/dashboard/WeekRhythmBlock'
+import { NoteBlock, NoteDrawerFAB } from '@/components/notes/NoteBlock'
 
 function getBRTHour(): number {
   try {
@@ -301,6 +304,12 @@ export function WeeklyView() {
       {/* ── Week navigator ── */}
       <FadeInUp delay={0}>
         <div className="card p-4 flex items-center justify-between gap-3">
+          <a
+            href="/planner"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.04] text-slate-400 hover:bg-emerald-500/10 hover:text-emerald-300 border border-white/[0.06] hover:border-emerald-500/20 transition-all flex-shrink-0"
+          >
+            <LayoutGrid size={12} /> Planner
+          </a>
           <button
             onClick={() => navigate('prev')}
             className={cn(
@@ -388,7 +397,14 @@ export function WeeklyView() {
             <p className="text-xs font-bold text-slate-400 mb-0.5">Dias da semana</p>
             <p className="text-[10px] text-slate-600">Completude diária de hábitos</p>
           </div>
-          <WeeklyHeatmapStrip days={weekDayHeatmap} />
+          <WeeklyHeatmapStrip
+            data={Object.fromEntries(
+              weekDayHeatmap.map((d, i) => {
+                const keys = ['seg','ter','qua','qui','sex','sab','dom']
+                return [keys[i], d.pct]
+              })
+            )}
+          />
         </div>
       </FadeInUp>
 
@@ -518,8 +534,28 @@ export function WeeklyView() {
         <WeeklyReportModal open={reportModalOpen} onClose={() => setReportModalOpen(false)} />
       </FadeInUp>
 
-      {/* ── Vision Board ── */}
+      {/* ── Metas do Mês ── */}
+      <FadeInUp delay={0.28}>
+        <MonthlyGoalsBlock />
+      </FadeInUp>
+
+      {/* ── Ritmo Semanal ── */}
+      <FadeInUp delay={0.29}>
+        <SectionTitle
+          icon={<CalendarDays className="w-4 h-4" />}
+          title="Ritmo da Semana"
+          subtitle="Papel de cada dia no sistema"
+        />
+        <WeekRhythmBlock year={currentYear} week={currentWeek} />
+      </FadeInUp>
+
+      {/* ── Notas da Semana ── */}
       <FadeInUp delay={0.30}>
+        <NoteBlock year={currentYear} week={currentWeek} />
+      </FadeInUp>
+
+      {/* ── Vision Board ── */}
+      <FadeInUp delay={0.31}>
         <SectionTitle
           icon={<Sparkles className="w-4 h-4" />}
           title="Quadro dos Sonhos"
@@ -527,6 +563,9 @@ export function WeeklyView() {
         />
         <DreamVisionMosaic />
       </FadeInUp>
+
+      {/* ── FAB: Notas ── */}
+      <NoteDrawerFAB />
 
     </div>
   )

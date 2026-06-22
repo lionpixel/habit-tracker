@@ -7,6 +7,7 @@
 import { useAppStore } from '@/store/appStore'
 import {
   buildSleepPlan,
+  calcSleepRules,
   calculateEnergyScore,
   buildAdjustmentChain,
   buildSleepHistory,
@@ -21,8 +22,13 @@ export function useSleep() {
   // Entrada de hoje
   const todayEntry = log[todayStr()]
 
-  // Registra acordar + dormir
-  function registerWakeTime(wakeTime: string, sleepTime?: string) {
+  // Registra acordar + dormir + qualidade + notas
+  function registerWakeTime(
+    wakeTime:  string,
+    sleepTime?: string,
+    quality?:   1 | 2 | 3 | 4 | 5,
+    notes?:     string,
+  ) {
     const today = todayStr()
     const updated: SleepData = {
       ...sleepData,
@@ -32,6 +38,8 @@ export function useSleep() {
           wakeTime,
           sleepTime: sleepTime ?? null,
           timestamp: new Date().toISOString(),
+          ...(quality !== undefined && { quality }),
+          ...(notes?.trim() && { notes: notes.trim() }),
         },
       },
     }
@@ -42,8 +50,9 @@ export function useSleep() {
     saveSleep({ ...sleepData, config: { ...config, targetWake } })
   }
 
-  // Plano
-  const plan = todayEntry ? buildSleepPlan(todayEntry.wakeTime) : null
+  // Plano + regras de sono
+  const plan          = todayEntry ? buildSleepPlan(todayEntry.wakeTime) : null
+  const sleepRules    = todayEntry ? calcSleepRules(todayEntry.wakeTime, config.targetWake) : null
 
   // Score de energia
   const energyScore = todayEntry
@@ -63,6 +72,7 @@ export function useSleep() {
     config,
     todayEntry,
     plan,
+    sleepRules,
     energyScore,
     adjustmentChain,
     history,

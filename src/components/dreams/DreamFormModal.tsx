@@ -9,7 +9,7 @@ import type { Dream, DreamCategory, DreamStatus } from '@/types/dreams'
 import { DREAM_CATEGORIES } from '@/types/dreams'
 import { useDreamsStore } from '@/store/dreamsStore'
 import { useGoalsStore }  from '@/store/goalsStore'
-import { uploadDreamImage, isSupabaseConfigured } from '@/lib/supabase'
+import { isSupabaseConfigured } from '@/lib/supabase'
 
 interface DreamFormModalProps {
   open:    boolean
@@ -89,9 +89,23 @@ export function DreamFormModal({ open, dream, onClose }: DreamFormModalProps) {
   async function handleFileUpload(file: File) {
     if (!file.type.startsWith('image/')) return
     setUploading(true)
-    const url = await uploadDreamImage(file)
-    setUploading(false)
-    if (url) set('imageUrl', url)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      if (dream?.id) fd.append('dreamId', dream.id)
+      const res = await fetch('/api/upload/dreams', { method: 'POST', body: fd })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setError(err.message ?? 'Erro no upload da imagem.')
+        return
+      }
+      const { url } = await res.json()
+      if (url) set('imageUrl', url)
+    } catch {
+      setError('Erro de conexão ao fazer upload.')
+    } finally {
+      setUploading(false)
+    }
   }
 
   function handleSubmit() {

@@ -100,16 +100,28 @@ export interface BigFiveResult {
   aiAnalysis?:       BigFiveAnalysis
 }
 
-export function getBigFiveQuarter(date: Date = new Date()): string {
-  const y = date.getFullYear()
-  const q = Math.ceil((date.getMonth() + 1) / 3)
-  return `${y}-Q${q}`
+function getBRTPartsNow(): { year: number; month: number; day: number } {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  })
+  const p = Object.fromEntries(fmt.formatToParts(new Date()).map(({ type, value }) => [type, value]))
+  return { year: parseInt(p.year), month: parseInt(p.month), day: parseInt(p.day) }
+}
+
+export function getBigFiveQuarter(): string {
+  const { year, month } = getBRTPartsNow()
+  const q = Math.ceil(month / 3)
+  return `${year}-Q${q}`
 }
 
 export function shouldRemindBigFive(history: BigFiveResult[]): boolean {
   if (!history.length) return true
-  const last = new Date(history[0].date)
-  const daysSince = Math.floor((Date.now() - last.getTime()) / 86_400_000)
+  const { year: ny, month: nm, day: nd } = getBRTPartsNow()
+  const [ly, lm, ld] = history[0].date.split('-').map(Number)
+  const daysSince = Math.round(
+    (Date.UTC(ny, nm - 1, nd) - Date.UTC(ly, lm - 1, ld)) / 86_400_000,
+  )
   return daysSince >= 75
 }
 

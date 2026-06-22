@@ -116,6 +116,24 @@ export interface DailyTask {
   tags?:            string[]
   createdAt:        string
   completedAt?:     string
+  pomosPlanned?:    number   // 1 | 2  (2+2+1 system)
+  pomosCompleted?:  number   // 0..pomosPlanned
+}
+
+// ── Personal Rules ────────────────────────────
+
+export type RuleCategory = 'social' | 'consumo' | 'foco' | 'saude' | 'outro'
+
+export interface PersonalRule {
+  id:             string
+  title:          string
+  description?:   string
+  category:       RuleCategory
+  limit?:         number      // e.g. 3 (vezes/dia)
+  limitUnit?:     string      // e.g. 'vez/dia'
+  days?:          number[]    // 0=dom..6=sab; undefined = every day
+  completedDates: string[]    // YYYY-MM-DD dates marked done
+  createdAt:      string
 }
 
 // ── Project ───────────────────────────────────
@@ -157,6 +175,8 @@ export interface GoalsStore {
   weeklyGoals:    WeeklyGoal[]
   dailyTasks:     DailyTask[]
   projects:       Project[]
+  notes:          Record<string, string>  // "YYYY-WNN" → markdown content
+  personalRules:  PersonalRule[]
 }
 
 // ── Helpers ───────────────────────────────────
@@ -188,10 +208,17 @@ export function getQuarterRange(year: number, quarter: Quarter): string {
 }
 
 export function getDaysUntil(dateStr: string): number {
-  const target = new Date(dateStr)
-  const today  = new Date()
-  today.setHours(0, 0, 0, 0)
-  return Math.ceil((target.getTime() - today.getTime()) / 86_400_000)
+  // Import inline to avoid circular deps — both are pure string ops
+  const [ty, tm, td] = dateStr.split('-').map(Number)
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  })
+  const p = Object.fromEntries(fmt.formatToParts(new Date()).map(({ type, value }) => [type, value]))
+  const [ny, nm, nd] = [parseInt(p.year), parseInt(p.month), parseInt(p.day)]
+  return (
+    Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(ny, nm - 1, nd)) / 86_400_000)
+  )
 }
 
 export function isOverdue(dateStr: string): boolean {

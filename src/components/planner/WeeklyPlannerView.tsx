@@ -844,6 +844,12 @@ export function WeeklyPlannerView() {
           </div>
 
           <div className="flex items-center gap-2">
+            <a
+              href="/weekly"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.04] text-slate-400 hover:bg-white/[0.07] hover:text-slate-200 border border-white/[0.07] transition-all"
+            >
+              <CalendarDays size={12} /> Ver Semanal
+            </a>
             <button
               type="button"
               onClick={() => setNewHabitOpen(true)}
