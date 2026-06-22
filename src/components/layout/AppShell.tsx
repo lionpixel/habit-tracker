@@ -1,12 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { useAppStore } from '@/store/appStore'
 import { Sidebar } from './Sidebar'
 import { Navbar } from './Navbar'
 import { ExportButton } from './ExportButton'
 import { RestoreBanner } from './RestoreBanner'
 import { Activity } from 'lucide-react'
+
+const AUTH_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password']
 
 function LoadingScreen() {
   return (
@@ -51,10 +54,16 @@ function LoadingScreen() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { hydrate, hydrated } = useAppStore()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     hydrate()
   }, [hydrate])
+
+  // Páginas de auth não têm sidebar/navbar
+  if (AUTH_PATHS.some((p) => pathname.startsWith(p))) {
+    return <>{children}</>
+  }
 
   if (!hydrated) {
     return <LoadingScreen />
@@ -111,7 +120,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 /* ── Mobile bottom nav ── */
-import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/lib/helpers'
 import { LayoutDashboard, Calendar, Briefcase, DollarSign, Star } from 'lucide-react'

@@ -1,9 +1,11 @@
 // Middleware de sessão Supabase.
-// Roda em cada request e garante que tokens expirados sejam renovados
-// antes de chegarem aos Route Handlers / Server Components.
+// 1. Renova tokens expirados em cada request.
+// 2. Protege rotas — redireciona para /login se não autenticado.
 
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+
+const PUBLIC_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password']
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -17,7 +19,6 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          // Propaga os cookies atualizados tanto no request quanto no response.
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           )
@@ -30,16 +31,32 @@ export async function middleware(request: NextRequest) {
     },
   )
 
-  // Renova a sessão se o access token expirou.
-  // getUser() é a única chamada segura para validar o JWT aqui.
-  await supabase.auth.getUser()
+  // getUser() valida o JWT contra o servidor Supabase — única chamada segura aqui.
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { pathname } = request.nextUrl
+  const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
+
+  // Não autenticado tentando acessar rota protegida → /login
+  if (!user && !isPublicPath) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  // Autenticado tentando acessar página de auth → /weekly
+  if (user && isPublicPath) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/weekly'
+    return NextResponse.redirect(url)
+  }
 
   return response
 }
 
 export const config = {
   matcher: [
-    // Roda em todas as rotas exceto estáticos e _next internals.
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Exclui estáticos, _next internals, rotas de API e arquivos com extensão
+    '/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 }

@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Bell, Flame, Menu } from 'lucide-react'
+import { Bell, Flame, Menu, LogOut, User as UserIcon } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 import { formatDisplayBRT, TZ } from '@/lib/time'
 import { useAppStore } from '@/store/appStore'
 import { useHabits } from '@/hooks/useHabits'
 import { useActiveHabitKeys } from '@/store/selectors'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { useAuth } from '@/providers/AuthProvider'
 
 const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/weekly':  { title: 'Dashboard Semanal',  subtitle: 'Acompanhe seus hábitos desta semana' },
@@ -24,8 +25,10 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname()
   const [time, setTime] = useState('')
   const [date, setDate] = useState('')
+  const [avatarOpen, setAvatarOpen] = useState(false)
   useAppStore()
   const { getWeekProgress } = useHabits()
+  const { user, signOut } = useAuth()
 
   const pageInfo = Object.entries(PAGE_TITLES).find(([k]) => pathname.startsWith(k))?.[1]
     ?? { title: 'HabitDB', subtitle: '' }
@@ -110,12 +113,61 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
           <Bell className="w-4 h-4" />
         </button>
 
-        {/* Avatar */}
-        <div className="relative w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer group">
-          <div className="absolute inset-0 bg-violet-gradient opacity-80 group-hover:opacity-100 transition-opacity" />
-          <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
-            H
-          </div>
+        {/* Avatar + dropdown */}
+        <div className="relative flex-shrink-0">
+          <button
+            onClick={() => setAvatarOpen((o) => !o)}
+            className="relative w-9 h-9 rounded-xl overflow-hidden cursor-pointer group focus:outline-none"
+            title={user?.displayName ?? 'Usuário'}
+          >
+            {user?.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={user.avatarUrl} alt={user.displayName} className="w-full h-full object-cover" />
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-violet-gradient opacity-80 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
+                  {user?.displayName?.[0]?.toUpperCase() ?? 'H'}
+                </div>
+              </>
+            )}
+          </button>
+
+          {avatarOpen && (
+            <>
+              {/* Backdrop */}
+              <div className="fixed inset-0 z-[80]" onClick={() => setAvatarOpen(false)} />
+              {/* Dropdown */}
+              <div className="absolute right-0 top-11 z-[90] w-56 rounded-2xl bg-[#0f1117] border border-white/[0.08] shadow-2xl p-2 animate-in fade-in slide-in-from-top-2 duration-150">
+                {/* User info */}
+                <div className="px-3 py-2.5 mb-1 border-b border-white/[0.06]">
+                  <p className="text-sm font-semibold text-slate-100 truncate">
+                    {user?.displayName ?? 'Usuário'}
+                  </p>
+                  <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                </div>
+
+                <a
+                  href="/profile"
+                  onClick={() => setAvatarOpen(false)}
+                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-slate-300
+                             hover:bg-white/[0.06] hover:text-slate-100 transition-colors"
+                >
+                  <UserIcon className="w-3.5 h-3.5 text-slate-500" />
+                  Meu Perfil
+                </a>
+
+                <button
+                  onClick={() => { setAvatarOpen(false); signOut() }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-red-400
+                             hover:bg-red-500/[0.08] hover:text-red-300 transition-colors mt-1"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Sair
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </header>

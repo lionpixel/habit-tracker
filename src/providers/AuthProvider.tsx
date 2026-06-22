@@ -1,48 +1,73 @@
 'use client'
 
-// ─────────────────────────────────────────────
-//  Auth Provider — preparado para NextAuth / Supabase
-//  Atualmente serve o perfil local do authService.
-//  Quando ativar NextAuth: envolva com <SessionProvider>
-//  Quando ativar Supabase: use supabase.auth.onAuthStateChange()
-// ─────────────────────────────────────────────
-
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { authService, type UserProfile } from '@/services/authService'
+import { createSupabaseClient } from '@/lib/supabase/client'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
+
+// ── Tipos ────────────────────────────────────
+
+export interface UserProfile {
+  id:          string
+  email:       string
+  displayName: string
+  avatarUrl?:  string
+  createdAt:   string
+}
 
 interface AuthContextValue {
-  user:          UserProfile | null
-  isLoading:     boolean
+  user:            UserProfile | null
+  isLoading:       boolean
   isAuthenticated: boolean
-  signOut:       () => Promise<void>
-  refreshUser:   () => void
+  signOut:         () => Promise<void>
 }
+
+// ── Context ──────────────────────────────────
 
 const AuthContext = createContext<AuthContextValue>({
   user:            null,
   isLoading:       true,
   isAuthenticated: false,
   signOut:         async () => {},
-  refreshUser:     () => {},
 })
+
+// ── Helper ───────────────────────────────────
+
+function toProfile(u: SupabaseUser): UserProfile {
+  return {
+    id:          u.id,
+    email:       u.email ?? '',
+    displayName: u.user_metadata?.full_name ?? u.email?.split('@')[0] ?? 'Usuário',
+    avatarUrl:   u.user_metadata?.avatar_url,
+    createdAt:   u.created_at,
+  }
+}
+
+// ── Provider ─────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,      setUser]      = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  function refreshUser() {
-    const profile = authService.getProfile()
-    setUser(profile)
-    setIsLoading(false)
-  }
+  const supabase = createSupabaseClient()
 
   useEffect(() => {
-    refreshUser()
-  }, [])
+    // Sessão inicial
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user ? toProfile(user) : null)
+      setIsLoading(false)
+    })
+
+    // Listener para login / logout / refresh de token
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? toProfile(session.user) : null)
+      setIsLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function signOut() {
-    await authService.signOut()
-    setUser(null)
+    await supabase.auth.signOut()
+    window.location.href = '/login'
   }
 
   return (
@@ -51,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: user !== null,
       signOut,
-      refreshUser,
     }}>
       {children}
     </AuthContext.Provider>
