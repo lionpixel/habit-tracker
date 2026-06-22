@@ -20,6 +20,7 @@ import {
   Activity, AlertCircle, CheckCircle2, Loader2,
 } from 'lucide-react'
 import { FadeInUp } from '@/components/ui/Motion'
+import { RadialProgressChart } from '@/components/charts/RadialProgressChart'
 
 function StatusDot({ ok }: { ok: boolean | null }) {
   if (ok === null) return <span className="text-slate-600 text-[11px]">—</span>
@@ -120,93 +121,116 @@ export function InsightsDashboard() {
           </div>
         </div>
 
-        {/* Status cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.04]">
+        {/* Status cards — 2×2 diagnóstico */}
+        <div className="grid grid-cols-2 gap-px bg-white/[0.04]">
           {/* Hábitos */}
-          <div className="bg-[#0d1117] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity size={14} className="text-emerald-400" />
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hábitos</span>
-              <StatusDot ok={habitsOk ? true : habitsPartial ? null : false} />
-            </div>
-            <div className="text-lg font-black text-slate-100 tabular-nums">{consistency}%</div>
-            <div className="text-[10px] text-slate-500 mt-0.5">
-              {doneCount}/{activeHabitCount} completos
-            </div>
-            {totalWeekMin > 0 && (
-              <div className="text-[10px] text-slate-600 tabular-nums">
-                {Math.round(totalWeekMin / 60)}h acumulado
+          <div className="bg-[#0d1117] p-4 border-l-4 border-l-emerald-500/60 flex items-center gap-3">
+            <RadialProgressChart
+              value={consistency}
+              size={56}
+              color={habitsOk ? '#10b981' : habitsPartial ? '#f59e0b' : '#ef4444'}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Activity size={12} className="text-emerald-400 flex-shrink-0" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Hábitos</span>
+                <StatusDot ok={habitsOk ? true : habitsPartial ? null : false} />
               </div>
-            )}
+              <div className="text-sm font-bold text-slate-200">
+                {doneCount}/{activeHabitCount} completos
+              </div>
+              {totalWeekMin > 0 && (
+                <div className="text-[10px] text-slate-600 tabular-nums mt-0.5">
+                  {Math.round(totalWeekMin / 60)}h acumulado
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sono */}
-          <div className="bg-[#0d1117] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Moon size={14} className="text-indigo-400" />
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sono</span>
-              <StatusDot ok={sleepOk} />
-            </div>
-            <div className="text-lg font-black text-slate-100 tabular-nums">
-              {sleepAvgHours !== undefined ? `${sleepAvgHours}h` : '—'}
-            </div>
-            <div className="text-[10px] text-slate-500 mt-0.5">média 7 dias</div>
-            {sleepOk === false && (
-              <div className="text-[10px] text-amber-500 mt-0.5">
-                abaixo das 7h ideais
+          <div className="bg-[#0d1117] p-4 border-l-4 border-l-indigo-500/60 flex items-center gap-3">
+            <RadialProgressChart
+              value={sleepAvgHours !== undefined ? Math.round((sleepAvgHours / 9) * 100) : 0}
+              size={56}
+              color={sleepOk === true ? '#818cf8' : sleepOk === false ? '#f59e0b' : '#475569'}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Moon size={12} className="text-indigo-400 flex-shrink-0" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sono</span>
+                <StatusDot ok={sleepOk} />
               </div>
-            )}
+              <div className="text-sm font-bold text-slate-200 tabular-nums">
+                {sleepAvgHours !== undefined ? `${sleepAvgHours}h` : '—'}
+              </div>
+              <div className="text-[10px] text-slate-600 mt-0.5">
+                {sleepOk === false ? 'abaixo das 7h' : 'média 7 dias'}
+              </div>
+            </div>
           </div>
 
           {/* Corpo */}
-          <div className="bg-[#0d1117] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap size={14} className="text-cyan-400" />
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Corpo</span>
-              <StatusDot ok={bodyOk} />
+          <div className="bg-[#0d1117] p-4 border-l-4 border-l-cyan-500/60 flex items-center gap-3">
+            <RadialProgressChart
+              value={
+                profile.bodyFat !== undefined
+                  ? Math.max(0, 100 - profile.bodyFat * 2.5)
+                  : 0
+              }
+              size={56}
+              color={bodyOk === true ? '#22d3ee' : bodyOk === false ? '#f59e0b' : '#475569'}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Zap size={12} className="text-cyan-400 flex-shrink-0" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Corpo</span>
+                <StatusDot ok={bodyOk} />
+              </div>
+              {profile.bodyFat !== undefined ? (
+                <>
+                  <div className="text-sm font-bold text-slate-200 tabular-nums">{profile.bodyFat}% gordura</div>
+                  <div className="text-[10px] text-slate-600 mt-0.5">
+                    {profile.weight !== undefined ? `${profile.weight}kg` : 'gordura corporal'}
+                  </div>
+                </>
+              ) : profile.weight !== undefined ? (
+                <>
+                  <div className="text-sm font-bold text-slate-200 tabular-nums">{profile.weight}kg</div>
+                  <div className="text-[10px] text-slate-600 mt-0.5">peso atual</div>
+                </>
+              ) : (
+                <div className="text-sm font-bold text-slate-600">sem dados</div>
+              )}
             </div>
-            {profile.bodyFat !== undefined ? (
-              <>
-                <div className="text-lg font-black text-slate-100 tabular-nums">{profile.bodyFat}%</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">gordura corporal</div>
-              </>
-            ) : profile.weight !== undefined ? (
-              <>
-                <div className="text-lg font-black text-slate-100 tabular-nums">{profile.weight}kg</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">peso atual</div>
-              </>
-            ) : (
-              <>
-                <div className="text-lg font-black text-slate-600">—</div>
-                <div className="text-[10px] text-slate-600 mt-0.5">sem dados</div>
-              </>
-            )}
           </div>
 
           {/* Finanças */}
-          <div className="bg-[#0d1117] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign size={14} className="text-amber-400" />
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Finanças</span>
-              <StatusDot ok={finOk} />
+          <div className="bg-[#0d1117] p-4 border-l-4 border-l-amber-500/60 flex items-center gap-3">
+            <RadialProgressChart
+              value={income > 0 ? Math.min(100, invRate * 5) : 0}
+              size={56}
+              color={finOk === true ? '#f59e0b' : finOk === false ? '#ef4444' : '#475569'}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <DollarSign size={12} className="text-amber-400 flex-shrink-0" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Finanças</span>
+                <StatusDot ok={finOk} />
+              </div>
+              {income > 0 ? (
+                <>
+                  <div className="text-sm font-bold text-slate-200 tabular-nums">{invRate}% invest.</div>
+                  <div className={cn(
+                    'text-[10px] mt-0.5 font-semibold',
+                    invRate >= 20 ? 'text-emerald-500' : invRate >= 10 ? 'text-amber-500' : 'text-red-500',
+                  )}>
+                    {invRate >= 20 ? 'acima do ideal' : 'meta: 20%'}
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm font-bold text-slate-600">sem dados</div>
+              )}
             </div>
-            {income > 0 ? (
-              <>
-                <div className="text-lg font-black text-slate-100 tabular-nums">{invRate}%</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">taxa investimento</div>
-                <div className={cn(
-                  'text-[10px] mt-0.5 font-semibold',
-                  invRate >= 20 ? 'text-emerald-500' : invRate >= 10 ? 'text-amber-500' : 'text-red-500',
-                )}>
-                  {invRate >= 20 ? '✓ acima do ideal' : `meta: 20%`}
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-lg font-black text-slate-600">—</div>
-                <div className="text-[10px] text-slate-600 mt-0.5">sem dados</div>
-              </>
-            )}
           </div>
         </div>
 
@@ -220,7 +244,7 @@ export function InsightsDashboard() {
                 'py-3 px-4 rounded-xl text-sm font-semibold',
                 'bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 hover:text-violet-200',
                 'border border-violet-500/20 hover:border-violet-500/30',
-                'transition-all duration-200 active:scale-98',
+                'transition-all duration-200 active:scale-95',
               )}
             >
               <Brain size={15} />

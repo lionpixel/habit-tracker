@@ -230,7 +230,7 @@ export function WeeklyView() {
       {isCurrentWeek && (
         <div className="grid grid-cols-2 gap-3">
           {/* Semana */}
-          <div className="flex flex-col gap-0 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] hover:border-violet-500/30 transition-all overflow-hidden">
+          <div className="flex flex-col gap-0 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] hover:border-violet-500/30 hover:-translate-y-0.5 transition-all overflow-hidden">
             <div className="flex items-center gap-3 mb-3">
               <CalendarDays className="w-5 h-5 text-violet-400 flex-shrink-0" />
               <div className="min-w-0">
@@ -248,7 +248,7 @@ export function WeeklyView() {
           </div>
 
           {/* Hábitos */}
-          <div className="flex flex-col gap-0 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] hover:border-emerald-500/30 transition-all overflow-hidden">
+          <div className="flex flex-col gap-0 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] hover:border-emerald-500/30 hover:-translate-y-0.5 transition-all overflow-hidden">
             <div className="flex items-center gap-3 mb-3">
               <CheckSquare className="w-5 h-5 text-emerald-400 flex-shrink-0" />
               <div className="min-w-0">
