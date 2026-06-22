@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getAnthropic, hasAnthropic } from '@/lib/anthropic'
 import type { MetricContext } from '@/lib/insightsEngine'
 
 // ── Rate limit em memória (por IP, por instância) ──
@@ -113,8 +114,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
+  if (!hasAnthropic()) {
     return NextResponse.json(
       { error: 'not_configured', insight: 'Configure ANTHROPIC_API_KEY no servidor para ativar insights.' },
       { status: 503 },
@@ -133,35 +133,17 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 300,
-        messages: [{ role: 'user', content: buildPrompt(ctx) }],
-      }),
+    const message = await getAnthropic().messages.create({
+      model:      'claude-sonnet-4-6',
+      max_tokens: 300,
+      messages:   [{ role: 'user', content: buildPrompt(ctx) }],
     })
-
-    if (!res.ok) {
-      console.error('[insights] Anthropic error:', res.status)
-      return NextResponse.json(
-        { insight: 'Não foi possível gerar insight no momento.' },
-        { status: 200 },
-      )
-    }
-
-    const data = await res.json()
-    const insight = (data.content?.[0]?.text ?? '').trim()
+    const insight = (message.content[0]?.type === 'text' ? message.content[0].text : '').trim()
     return NextResponse.json({ insight })
   } catch (err) {
-    console.error('[insights] fetch error:', err)
+    console.error('[insights] Anthropic error:', err)
     return NextResponse.json(
-      { insight: 'Erro de conexão ao gerar insight.' },
+      { insight: 'Não foi possível gerar insight no momento.' },
       { status: 200 },
     )
   }

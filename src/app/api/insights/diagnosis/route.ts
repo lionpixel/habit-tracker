@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getAnthropic, hasAnthropic } from '@/lib/anthropic'
 import type { UserSnapshot } from '@/lib/insightsEngine'
 
 // ── Rate limit compartilhado (mesmo mapa da rota irmã) ──
@@ -48,14 +49,30 @@ function buildDiagnosisPrompt(snapshot: UserSnapshot): string {
     snapshot.investmentRate !== undefined && `Taxa de investimento: ${snapshot.investmentRate}% (média BR: 6.3%)`,
     snapshot.netBalance !== undefined && `Saldo líquido mensal: R$ ${snapshot.netBalance.toLocaleString('pt-BR')}`,
     snapshot.fastingStreak && snapshot.fastingStreak > 0 && `Sequência de jejum: ${snapshot.fastingStreak} dias`,
+    snapshot.monthlyGoalsPct !== undefined && `Metas mensais: ${snapshot.monthlyGoalsDone}/${snapshot.monthlyGoalsTotal} (${snapshot.monthlyGoalsPct}%)`,
+    snapshot.rulesKeptToday !== undefined && `Regras pessoais hoje: ${snapshot.rulesKeptToday}/${snapshot.rulesTotal}`,
+    snapshot.pomosToday && `Pomodoros hoje: ${snapshot.pomosToday}`,
   ]
     .filter(Boolean)
     .join('\n')
 
-  return `Você é um coach de alta performance com visão integrada de corpo, mente e finanças.
+  const bigFiveBlock = snapshot.bigFive
+    ? `\nPERFIL DE PERSONALIDADE (Big Five / OCEAN — ${snapshot.bigFive.quarter}):
+- Abertura: ${snapshot.bigFive.openness}/100
+- Conscienciosidade: ${snapshot.bigFive.conscientiousness}/100
+- Extroversão: ${snapshot.bigFive.extraversion}/100
+- Amabilidade: ${snapshot.bigFive.agreeableness}/100
+- Neuroticismo: ${snapshot.bigFive.neuroticism}/100${
+        snapshot.bigFive.personalityProfile
+          ? `\nPerfil resumido: ${snapshot.bigFive.personalityProfile}`
+          : ''
+      }`
+    : ''
+
+  return `Você é um coach de alta performance com visão integrada de corpo, mente, finanças e personalidade.
 
 DADOS REAIS DO USUÁRIO HOJE:
-${lines}
+${lines}${bigFiveBlock}
 
 BENCHMARKS RELEVANTES:
 - Brasileiro médio dorme 6.9h (recomendado: 7.5h+)
@@ -63,13 +80,15 @@ BENCHMARKS RELEVANTES:
 - 77% dos brasileiros não fazem exercício suficiente
 - Sono <7h reduz performance de treino em 21%
 - Gordura visceral e sono ruim são diretamente correlacionados
+- Conscienciosidade alta (>65) prediz adesão a rotinas estruturadas
 
 TAREFA:
 Escreva um diagnóstico integrado de 3 a 4 frases que:
 1. Identifique o padrão mais importante cruzando 2 ou mais módulos
 2. Use os números REAIS fornecidos
-3. Aponte UMA prioridade de ação para esta semana
-4. Tom: coach direto, baseado em dados, sem julgamentos morais
+3. Se houver Big Five, conecte o perfil ao padrão identificado
+4. Aponte UMA prioridade de ação para esta semana
+5. Tom: coach direto, baseado em dados, sem julgamentos morais
 
 Responda APENAS com o diagnóstico. Sem título, sem prefixo.`
 }
@@ -86,8 +105,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
+  if (!hasAnthropic()) {
     return NextResponse.json(
       { diagnosis: 'Configure ANTHROPIC_API_KEY no servidor para ativar o diagnóstico.' },
       { status: 503 },
@@ -106,27 +124,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 500,
-        messages: [{ role: 'user', content: buildDiagnosisPrompt(snapshot) }],
-      }),
+    const message = await getAnthropic().messages.create({
+      model:      'claude-sonnet-4-6',
+      max_tokens: 500,
+      messages:   [{ role: 'user', content: buildDiagnosisPrompt(snapshot) }],
     })
-
-    if (!res.ok) {
-      console.error('[diagnosis] Anthropic error:', res.status)
-      return NextResponse.json({ diagnosis: 'Diagnóstico indisponível no momento.' }, { status: 200 })
-    }
-
-    const data = await res.json()
-    const diagnosis = (data.content?.[0]?.text ?? '').trim()
+    const diagnosis = (message.content[0]?.type === 'text' ? message.content[0].text : '').trim()
     return NextResponse.json({ diagnosis })
   } catch (err) {
     console.error('[diagnosis] fetch error:', err)

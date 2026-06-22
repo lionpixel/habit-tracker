@@ -55,9 +55,67 @@ export interface BodyCheckIn {
   notes?:    string
 }
 
+// ── Big Five (OCEAN) ──────────────────────────
+
+export type BigFiveSource =
+  | '16personalities'
+  | 'ipip-120'
+  | 'bigfive-test'
+  | 'manual'
+
+export interface BigFiveHabitCompatibility {
+  habitKey:      string
+  habitName:     string
+  compatibility: 'alta' | 'media' | 'baixa'
+  explanation:   string
+}
+
+export interface BigFiveAnalysis {
+  generatedAt:          string
+  personalityProfile:   string
+  strengthsFromTraits:  string[]
+  challengesFromTraits: string[]
+  habitCompatibility:   BigFiveHabitCompatibility[]
+  moodPatterns:         string
+  consistencyPrediction:string
+  actionableInsights:   string[]
+  quarterComparison:    string | null
+}
+
+export interface BigFiveResult {
+  id:                string
+  date:              string       // ISO date do teste (YYYY-MM-DD)
+  quarter:           string       // ex: '2026-Q2'
+  source:            BigFiveSource
+
+  // escores brutos 0–100
+  openness:          number
+  conscientiousness: number
+  extraversion:      number
+  agreeableness:     number
+  neuroticism:       number
+
+  rawResultText?:    string
+  aiAnalysis?:       BigFiveAnalysis
+}
+
+export function getBigFiveQuarter(date: Date = new Date()): string {
+  const y = date.getFullYear()
+  const q = Math.ceil((date.getMonth() + 1) / 3)
+  return `${y}-Q${q}`
+}
+
+export function shouldRemindBigFive(history: BigFiveResult[]): boolean {
+  if (!history.length) return true
+  const last = new Date(history[0].date)
+  const daysSince = Math.floor((Date.now() - last.getTime()) / 86_400_000)
+  return daysSince >= 75
+}
+
 export interface ProfileStore {
-  profile:   PhysicalProfile
-  history:   BodyCheckIn[]
+  profile:         PhysicalProfile
+  history:         BodyCheckIn[]
+  bigFiveHistory:  BigFiveResult[]
 }
 
 // Computed helpers

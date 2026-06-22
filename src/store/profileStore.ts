@@ -4,16 +4,24 @@
 
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import type { PhysicalProfile, BodyCheckIn, ProfileStore as ProfileData } from '@/types/profile'
+import type { PhysicalProfile, BodyCheckIn, BigFiveResult, ProfileStore as ProfileData } from '@/types/profile'
 import { computeIMC, computeLeanMass, computeFatMass } from '@/types/profile'
 import { safeParse, todayStr } from '@/lib/helpers'
+
+function uid(): string {
+  return Math.random().toString(36).slice(2, 11)
+}
 
 const PROFILE_KEY = 'hdb_profile'
 
 function loadProfile(fallback: ProfileData): ProfileData {
   if (typeof window === 'undefined') return fallback
   const raw = localStorage.getItem(PROFILE_KEY)
-  return safeParse<ProfileData>(raw, fallback)
+  const parsed = safeParse<ProfileData>(raw, fallback)
+  return {
+    ...parsed,
+    bigFiveHistory: parsed.bigFiveHistory ?? [],
+  }
 }
 
 function saveProfile(data: ProfileData): void {
@@ -22,44 +30,54 @@ function saveProfile(data: ProfileData): void {
 }
 
 const DEFAULT_PROFILE_DATA: ProfileData = {
-  profile: {},
-  history: [],
+  profile:        {},
+  history:        [],
+  bigFiveHistory: [],
 }
 
 // ── Types ────────────────────────────────────
 
 interface ProfileStoreState {
-  profile:  PhysicalProfile
-  history:  BodyCheckIn[]
-  hydrated: boolean
-  hydrate:  () => void
+  profile:        PhysicalProfile
+  history:        BodyCheckIn[]
+  bigFiveHistory: BigFiveResult[]
+  hydrated:       boolean
+  hydrate:        () => void
 
   updateProfile: (patch: Partial<PhysicalProfile>) => void
-
-  // Check-in — creates or updates the entry for today (or given date)
-  saveCheckIn: (entry: Partial<BodyCheckIn> & { date?: string }) => void
+  saveCheckIn:   (entry: Partial<BodyCheckIn> & { date?: string }) => void
   deleteCheckIn: (date: string) => void
+
+  // Big Five
+  addBigFiveResult: (result: Omit<BigFiveResult, 'id'>) => string
+  updateBigFiveAnalysis: (id: string, analysis: BigFiveResult['aiAnalysis']) => void
+  deleteBigFiveResult: (id: string) => void
 }
 
 // ── Store ────────────────────────────────────
 
 export const useProfileStore = create<ProfileStoreState>()(
   subscribeWithSelector((set, get) => ({
-    profile:  DEFAULT_PROFILE_DATA.profile,
-    history:  DEFAULT_PROFILE_DATA.history,
-    hydrated: false,
+    profile:        DEFAULT_PROFILE_DATA.profile,
+    history:        DEFAULT_PROFILE_DATA.history,
+    bigFiveHistory: DEFAULT_PROFILE_DATA.bigFiveHistory,
+    hydrated:       false,
 
     hydrate() {
       const data = loadProfile(DEFAULT_PROFILE_DATA)
-      set({ profile: data.profile, history: data.history, hydrated: true })
+      set({
+        profile:        data.profile,
+        history:        data.history,
+        bigFiveHistory: data.bigFiveHistory,
+        hydrated:       true,
+      })
     },
 
     updateProfile(patch) {
-      const now = new Date().toISOString()
+      const now  = new Date().toISOString()
       const base = get().profile
       const merged: PhysicalProfile = { ...base, ...patch, updatedAt: now }
 
-      // Recompute derived fields when weight / bodyFat / height change
       const w  = merged.weight   ?? base.weight
       const bf = merged.bodyFat  ?? base.bodyFat
       const h  = merged.height   ?? base.height
@@ -68,7 +86,7 @@ export const useProfileStore = create<ProfileStoreState>()(
       if (w && bf) merged.leanMass = computeLeanMass(w, bf)
       if (w && bf) merged.fatMass  = computeFatMass(w, bf)
 
-      const data: ProfileData = { profile: merged, history: get().history }
+      const data: ProfileData = { profile: merged, history: get().history, bigFiveHistory: get().bigFiveHistory }
       saveProfile(data)
       set({ profile: merged })
     },
@@ -78,7 +96,6 @@ export const useProfileStore = create<ProfileStoreState>()(
       const history = get().history
       const existing = history.find((e) => e.date === date) ?? {}
 
-      // Merge and recompute derived fields
       const merged: BodyCheckIn = { ...existing, ...entry, date }
       if (merged.weight && merged.bodyFat) {
         merged.leanMass = computeLeanMass(merged.weight, merged.bodyFat)
@@ -93,7 +110,6 @@ export const useProfileStore = create<ProfileStoreState>()(
         ? history.map((e) => (e.date === date ? merged : e))
         : [...history, merged].sort((a, b) => b.date.localeCompare(a.date))
 
-      // Also update current profile with latest values
       const now = new Date().toISOString()
       const updatedProfile: PhysicalProfile = {
         ...profile,
@@ -106,16 +122,42 @@ export const useProfileStore = create<ProfileStoreState>()(
         updatedAt: now,
       }
 
-      const data: ProfileData = { profile: updatedProfile, history: updated }
+      const data: ProfileData = { profile: updatedProfile, history: updated, bigFiveHistory: get().bigFiveHistory }
       saveProfile(data)
       set({ profile: updatedProfile, history: updated })
     },
 
     deleteCheckIn(date) {
       const updated = get().history.filter((e) => e.date !== date)
-      const data: ProfileData = { profile: get().profile, history: updated }
+      const data: ProfileData = { profile: get().profile, history: updated, bigFiveHistory: get().bigFiveHistory }
       saveProfile(data)
       set({ history: updated })
+    },
+
+    addBigFiveResult(result) {
+      const id      = uid()
+      const newItem = { ...result, id }
+      const updated = [newItem, ...get().bigFiveHistory].sort((a, b) => b.date.localeCompare(a.date))
+      const data: ProfileData = { profile: get().profile, history: get().history, bigFiveHistory: updated }
+      saveProfile(data)
+      set({ bigFiveHistory: updated })
+      return id
+    },
+
+    updateBigFiveAnalysis(id, analysis) {
+      const updated = get().bigFiveHistory.map((r) =>
+        r.id === id ? { ...r, aiAnalysis: analysis } : r,
+      )
+      const data: ProfileData = { profile: get().profile, history: get().history, bigFiveHistory: updated }
+      saveProfile(data)
+      set({ bigFiveHistory: updated })
+    },
+
+    deleteBigFiveResult(id) {
+      const updated = get().bigFiveHistory.filter((r) => r.id !== id)
+      const data: ProfileData = { profile: get().profile, history: get().history, bigFiveHistory: updated }
+      saveProfile(data)
+      set({ bigFiveHistory: updated })
     },
   })),
 )

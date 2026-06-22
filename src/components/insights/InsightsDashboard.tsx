@@ -10,9 +10,11 @@ import { cn } from '@/lib/helpers'
 import { useAppStore } from '@/store/appStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useFinanceStore, currentMonthKey } from '@/store/financeStore'
+import { useGoalsStore } from '@/store/goalsStore'
 import { useActiveHabitKeys, useWeekConsistency, useWeekTotalMinutes } from '@/store/selectors'
 import { buildUserSnapshot, generateFullDiagnosis } from '@/lib/insightsEngine'
-import { buildSleepHistory } from '@/services/sleepService'
+import { buildSleepHistory, calcSleepRules } from '@/services/sleepService'
+import { getBRTMonth, getBRTYear, getTodayStr } from '@/lib/time'
 import { totalIncome, totalExpenses, totalSavings, savingsRate } from '@/types/finance'
 import { getWeekKey } from '@/lib/helpers'
 import {
@@ -36,6 +38,7 @@ export function InsightsDashboard() {
   const consistency    = useWeekConsistency()
   const totalWeekMin   = useWeekTotalMinutes()
   const profile        = useProfileStore((s) => s.profile)
+  const bigFiveHistory = useProfileStore((s) => s.bigFiveHistory)
   const monthKey       = currentMonthKey()
   const getMonth       = useFinanceStore((s) => s.getMonth)
   const finMonth       = getMonth(monthKey)
@@ -43,8 +46,10 @@ export function InsightsDashboard() {
   const [diagText, setDiagText] = useState<string>('')
   const [loading,  setLoading]  = useState(false)
 
+  const goalsStore = useGoalsStore()
   const { habits, currentYear, currentWeek } = data
   const wKey = getWeekKey(currentYear, currentWeek)
+  const today = getTodayStr()
 
   // Sleep avg last 7 days
   const sleepAvgHours = useMemo(() => {
@@ -53,6 +58,47 @@ export function InsightsDashboard() {
     if (!withDur.length) return undefined
     return Math.round((withDur.reduce((s, h) => s + (h.durationMin ?? 0), 0) / withDur.length / 60) * 10) / 10
   }, [sleepData])
+
+  // Sleep days to goal
+  const sleepDaysToGoal = useMemo(() => {
+    const entry = sleepData.log[today]
+    if (!entry) return undefined
+    return calcSleepRules(entry.wakeTime, sleepData.config.targetWake).daysToGoal
+  }, [sleepData, today])
+
+  // Monthly goals
+  const { monthlyGoalsTotal, monthlyGoalsDone } = useMemo(() => {
+    const m = getBRTMonth(), y = getBRTYear()
+    const goals = goalsStore.monthlyGoals.filter((g) => g.year === y && g.month === m)
+    return { monthlyGoalsTotal: goals.length, monthlyGoalsDone: goals.filter((g) => g.status === 'done').length }
+  }, [goalsStore.monthlyGoals])
+
+  // Personal rules
+  const { rulesTotal, rulesKeptToday } = useMemo(() => ({
+    rulesTotal:     goalsStore.personalRules.length,
+    rulesKeptToday: goalsStore.personalRules.filter((r) => r.completedDates.includes(today)).length,
+  }), [goalsStore.personalRules, today])
+
+  // Pomos today
+  const pomosToday = useMemo(() => {
+    const dayData = useAppStore.getState().pomoData[today]
+    return dayData?.total ?? 0
+  }, [today])
+
+  // Big Five latest
+  const latestBigFive = useMemo(() => {
+    const r = bigFiveHistory[0]
+    if (!r) return undefined
+    return {
+      openness:          r.openness,
+      conscientiousness: r.conscientiousness,
+      extraversion:      r.extraversion,
+      agreeableness:     r.agreeableness,
+      neuroticism:       r.neuroticism,
+      quarter:           r.quarter,
+      personalityProfile: r.aiAnalysis?.personalityProfile,
+    }
+  }, [bigFiveHistory])
 
   const income    = totalIncome(finMonth)
   const expenses  = totalExpenses(finMonth)
@@ -74,8 +120,9 @@ export function InsightsDashboard() {
       goalBodyFat: profile.goalBodyFat,
     },
     sleep: {
-      avgHours:   sleepAvgHours,
-      targetWake: sleepData.config.targetWake,
+      avgHours:    sleepAvgHours,
+      targetWake:  sleepData.config.targetWake,
+      daysToGoal:  sleepDaysToGoal,
     },
     finance: {
       income:         income > 0 ? income : undefined,
@@ -86,7 +133,11 @@ export function InsightsDashboard() {
     },
     fastingStreak:        habits.fasting?.currentStreak,
     longestFastingStreak: (habits.fasting as { longestStreak?: number })?.longestStreak,
-  }), [habits, activeKeys, wKey, consistency, profile, sleepAvgHours, sleepData, income, expenses, savings, invRate, netBal])
+    monthlyGoals: monthlyGoalsTotal > 0 ? { total: monthlyGoalsTotal, done: monthlyGoalsDone } : undefined,
+    pomos:        pomosToday > 0 ? { today: pomosToday, week: pomosToday } : undefined,
+    rules:        rulesTotal > 0 ? { total: rulesTotal, keptToday: rulesKeptToday } : undefined,
+    bigFive:      latestBigFive,
+  }), [habits, activeKeys, wKey, consistency, profile, sleepAvgHours, sleepDaysToGoal, sleepData, income, expenses, savings, invRate, netBal, monthlyGoalsTotal, monthlyGoalsDone, pomosToday, rulesTotal, rulesKeptToday, latestBigFive])
 
   async function handleDiagnosis() {
     setLoading(true)

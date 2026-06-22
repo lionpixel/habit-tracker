@@ -15,6 +15,8 @@ import { GoalProgressCard }       from './GoalProgressCard'
 import { PhysicalInsights }       from './PhysicalInsights'
 import { WeeklyCheckinModal }     from './WeeklyCheckinModal'
 import { ProgressPhotoTracker }   from './ProgressPhotoTracker'
+import { PersonalRulesSection }   from './PersonalRulesSection'
+import { BigFiveSection }          from './BigFiveSection'
 import { FadeInUp } from '@/components/ui/Motion'
 import { StatCard }  from '@/components/ui/StatCard'
 import { todayStr }  from '@/lib/helpers'
@@ -124,6 +126,20 @@ export function ProfileView() {
             <h3 className="font-bold text-slate-100 text-sm">Evolução — últimos 30 dias</h3>
           </div>
           <BodyEvolutionChart history={history} />
+        </div>
+      </FadeInUp>
+
+      {/* Regras Pessoais */}
+      <FadeInUp delay={0.16}>
+        <div className="card p-5">
+          <PersonalRulesSection />
+        </div>
+      </FadeInUp>
+
+      {/* Big Five — personalidade OCEAN */}
+      <FadeInUp delay={0.165}>
+        <div className="card p-5">
+          <BigFiveSection />
         </div>
       </FadeInUp>
 

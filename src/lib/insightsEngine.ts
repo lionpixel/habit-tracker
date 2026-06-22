@@ -41,6 +41,7 @@ export interface UserSnapshot {
   sleepDebt?: number
   wakeTimeGoal?: string
   sleepEnergyScore?: number
+  sleepDaysToGoal?: number
 
   // Finanças
   monthlyIncome?: number
@@ -52,6 +53,30 @@ export interface UserSnapshot {
   // Streak
   fastingStreak?: number
   longestFastingStreak?: number
+
+  // Metas mensais
+  monthlyGoalsTotal?: number
+  monthlyGoalsDone?: number
+  monthlyGoalsPct?: number
+
+  // Pomodoros
+  pomosToday?: number
+  pomosWeek?: number
+
+  // Regras pessoais
+  rulesTotal?: number
+  rulesKeptToday?: number
+
+  // Big Five (OCEAN)
+  bigFive?: {
+    openness:          number
+    conscientiousness: number
+    extraversion:      number
+    agreeableness:     number
+    neuroticism:       number
+    quarter:           string
+    personalityProfile?: string
+  }
 }
 
 // ── Coletar snapshot de todos os stores ──────
@@ -62,10 +87,17 @@ export function buildUserSnapshot(params: {
   weekMinutes: Record<string, number>
   weekConsistency: number
   profile?: { weight?: number; bodyFat?: number; imc?: number; leanMass?: number; goalWeight?: number; goalBodyFat?: number }
-  sleep?: { avgHours?: number; energyScore?: number; targetWake?: string }
+  sleep?: { avgHours?: number; energyScore?: number; targetWake?: string; daysToGoal?: number }
   finance?: { income?: number; expenses?: number; investments?: number; investmentRate?: number; netBalance?: number }
   fastingStreak?: number
   longestFastingStreak?: number
+  monthlyGoals?: { total: number; done: number }
+  pomos?: { today: number; week: number }
+  rules?: { total: number; keptToday: number }
+  bigFive?: {
+    openness: number; conscientiousness: number; extraversion: number
+    agreeableness: number; neuroticism: number; quarter: string; personalityProfile?: string
+  }
 }): UserSnapshot {
   const activeHabits = Object.entries(params.habits)
     .filter(([, h]) => !h.archived)
@@ -102,6 +134,17 @@ export function buildUserSnapshot(params: {
     netBalance: params.finance?.netBalance,
     fastingStreak: params.fastingStreak,
     longestFastingStreak: params.longestFastingStreak,
+    sleepDaysToGoal: params.sleep?.daysToGoal,
+    monthlyGoalsTotal: params.monthlyGoals?.total,
+    monthlyGoalsDone:  params.monthlyGoals?.done,
+    monthlyGoalsPct:   params.monthlyGoals?.total
+      ? Math.round((params.monthlyGoals.done / params.monthlyGoals.total) * 100)
+      : undefined,
+    pomosToday:    params.pomos?.today,
+    pomosWeek:     params.pomos?.week,
+    rulesTotal:    params.rules?.total,
+    rulesKeptToday: params.rules?.keptToday,
+    bigFive:       params.bigFive,
   }
 }
 
