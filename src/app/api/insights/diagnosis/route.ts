@@ -5,7 +5,8 @@
 // ─────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getAnthropic, hasAnthropic } from '@/lib/anthropic'
+import Anthropic from '@anthropic-ai/sdk'
+import { getUserApiKey } from '@/lib/getUserApiKey'
 import type { UserSnapshot } from '@/lib/insightsEngine'
 
 // ── Rate limit compartilhado (mesmo mapa da rota irmã) ──
@@ -105,13 +106,6 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  if (!hasAnthropic()) {
-    return NextResponse.json(
-      { diagnosis: 'Configure ANTHROPIC_API_KEY no servidor para ativar o diagnóstico.' },
-      { status: 503 },
-    )
-  }
-
   let snapshot: UserSnapshot
   try {
     const body = await req.json()
@@ -124,15 +118,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const message = await getAnthropic().messages.create({
+    const { key, source } = await getUserApiKey('anthropic')
+    const client  = new Anthropic({ apiKey: key })
+    const message = await client.messages.create({
       model:      'claude-sonnet-4-6',
       max_tokens: 500,
       messages:   [{ role: 'user', content: buildDiagnosisPrompt(snapshot) }],
     })
     const diagnosis = (message.content[0]?.type === 'text' ? message.content[0].text : '').trim()
-    return NextResponse.json({ diagnosis })
+    return NextResponse.json(
+      { diagnosis, keySource: source },
+      { headers: { 'X-AI-Key-Source': source } },
+    )
   } catch (err) {
-    console.error('[diagnosis] fetch error:', err)
+    console.error('[diagnosis] error:', err)
     return NextResponse.json({ diagnosis: 'Erro ao gerar diagnóstico.' }, { status: 200 })
   }
 }

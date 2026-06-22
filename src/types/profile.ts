@@ -39,7 +39,8 @@ export interface PhysicalProfile {
   goalLeanMass?:  number
   goalWaist?:     number
 
-  updatedAt?:     string
+  updatedAt?:          string
+  preferredAiProvider?: 'openai' | 'anthropic' | 'gemini' | 'auto'
 }
 
 export interface BodyCheckIn {

@@ -13,6 +13,7 @@ import { useFinanceStore, currentMonthKey } from '@/store/financeStore'
 import { useGoalsStore } from '@/store/goalsStore'
 import { useActiveHabitKeys, useWeekConsistency, useWeekTotalMinutes } from '@/store/selectors'
 import { buildUserSnapshot, generateFullDiagnosis } from '@/lib/insightsEngine'
+import { AiSourceBadge } from '@/components/profile/ApiKeysSettings'
 import { buildSleepHistory, calcSleepRules } from '@/services/sleepService'
 import { getBRTMonth, getBRTYear, getTodayStr } from '@/lib/time'
 import { totalIncome, totalExpenses, totalSavings, savingsRate } from '@/types/finance'
@@ -43,8 +44,9 @@ export function InsightsDashboard() {
   const getMonth       = useFinanceStore((s) => s.getMonth)
   const finMonth       = getMonth(monthKey)
 
-  const [diagText, setDiagText] = useState<string>('')
-  const [loading,  setLoading]  = useState(false)
+  const [diagText,   setDiagText]   = useState<string>('')
+  const [diagSource, setDiagSource] = useState<string | undefined>(undefined)
+  const [loading,    setLoading]    = useState(false)
 
   const goalsStore = useGoalsStore()
   const { habits, currentYear, currentWeek } = data
@@ -142,8 +144,10 @@ export function InsightsDashboard() {
   async function handleDiagnosis() {
     setLoading(true)
     setDiagText('')
+    setDiagSource(undefined)
     const result = await generateFullDiagnosis(snapshot)
-    setDiagText(result)
+    setDiagText(result.diagnosis)
+    setDiagSource(result.keySource)
     setLoading(false)
   }
 
@@ -322,12 +326,15 @@ export function InsightsDashboard() {
                 </span>
               </div>
               <p className="text-sm text-slate-200 leading-relaxed">{diagText}</p>
-              <button
-                onClick={handleDiagnosis}
-                className="text-[11px] text-slate-500 hover:text-slate-400 transition-colors flex items-center gap-1"
-              >
-                <TrendingUp size={10} /> Gerar nova análise
-              </button>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={handleDiagnosis}
+                  className="text-[11px] text-slate-500 hover:text-slate-400 transition-colors flex items-center gap-1"
+                >
+                  <TrendingUp size={10} /> Gerar nova análise
+                </button>
+                <AiSourceBadge source={diagSource} />
+              </div>
             </div>
           )}
         </div>

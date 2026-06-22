@@ -1,19 +1,13 @@
 // POST /api/openai/bigfive-analyze
-// Recebe os escores Big Five + contexto do usuário (hábitos, sono, metas) e gera uma análise completa.
+// Recebe os escores Big Five + contexto do usuário e gera uma análise completa.
 // Retorna: BigFiveAnalysis
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpenAI, hasOpenAI } from '@/lib/openai'
+import OpenAI from 'openai'
+import { getUserApiKey } from '@/lib/getUserApiKey'
 import type { BigFiveResult, BigFiveAnalysis } from '@/types/profile'
 
 export async function POST(req: NextRequest) {
-  if (!hasOpenAI()) {
-    return NextResponse.json(
-      { error: 'not_configured', message: 'Configure OPENAI_API_KEY no servidor.' },
-      { status: 503 },
-    )
-  }
-
   let current: BigFiveResult
   let previous: BigFiveResult | null
   let habitNames: string[]
@@ -79,7 +73,9 @@ Regras:
 - Idioma: português brasileiro.`
 
   try {
-    const completion = await getOpenAI().chat.completions.create({
+    const { key, source } = await getUserApiKey('openai')
+    const client     = new OpenAI({ apiKey: key })
+    const completion = await client.chat.completions.create({
       model:       'gpt-4o',
       max_tokens:  2000,
       temperature: 0.4,
@@ -89,14 +85,17 @@ Regras:
       ],
     })
 
-    const text       = completion.choices[0]?.message?.content?.trim() ?? ''
-    const jsonMatch  = text.match(/\{[\s\S]*\}/)
+    const text      = completion.choices[0]?.message?.content?.trim() ?? ''
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       return NextResponse.json({ error: 'parse_failed', message: 'Resposta inesperada do modelo.' }, { status: 502 })
     }
 
     const analysis = JSON.parse(jsonMatch[0]) as BigFiveAnalysis
-    return NextResponse.json({ analysis: { ...analysis, generatedAt: new Date().toISOString() } })
+    return NextResponse.json(
+      { analysis: { ...analysis, generatedAt: new Date().toISOString() }, keySource: source },
+      { headers: { 'X-AI-Key-Source': source } },
+    )
   } catch (err) {
     console.error('[bigfive-analyze] OpenAI error:', err)
     return NextResponse.json({ error: 'openai_error', message: 'Erro ao gerar análise.' }, { status: 502 })

@@ -5,7 +5,8 @@
 // ─────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getAnthropic, hasAnthropic } from '@/lib/anthropic'
+import Anthropic from '@anthropic-ai/sdk'
+import { getUserApiKey } from '@/lib/getUserApiKey'
 import type { MetricContext } from '@/lib/insightsEngine'
 
 // ── Rate limit em memória (por IP, por instância) ──
@@ -114,13 +115,6 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  if (!hasAnthropic()) {
-    return NextResponse.json(
-      { error: 'not_configured', insight: 'Configure ANTHROPIC_API_KEY no servidor para ativar insights.' },
-      { status: 503 },
-    )
-  }
-
   let ctx: MetricContext
   try {
     const body = await req.json()
@@ -133,13 +127,18 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const message = await getAnthropic().messages.create({
+    const { key, source } = await getUserApiKey('anthropic')
+    const client  = new Anthropic({ apiKey: key })
+    const message = await client.messages.create({
       model:      'claude-sonnet-4-6',
       max_tokens: 300,
       messages:   [{ role: 'user', content: buildPrompt(ctx) }],
     })
     const insight = (message.content[0]?.type === 'text' ? message.content[0].text : '').trim()
-    return NextResponse.json({ insight })
+    return NextResponse.json(
+      { insight, keySource: source },
+      { headers: { 'X-AI-Key-Source': source } },
+    )
   } catch (err) {
     console.error('[insights] Anthropic error:', err)
     return NextResponse.json(

@@ -5,7 +5,8 @@
 // ─────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpenAI } from '@/lib/openai'
+import OpenAI from 'openai'
+import { getUserApiKey } from '@/lib/getUserApiKey'
 
 const rateLimitMap = new Map<string, { count: number; reset: number }>()
 
@@ -55,13 +56,6 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json(
-      { report: 'Configure OPENAI_API_KEY no servidor para gerar relatórios.' },
-      { status: 503 },
-    )
-  }
-
   let weekData: WeekData
   try {
     const body = await req.json()
@@ -78,7 +72,9 @@ export async function POST(req: NextRequest) {
   ).join('\n')
 
   try {
-    const completion = await getOpenAI().chat.completions.create({
+    const { key, source } = await getUserApiKey('openai')
+    const client     = new OpenAI({ apiKey: key })
+    const completion = await client.chat.completions.create({
       model: 'gpt-4o',
       max_tokens: 1000,
       temperature: 0.7,
@@ -130,7 +126,10 @@ FINANÇAS:
     })
 
     const report = (completion.choices[0]?.message?.content ?? '').trim()
-    return NextResponse.json({ report })
+    return NextResponse.json(
+      { report, keySource: source },
+      { headers: { 'X-AI-Key-Source': source } },
+    )
   } catch (err) {
     console.error('[openai/report/weekly]', err)
     return NextResponse.json(

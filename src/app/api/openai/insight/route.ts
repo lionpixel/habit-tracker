@@ -5,7 +5,8 @@
 // ─────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpenAI } from '@/lib/openai'
+import OpenAI from 'openai'
+import { getUserApiKey } from '@/lib/getUserApiKey'
 import type { MetricContext } from '@/lib/insightsEngine'
 
 const rateLimitMap = new Map<string, { count: number; reset: number }>()
@@ -38,13 +39,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: 'rate_limit', insight: 'Muitas requisições. Aguarde 1 minuto.' },
       { status: 429 },
-    )
-  }
-
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json(
-      { insight: 'Configure OPENAI_API_KEY no servidor para ativar insights.' },
-      { status: 503 },
     )
   }
 
@@ -82,8 +76,13 @@ export async function POST(req: NextRequest) {
       ].filter(Boolean).join(' | ')
     : null
 
+  let keySource: string
   try {
-    const completion = await getOpenAI().chat.completions.create({
+    const { key, source } = await getUserApiKey('openai')
+    keySource = source
+
+    const client     = new OpenAI({ apiKey: key })
+    const completion = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       max_tokens: 200,
       temperature: 0.85,
@@ -110,7 +109,10 @@ ${snapLines ? `Contexto do usuário: ${snapLines}` : ''}`.trim(),
     })
 
     const insight = (completion.choices[0]?.message?.content ?? '').trim()
-    return NextResponse.json({ insight })
+    return NextResponse.json(
+      { insight, keySource },
+      { headers: { 'X-AI-Key-Source': keySource } },
+    )
   } catch (err) {
     console.error('[openai/insight]', err)
     return NextResponse.json(

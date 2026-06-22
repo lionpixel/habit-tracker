@@ -5,7 +5,8 @@
 // ─────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpenAI } from '@/lib/openai'
+import OpenAI from 'openai'
+import { getUserApiKey } from '@/lib/getUserApiKey'
 
 const rateLimitMap = new Map<string, { count: number; reset: number }>()
 
@@ -53,13 +54,6 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json(
-      { analysis: 'Configure OPENAI_API_KEY no servidor para analisar hábitos.' },
-      { status: 503 },
-    )
-  }
-
   let habit: HabitInfo
   let history: WeekHistory[]
   try {
@@ -82,7 +76,9 @@ export async function POST(req: NextRequest) {
     : 'não cadastrados'
 
   try {
-    const completion = await getOpenAI().chat.completions.create({
+    const { key, source } = await getUserApiKey('openai')
+    const client     = new OpenAI({ apiKey: key })
+    const completion = await client.chat.completions.create({
       model: 'gpt-4o',
       max_tokens: 600,
       temperature: 0.7,
@@ -120,7 +116,10 @@ ${factsText}`,
     })
 
     const analysis = (completion.choices[0]?.message?.content ?? '').trim()
-    return NextResponse.json({ analysis })
+    return NextResponse.json(
+      { analysis, keySource: source },
+      { headers: { 'X-AI-Key-Source': source } },
+    )
   } catch (err) {
     console.error('[openai/report/habit]', err)
     return NextResponse.json(

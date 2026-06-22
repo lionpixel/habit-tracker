@@ -173,21 +173,24 @@ export async function generateInsight(ctx: MetricContext): Promise<string> {
 
 // ── Diagnóstico cruzado completo ─────────────
 
-export async function generateFullDiagnosis(snapshot: UserSnapshot): Promise<string> {
+export async function generateFullDiagnosis(
+  snapshot: UserSnapshot,
+): Promise<{ diagnosis: string; keySource?: string }> {
   try {
     const res = await fetch('/api/insights/diagnosis', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ snapshot }),
+      body:    JSON.stringify({ snapshot }),
     })
 
-    if (res.status === 429) return 'Limite de diagnósticos atingido. Aguarde 1 minuto.'
-    if (res.status === 503) return 'Configure ANTHROPIC_API_KEY no servidor para ativar o diagnóstico.'
-    if (!res.ok)            return 'Diagnóstico indisponível no momento.'
+    if (res.status === 429) return { diagnosis: 'Limite de diagnósticos atingido. Aguarde 1 minuto.' }
+    if (!res.ok)            return { diagnosis: 'Diagnóstico indisponível no momento.' }
 
-    const data = await res.json()
-    return (data.diagnosis ?? '').trim() || 'Diagnóstico indisponível.'
+    const data      = await res.json()
+    const diagnosis = (data.diagnosis ?? '').trim() || 'Diagnóstico indisponível.'
+    const keySource = data.keySource ?? res.headers.get('X-AI-Key-Source') ?? undefined
+    return { diagnosis, keySource }
   } catch {
-    return 'Erro ao gerar diagnóstico.'
+    return { diagnosis: 'Erro ao gerar diagnóstico.' }
   }
 }

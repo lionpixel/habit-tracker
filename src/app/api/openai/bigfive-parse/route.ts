@@ -3,16 +3,10 @@
 // Retorna: { openness, conscientiousness, extraversion, agreeableness, neuroticism }
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpenAI, hasOpenAI } from '@/lib/openai'
+import OpenAI from 'openai'
+import { getUserApiKey } from '@/lib/getUserApiKey'
 
 export async function POST(req: NextRequest) {
-  if (!hasOpenAI()) {
-    return NextResponse.json(
-      { error: 'not_configured', message: 'Configure OPENAI_API_KEY no servidor.' },
-      { status: 503 },
-    )
-  }
-
   let rawText: string
   let source: string
   try {
@@ -40,7 +34,9 @@ Responda SOMENTE com JSON válido, sem texto adicional, no formato:
 Se um escore não for encontrado explicitamente, infira a partir do texto. Todos os valores devem ser inteiros.`
 
   try {
-    const completion = await getOpenAI().chat.completions.create({
+    const { key, source: keySource } = await getUserApiKey('openai')
+    const client     = new OpenAI({ apiKey: key })
+    const completion = await client.chat.completions.create({
       model:       'gpt-4o-mini',
       max_tokens:  200,
       temperature: 0,
@@ -58,19 +54,23 @@ Se um escore não for encontrado explicitamente, infira a partir do texto. Todos
 
     const scores = JSON.parse(jsonMatch[0]) as Record<string, number>
     const required = ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism']
-    for (const key of required) {
-      if (typeof scores[key] !== 'number') {
-        return NextResponse.json({ error: 'incomplete_scores', message: `Escore "${key}" ausente.` }, { status: 502 })
+    for (const k of required) {
+      if (typeof scores[k] !== 'number') {
+        return NextResponse.json({ error: 'incomplete_scores', message: `Escore "${k}" ausente.` }, { status: 502 })
       }
     }
 
-    return NextResponse.json({
-      openness:          Math.round(Math.min(100, Math.max(0, scores.openness))),
-      conscientiousness: Math.round(Math.min(100, Math.max(0, scores.conscientiousness))),
-      extraversion:      Math.round(Math.min(100, Math.max(0, scores.extraversion))),
-      agreeableness:     Math.round(Math.min(100, Math.max(0, scores.agreeableness))),
-      neuroticism:       Math.round(Math.min(100, Math.max(0, scores.neuroticism))),
-    })
+    return NextResponse.json(
+      {
+        openness:          Math.round(Math.min(100, Math.max(0, scores.openness))),
+        conscientiousness: Math.round(Math.min(100, Math.max(0, scores.conscientiousness))),
+        extraversion:      Math.round(Math.min(100, Math.max(0, scores.extraversion))),
+        agreeableness:     Math.round(Math.min(100, Math.max(0, scores.agreeableness))),
+        neuroticism:       Math.round(Math.min(100, Math.max(0, scores.neuroticism))),
+        keySource,
+      },
+      { headers: { 'X-AI-Key-Source': keySource } },
+    )
   } catch (err) {
     console.error('[bigfive-parse] OpenAI error:', err)
     return NextResponse.json({ error: 'openai_error', message: 'Erro ao processar resultado.' }, { status: 502 })
