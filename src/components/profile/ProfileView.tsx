@@ -5,15 +5,16 @@
 'use client'
 
 import { useEffect } from 'react'
-import { User, ClipboardCheck, TrendingUp } from 'lucide-react'
+import { User, ClipboardCheck, TrendingUp, Camera } from 'lucide-react'
 import { useState } from 'react'
 import { useProfileStore } from '@/store/profileStore'
-import { ProfileOverview }    from './ProfileOverview'
-import { BodyMetricsCard }    from './BodyMetricsCard'
-import { BodyEvolutionChart } from './BodyEvolutionChart'
-import { GoalProgressCard }   from './GoalProgressCard'
-import { PhysicalInsights }   from './PhysicalInsights'
-import { WeeklyCheckinModal } from './WeeklyCheckinModal'
+import { ProfileOverview }        from './ProfileOverview'
+import { BodyMetricsCard }        from './BodyMetricsCard'
+import { BodyEvolutionChart }     from './BodyEvolutionChart'
+import { GoalProgressCard }       from './GoalProgressCard'
+import { PhysicalInsights }       from './PhysicalInsights'
+import { WeeklyCheckinModal }     from './WeeklyCheckinModal'
+import { ProgressPhotoTracker }   from './ProgressPhotoTracker'
 import { FadeInUp } from '@/components/ui/Motion'
 import { StatCard }  from '@/components/ui/StatCard'
 import { todayStr }  from '@/lib/helpers'
@@ -123,6 +124,19 @@ export function ProfileView() {
             <h3 className="font-bold text-slate-100 text-sm">Evolução — últimos 30 dias</h3>
           </div>
           <BodyEvolutionChart history={history} />
+        </div>
+      </FadeInUp>
+
+      {/* Progresso Visual — tracker de fotos */}
+      <FadeInUp delay={0.17}>
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-violet-500/15 flex items-center justify-center">
+              <Camera size={15} className="text-violet-400" />
+            </div>
+            <h3 className="font-bold text-slate-100 text-sm">Progresso Visual</h3>
+          </div>
+          <ProgressPhotoTracker />
         </div>
       </FadeInUp>
 

@@ -1,11 +1,12 @@
 'use client'
 
 // ─────────────────────────────────────────────
-//  InsightTooltip — Tooltip que chama Claude API ao hover
-//  Mostra motivação contextualizada por métrica
+//  InsightTooltip — Tooltip com position:fixed para evitar
+//  clipping por overflow-hidden em componentes pai.
+//  Posição calculada no hover via getBoundingClientRect.
 // ─────────────────────────────────────────────
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, CSSProperties } from 'react'
 import { cn } from '@/lib/helpers'
 import type { MetricContext } from '@/lib/insightsEngine'
 import { generateInsight } from '@/lib/insightsEngine'
@@ -22,38 +23,52 @@ const CATEGORY_ICON: Record<string, React.ReactNode> = {
 }
 
 type TooltipState = 'idle' | 'loading' | 'loaded' | 'error'
-type Position = 'top' | 'bottom' | 'auto'
 
 interface InsightTooltipProps {
-  ctx: MetricContext
-  children: React.ReactNode
-  position?: Position
-  className?: string
+  ctx:          MetricContext
+  children:     React.ReactNode
+  position?:    'top' | 'bottom' | 'auto'
+  className?:   string
   triggerMode?: 'hover' | 'click'
 }
 
 export function InsightTooltip({
   ctx,
   children,
-  position = 'auto',
   className,
   triggerMode = 'hover',
 }: InsightTooltipProps) {
-  const [state, setState] = useState<TooltipState>('idle')
-  const [text, setText] = useState<string>('')
-  const [visible, setVisible] = useState(false)
-  const wrapRef = useRef<HTMLDivElement>(null)
+  const [state,        setState]       = useState<TooltipState>('idle')
+  const [text,         setText]        = useState<string>('')
+  const [visible,      setVisible]     = useState(false)
+  const [tooltipStyle, setTooltipStyle] = useState<CSSProperties>({})
+  const wrapRef  = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const resolvedPos: 'top' | 'bottom' = (() => {
-    if (position !== 'auto') return position
-    if (typeof window === 'undefined') return 'bottom'
+  // Calcula posição usando coordenadas fixas do viewport — bypassa overflow-hidden
+  function computeStyle() {
     const rect = wrapRef.current?.getBoundingClientRect()
-    if (!rect) return 'bottom'
-    return rect.top > window.innerHeight / 2 ? 'top' : 'bottom'
-  })()
+    if (!rect || typeof window === 'undefined') return
+
+    const TOOLTIP_W   = 300
+    const TOOLTIP_H   = 220  // estimativa
+    const MARGIN      = 8
+    const spaceAbove  = rect.top
+    const spaceBelow  = window.innerHeight - rect.bottom
+    const left        = Math.max(MARGIN, Math.min(rect.left, window.innerWidth - TOOLTIP_W - MARGIN))
+
+    const style: CSSProperties = { position: 'fixed', zIndex: 9999, width: TOOLTIP_W, left }
+
+    if (spaceAbove >= TOOLTIP_H + MARGIN || spaceAbove > spaceBelow) {
+      style.bottom = window.innerHeight - rect.top + MARGIN
+    } else {
+      style.top = rect.bottom + MARGIN
+    }
+    setTooltipStyle(style)
+  }
 
   const show = useCallback(async () => {
+    computeStyle()
     setVisible(true)
     if (state === 'loaded') return
     setState('loading')
@@ -82,28 +97,18 @@ export function InsightTooltip({
     : { onClick: () => (visible ? setVisible(false) : show()) }
 
   return (
-    <div ref={wrapRef} className={cn('relative inline-block', className)} {...hoverProps}>
-      {children}
+    <>
+      <div ref={wrapRef} className={cn('relative inline-block', className)} {...hoverProps}>
+        {children}
+      </div>
 
       {visible && (
         <div
-          className={cn(
-            'absolute z-50 w-[300px] max-w-[calc(100vw-2rem)]',
-            'bg-[#0d1117] border border-white/[0.1] rounded-2xl shadow-2xl shadow-black/60',
-            'pointer-events-auto',
-            resolvedPos === 'bottom' ? 'top-full mt-2 left-0' : 'bottom-full mb-2 left-0',
-          )}
+          style={tooltipStyle}
+          className="bg-[#0d1117] border border-white/[0.1] rounded-2xl shadow-2xl shadow-black/60 pointer-events-auto"
           onMouseEnter={keepOpen}
           onMouseLeave={hide}
         >
-          {/* Arrow */}
-          <div className={cn(
-            'absolute w-2.5 h-2.5 bg-[#0d1117] border-white/[0.1] rotate-45',
-            resolvedPos === 'bottom'
-              ? 'top-[-5px] left-4 border-t border-l'
-              : 'bottom-[-5px] left-4 border-b border-r',
-          )} />
-
           <div className="p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
@@ -132,7 +137,6 @@ export function InsightTooltip({
               </div>
             )}
 
-            {/* Divider */}
             <div className="border-t border-white/[0.06] mb-3" />
 
             {/* Insight content */}
@@ -161,12 +165,12 @@ export function InsightTooltip({
                 </span>
                 <span className={cn(
                   'text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase',
-                  ctx.triggeredFact.category === 'beneficio' && 'bg-emerald-500/15 text-emerald-400',
-                  ctx.triggeredFact.category === 'abandono' && 'bg-red-500/15 text-red-400',
+                  ctx.triggeredFact.category === 'beneficio'    && 'bg-emerald-500/15 text-emerald-400',
+                  ctx.triggeredFact.category === 'abandono'     && 'bg-red-500/15 text-red-400',
                   ctx.triggeredFact.category === 'neurociencia' && 'bg-violet-500/15 text-violet-400',
-                  ctx.triggeredFact.category === 'comparacao' && 'bg-blue-500/15 text-blue-400',
-                  ctx.triggeredFact.category === 'financeiro' && 'bg-amber-500/15 text-amber-400',
-                  !['beneficio','abandono','neurociencia','comparacao','financeiro'].includes(ctx.triggeredFact.category) && 'bg-slate-500/15 text-slate-400',
+                  ctx.triggeredFact.category === 'comparacao'   && 'bg-blue-500/15 text-blue-400',
+                  ctx.triggeredFact.category === 'financeiro'   && 'bg-amber-500/15 text-amber-400',
+                  !['beneficio','abandono','neurociencia','comparacao','financeiro'].includes(ctx.triggeredFact.category ?? '') && 'bg-slate-500/15 text-slate-400',
                 )}>
                   {ctx.triggeredFact.category}
                 </span>
@@ -175,6 +179,6 @@ export function InsightTooltip({
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

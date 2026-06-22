@@ -226,19 +226,48 @@ export function WeeklyView() {
         />
       </FadeInUp>
 
-      {/* ── Atalhos rápidos ── */}
-      {isCurrentWeek && (
+      {/* ── Board Semanal + atalhos ── */}
+      <div className="space-y-3">
+        {/* Board Semanal — sempre visível, sempre clicável */}
+        <a
+          href="/weekly"
+          className={cn(
+            'flex items-center justify-between p-4 rounded-xl',
+            'bg-white/[0.04] border border-white/[0.08]',
+            'hover:bg-violet-500/[0.06] hover:border-violet-500/30',
+            'hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group',
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-violet-500/15 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-500/25 transition-colors">
+              <CalendarDays className="w-4 h-4 text-violet-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-100 leading-tight">Board Semanal</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Semana {currentWeek},&nbsp;{currentYear}
+              </p>
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-xl font-black text-slate-100 tabular-nums leading-none">
+              {habitsOnTrack}/{HABIT_KEYS.length}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">no ritmo</p>
+          </div>
+        </a>
+
+        {/* Atalhos de progresso — visíveis sempre */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Semana */}
+          {/* Consistência */}
           <div className="flex flex-col gap-0 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] hover:border-violet-500/30 hover:-translate-y-0.5 transition-all overflow-hidden">
             <div className="flex items-center gap-3 mb-3">
               <CalendarDays className="w-5 h-5 text-violet-400 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-100 leading-tight">Semana Atual</p>
-                <p className="text-xs text-slate-500 mt-0.5">{avgConsistency}% concluído</p>
+                <p className="text-sm font-semibold text-slate-100 leading-tight">Consistência</p>
+                <p className="text-xs text-slate-500 mt-0.5">{avgConsistency}% da semana</p>
               </div>
             </div>
-            {/* Micro progress bar */}
             <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
@@ -247,7 +276,7 @@ export function WeeklyView() {
             </div>
           </div>
 
-          {/* Hábitos */}
+          {/* Hábitos no ritmo */}
           <div className="flex flex-col gap-0 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] hover:border-emerald-500/30 hover:-translate-y-0.5 transition-all overflow-hidden">
             <div className="flex items-center gap-3 mb-3">
               <CheckSquare className="w-5 h-5 text-emerald-400 flex-shrink-0" />
@@ -256,7 +285,6 @@ export function WeeklyView() {
                 <p className="text-xs text-slate-500 mt-0.5">{habitsOnTrack}/{HABIT_KEYS.length} no ritmo</p>
               </div>
             </div>
-            {/* Micro progress bar */}
             <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
@@ -268,7 +296,7 @@ export function WeeklyView() {
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* ── Week navigator ── */}
       <FadeInUp delay={0}>
