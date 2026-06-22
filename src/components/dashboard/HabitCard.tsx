@@ -18,6 +18,8 @@ import {
   TrendingUp, Clock, Calendar,
   Pause,
 } from 'lucide-react'
+import { ScientificPillsRow } from '@/components/insights/ScientificPill'
+import { SCIENTIFIC_FACTS, BENCHMARKS } from '@/lib/benchmarks'
 
 interface HabitCardProps {
   habitKey: HabitKey
@@ -281,6 +283,30 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
               />
             </div>
           )}
+
+          {/* ── Scientific facts ── */}
+          {(() => {
+            const facts = SCIENTIFIC_FACTS[habitKey] ?? []
+            if (facts.length === 0) return null
+            const benchKey = habitKey === 'hiit' ? 'exercise' : habitKey === 'reading' ? 'reading' : null
+            const bench = benchKey ? BENCHMARKS.habits[benchKey as keyof typeof BENCHMARKS.habits] : undefined
+            return (
+              <ScientificPillsRow
+                facts={facts}
+                max={2}
+                className="mb-4"
+                ctx={{
+                  module: 'habito',
+                  metricName: habit.name,
+                  metricKey: habitKey,
+                  currentValue: progress,
+                  unit: '%',
+                  trend: progress >= 80 ? 'subindo' : progress >= 40 ? 'estavel' : 'caindo',
+                  benchmarks: bench ? { ...bench, metricLabel: habit.name } : undefined,
+                }}
+              />
+            )
+          })()}
 
           {/* ── Action buttons ── */}
           <div className="grid grid-cols-2 gap-2">

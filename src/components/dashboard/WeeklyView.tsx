@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 import { DreamVisionMosaic }  from '@/components/home/DreamVisionMosaic'
+import { InsightsDashboard }  from '@/components/insights/InsightsDashboard'
 
 function SectionTitle({
   icon, title, subtitle, className,
@@ -337,8 +338,18 @@ export function WeeklyView() {
         </div>
       </FadeInUp>
 
+      {/* ── Diagnóstico Integrado ── */}
+      <FadeInUp delay={0.26}>
+        <SectionTitle
+          icon={<Sparkles className="w-4 h-4" />}
+          title="Diagnóstico Integrado"
+          subtitle="Análise cruzada de todos os módulos via IA"
+        />
+        <InsightsDashboard />
+      </FadeInUp>
+
       {/* ── Vision Board ── */}
-      <FadeInUp delay={0.28}>
+      <FadeInUp delay={0.30}>
         <SectionTitle
           icon={<Sparkles className="w-4 h-4" />}
           title="Quadro dos Sonhos"

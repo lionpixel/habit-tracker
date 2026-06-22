@@ -16,6 +16,9 @@ import {
   Moon, Clock, Zap, CalendarDays, AlarmClock,
   MonitorOff, BedDouble, CheckCircle2, TrendingUp, BarChart3,
 } from 'lucide-react'
+import { ScientificPillsRow } from '@/components/insights/ScientificPill'
+import { BenchmarkBar } from '@/components/insights/BenchmarkBar'
+import { SCIENTIFIC_FACTS, BENCHMARKS } from '@/lib/benchmarks'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   BarChart, Bar, ReferenceLine,
@@ -259,6 +262,44 @@ export function SleepView() {
           </div>
         </FadeInUp>
       )}
+
+      {/* Sleep benchmarks + scientific facts */}
+      {history.length > 0 && (() => {
+        const withDur = history.filter((h) => (h.durationMin ?? 0) > 0)
+        const avgHours = withDur.length
+          ? Math.round(withDur.reduce((s, h) => s + (h.durationMin ?? 0), 0) / withDur.length / 60 * 10) / 10
+          : undefined
+        return (
+          <FadeInUp delay={0.125}>
+            <div className="card p-5 space-y-5">
+              <ScientificPillsRow
+                facts={SCIENTIFIC_FACTS.sleep}
+                max={3}
+                ctx={{
+                  module: 'sono',
+                  metricName: 'Sono',
+                  metricKey: 'sleep',
+                  currentValue: avgHours ?? 0,
+                  unit: 'h',
+                }}
+              />
+              {avgHours !== undefined && (
+                <BenchmarkBar
+                  label="Horas dormidas (média 7d)"
+                  userValue={avgHours}
+                  unit="h"
+                  national={BENCHMARKS.sleep.hoursPerNight.national}
+                  global={BENCHMARKS.sleep.hoursPerNight.global}
+                  recommended={BENCHMARKS.sleep.hoursPerNight.recommended}
+                  top10={BENCHMARKS.sleep.hoursPerNight.top10}
+                  worst25={BENCHMARKS.sleep.hoursPerNight.worst25}
+                  higherIsBetter
+                />
+              )}
+            </div>
+          </FadeInUp>
+        )
+      })()}
 
       {/* Charts */}
       {history.length > 1 && (

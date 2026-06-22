@@ -6,6 +6,10 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { DollarSign, ChevronLeft, ChevronRight, Plus, Settings } from 'lucide-react'
+import { ScientificPillsRow } from '@/components/insights/ScientificPill'
+import { BenchmarkBar } from '@/components/insights/BenchmarkBar'
+import { SCIENTIFIC_FACTS, BENCHMARKS } from '@/lib/benchmarks'
+import { savingsRate, totalSavings } from '@/types/finance'
 import { useFinanceStore, currentMonthKey } from '@/store/financeStore'
 import { FinanceOverview }       from './FinanceOverview'
 import { IncomeChart }           from './IncomeChart'
@@ -152,6 +156,35 @@ export function FinanceView() {
           <FadeInUp delay={0.07}>
             <FinanceInsights month={month} goals={goalsSummary} />
           </FadeInUp>
+
+          {/* Scientific facts + Benchmark */}
+          {income > 0 && (
+            <FadeInUp delay={0.075}>
+              <div className="card p-5 space-y-5">
+                <ScientificPillsRow
+                  facts={SCIENTIFIC_FACTS.finance}
+                  max={3}
+                  ctx={{
+                    module: 'financas',
+                    metricName: 'Taxa de Investimento',
+                    metricKey: 'investmentRate',
+                    currentValue: savingsRate(month),
+                    unit: '%',
+                  }}
+                />
+                <BenchmarkBar
+                  label="Taxa de Investimento"
+                  userValue={savingsRate(month)}
+                  unit="%"
+                  national={BENCHMARKS.finance.investmentRate.national}
+                  global={BENCHMARKS.finance.investmentRate.global}
+                  recommended={BENCHMARKS.finance.investmentRate.recommended}
+                  top10={BENCHMARKS.finance.investmentRate.top10}
+                  higherIsBetter
+                />
+              </div>
+            </FadeInUp>
+          )}
 
           {/* Income + Expense charts */}
           <FadeInUp delay={0.09}>

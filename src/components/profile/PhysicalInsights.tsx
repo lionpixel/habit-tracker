@@ -10,6 +10,10 @@ import type { BodyCheckIn, PhysicalProfile } from '@/types/profile'
 import { imcCategory } from '@/types/profile'
 import { useAppStore } from '@/store/appStore'
 import { useActiveHabitKeys } from '@/store/selectors'
+import { BenchmarkBar } from '@/components/insights/BenchmarkBar'
+import { ScientificPillsRow } from '@/components/insights/ScientificPill'
+import { InsightTooltip } from '@/components/insights/InsightTooltip'
+import { SCIENTIFIC_FACTS, BENCHMARKS } from '@/lib/benchmarks'
 
 // ── TMB + TDEE ────────────────────────────────
 
@@ -196,14 +200,124 @@ export function PhysicalInsights({ profile, history }: PhysicalInsightsProps) {
     }
   }
 
-  if (!insights.length) return null
+  const bench = BENCHMARKS.body
+  const isMale = profile.sex !== 'female'
+  const bfBench = isMale ? bench.bodyFat_male : bench.bodyFat_female
+  const wBench  = isMale ? bench.waist_male   : bench.waist_female
 
   return (
-    <div>
-      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Insights</div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {insights.map((ins, i) => <InsightCard key={i} {...ins} />)}
+    <div className="space-y-6">
+      {/* ── Scientific facts ── */}
+      <div>
+        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Dados Científicos</div>
+        <ScientificPillsRow
+          facts={SCIENTIFIC_FACTS.body}
+          max={4}
+          ctx={{
+            module: 'corpo',
+            metricName: 'Corpo',
+            metricKey: 'body',
+            currentValue: profile.bodyFat ?? profile.imc ?? 0,
+            unit: profile.bodyFat ? '%' : 'kg/m²',
+          }}
+        />
       </div>
+
+      {/* ── Benchmarks corporais ── */}
+      {(profile.bodyFat !== undefined || profile.imc !== undefined || profile.waist !== undefined) && (
+        <div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+            Onde você está vs médias
+          </div>
+          <div className="card p-4 space-y-5">
+            {profile.bodyFat !== undefined && (
+              <InsightTooltip
+                ctx={{
+                  module: 'corpo',
+                  metricName: '% Gordura Corporal',
+                  metricKey: 'bodyFat',
+                  currentValue: profile.bodyFat,
+                  unit: '%',
+                  benchmarks: bfBench,
+                  triggeredFact: SCIENTIFIC_FACTS.body[0],
+                }}
+                position="bottom"
+              >
+                <BenchmarkBar
+                  label="% Gordura Corporal"
+                  userValue={profile.bodyFat}
+                  unit="%"
+                  national={bfBench.national}
+                  recommended={bfBench.recommended}
+                  top10={bfBench.top10}
+                  worst25={bfBench.worst25}
+                  higherIsBetter={false}
+                />
+              </InsightTooltip>
+            )}
+
+            {profile.imc !== undefined && (
+              <InsightTooltip
+                ctx={{
+                  module: 'corpo',
+                  metricName: 'IMC',
+                  metricKey: 'bmi',
+                  currentValue: profile.imc,
+                  unit: 'kg/m²',
+                  benchmarks: bench.bmi,
+                  triggeredFact: SCIENTIFIC_FACTS.body[4],
+                }}
+                position="bottom"
+              >
+                <BenchmarkBar
+                  label="IMC"
+                  userValue={profile.imc}
+                  unit="kg/m²"
+                  national={bench.bmi.national}
+                  global={bench.bmi.global}
+                  recommended={bench.bmi.recommended}
+                  top10={bench.bmi.top10}
+                  higherIsBetter={false}
+                />
+              </InsightTooltip>
+            )}
+
+            {profile.waist !== undefined && (
+              <InsightTooltip
+                ctx={{
+                  module: 'corpo',
+                  metricName: 'Circunferência Abdominal',
+                  metricKey: 'waist',
+                  currentValue: profile.waist,
+                  unit: 'cm',
+                  benchmarks: wBench,
+                }}
+                position="bottom"
+              >
+                <BenchmarkBar
+                  label="Circunferência Abdominal"
+                  userValue={profile.waist}
+                  unit="cm"
+                  national={wBench.national}
+                  recommended={wBench.recommended}
+                  top10={wBench.top10}
+                  higherIsBetter={false}
+                />
+              </InsightTooltip>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Insight cards ── */}
+      {insights.length > 0 && (
+        <div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Análise</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {insights.map((ins, i) => <InsightCard key={i} {...ins} />)}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

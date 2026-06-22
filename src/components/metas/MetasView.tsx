@@ -13,6 +13,8 @@ import { formatTime, getMonthKey } from '@/lib/helpers'
 import { Timer, CalendarDays, Trophy, Flame, Target } from 'lucide-react'
 import type { HabitKey } from '@/types/habit'
 import { useActiveHabitKeys } from '@/store/selectors'
+import { ScientificPillsRow } from '@/components/insights/ScientificPill'
+import { SCIENTIFIC_FACTS } from '@/lib/benchmarks'
 
 export function MetasView() {
   const { habits, currentYear, currentMonth, getMonthlyGoalInfo } = useHabits()
@@ -100,6 +102,41 @@ export function MetasView() {
                     height="md"
                     showLabel
                   />
+
+                  {/* Scientific facts for this habit */}
+                  {(SCIENTIFIC_FACTS[key] ?? []).length > 0 && (
+                    <div className="mt-3">
+                      <ScientificPillsRow
+                        facts={SCIENTIFIC_FACTS[key]}
+                        max={2}
+                        ctx={{
+                          module: 'meta',
+                          metricName: habit.name,
+                          metricKey: key,
+                          currentValue: goal.progress,
+                          unit: '%',
+                          trend: goal.progress >= 80 ? 'subindo' : goal.progress >= 40 ? 'estavel' : 'caindo',
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Goals context pills */}
+                  {(SCIENTIFIC_FACTS[key] ?? []).length === 0 && (
+                    <div className="mt-3">
+                      <ScientificPillsRow
+                        facts={SCIENTIFIC_FACTS.goals}
+                        max={2}
+                        ctx={{
+                          module: 'meta',
+                          metricName: habit.name,
+                          metricKey: key,
+                          currentValue: goal.progress,
+                          unit: '%',
+                        }}
+                      />
+                    </div>
+                  )}
 
                   <HabitMiniHeatmap habitKey={key} color={color} />
                 </AnimatedCard>
