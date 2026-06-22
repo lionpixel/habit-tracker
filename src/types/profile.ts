@@ -75,12 +75,17 @@ export function computeFatMass(weight: number, bf: number): number {
 }
 
 export function imcCategory(imc: number): { label: string; color: string } {
-  if (imc < 18.5) return { label: 'Abaixo do peso', color: '#0ea5e9' }
-  if (imc < 25)   return { label: 'Peso normal',     color: '#10b981' }
-  if (imc < 30)   return { label: 'Sobrepeso',        color: '#f59e0b' }
-  if (imc < 35)   return { label: 'Obesidade I',      color: '#ef4444' }
-  if (imc < 40)   return { label: 'Obesidade II',     color: '#dc2626' }
-  return               { label: 'Obesidade III',      color: '#7f1d1d' }
+  if (imc < 18.5) return { label: 'Abaixo do peso',      color: '#0ea5e9' }
+  if (imc < 25)   return { label: 'Peso normal',          color: '#10b981' }
+  if (imc < 30)   return { label: 'Sobrepeso',            color: '#f59e0b' }
+  if (imc < 35)   return { label: 'Obesidade grau I',     color: '#ef4444' }
+  if (imc < 40)   return { label: 'Obesidade grau II',    color: '#dc2626' }
+  return               { label: 'Obesidade grau III',    color: '#7f1d1d' }
+}
+
+/** Normaliza altura para cm: se o usuário digitou em metros (ex: 1.85), converte */
+export function normalizeHeightCm(raw: number): number {
+  return raw < 3 ? Math.round(raw * 100) : raw
 }
 
 export const ACTIVITY_LABELS: Record<ActivityLevel, string> = {

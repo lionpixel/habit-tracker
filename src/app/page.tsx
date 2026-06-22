@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────
-//  Página principal — redireciona para /weekly
+//  Página principal — Home com vision board e resumo
 // ─────────────────────────────────────────────
 
 import { redirect } from 'next/navigation'

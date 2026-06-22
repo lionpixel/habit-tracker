@@ -103,7 +103,7 @@ export function buildAdjustmentChain(
 export function buildSleepHistory(
   log: SleepData['log'],
   targetWake: string,
-  days = 7,
+  days = 30,
 ): SleepHistoryItem[] {
   const history: SleepHistoryItem[] = []
   const targetMin = timeToMinutes(targetWake)
@@ -112,7 +112,6 @@ export function buildSleepHistory(
   for (let i = days - 1; i >= 0; i--) {
     const key = addDaysToStr(todayBRT3, -i)
     const entry = log[key]
-
     if (!entry) continue
 
     const wakeMin = timeToMinutes(entry.wakeTime)
@@ -121,11 +120,21 @@ export function buildSleepHistory(
     if (diff > 60)      badge = 'off'
     else if (diff > 30) badge = 'near'
 
+    let durationMin: number | undefined
+    if (entry.sleepTime) {
+      const sleepMin = timeToMinutes(entry.sleepTime)
+      durationMin = wakeMin > sleepMin
+        ? wakeMin - sleepMin
+        : 1440 - sleepMin + wakeMin
+    }
+
     history.push({
-      date:      key,
-      wakeTime:  entry.wakeTime,
-      sleepTime: entry.sleepTime,
+      date:        key,
+      wakeTime:    entry.wakeTime,
+      sleepTime:   entry.sleepTime,
       badge,
+      durationMin,
+      wakeMinutes: wakeMin,
     })
   }
 

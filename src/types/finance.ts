@@ -21,6 +21,10 @@ export interface FinanceCategory {
 export interface MonthlyFinance {
   monthKey: string    // "YYYY-MM"
 
+  // Company revenue (PJ) — each split 50% pró-labore / 50% reinvest
+  companyARevenue?: number
+  companyBRevenue?: number
+
   // Income
   salary:          number
   freelance:       number
@@ -101,11 +105,16 @@ export function savingsRate(m: MonthlyFinance): number {
 export function emptyMonth(monthKey: string): MonthlyFinance {
   return {
     monthKey,
+    companyARevenue: 0, companyBRevenue: 0,
     salary: 0, freelance: 0, business: 0, investmentReturn: 0, otherIncome: 0,
     housing: 0, food: 0, transport: 0, health: 0, education: 0,
     entertainment: 0, utilities: 0, clothing: 0, personal: 0, debt: 0, otherExpense: 0,
     investments: 0, emergencyFund: 0, savings: 0,
   }
+}
+
+export function fmtBRL(value: number): string {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 }
 
 // Brazil income percentile approximation (2024 data)

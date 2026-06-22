@@ -121,6 +121,33 @@ export function MonthlyFinanceTable({ monthKey }: MonthlyFinanceTableProps) {
 
   return (
     <div className="space-y-3">
+      {/* Company A/B inputs */}
+      <div className="border border-white/[0.06] rounded-xl overflow-hidden">
+        <div className="px-4 py-3 bg-white/[0.03]">
+          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Faturamento Empresas (PJ)</span>
+        </div>
+        <div className="divide-y divide-white/[0.04]">
+          {[
+            { label: 'Empresa A', field: 'companyARevenue' as keyof MonthlyFinance, color: '#6366f1' },
+            { label: 'Empresa B', field: 'companyBRevenue' as keyof MonthlyFinance, color: '#0ea5e9' },
+          ].map(({ label, field, color }) => (
+            <div key={field} className="flex items-center gap-3 px-4 py-3">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
+                <span style={{ color, fontSize: 11, fontWeight: 800 }}>PJ</span>
+              </div>
+              <span className="flex-1 text-xs font-semibold text-slate-400">{label}</span>
+              <input
+                type="number" min={0} step="any"
+                className="w-32 text-right bg-white/[0.05] rounded-lg px-3 py-1.5 text-slate-200 text-xs font-bold tabular-nums border border-white/[0.06] focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white/[0.08]"
+                value={(values[field as string] ?? 0) === 0 ? '' : values[field as string]}
+                placeholder="R$ 0"
+                onChange={(e) => handleChange(field, Number(e.target.value) || 0)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       <Section
         title="Receitas"
         categories={INCOME_CATEGORIES}

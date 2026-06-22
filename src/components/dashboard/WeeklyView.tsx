@@ -22,9 +22,10 @@ import {
   ChevronLeft, ChevronRight,
   Timer, CheckSquare, Zap, Award,
   TrendingUp, TrendingDown, Target, CalendarCheck,
-  Map, BarChart3, Trophy, AlertTriangle, Layers, Plus,
+  Map, BarChart3, Trophy, AlertTriangle, Layers, Plus, Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/helpers'
+import { DreamVisionMosaic }  from '@/components/home/DreamVisionMosaic'
 
 function SectionTitle({
   icon, title, subtitle, className,
@@ -334,6 +335,16 @@ export function WeeklyView() {
             <InsightCards />
           </section>
         </div>
+      </FadeInUp>
+
+      {/* ── Vision Board ── */}
+      <FadeInUp delay={0.28}>
+        <SectionTitle
+          icon={<Sparkles className="w-4 h-4" />}
+          title="Quadro dos Sonhos"
+          subtitle="O que você está construindo — mantenha vivo na memória"
+        />
+        <DreamVisionMosaic />
       </FadeInUp>
 
     </div>

@@ -22,12 +22,18 @@ import type { HabitKey } from '@/types/habit'
 import { Clock, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 
-const DAY_NAMES = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
-const MONTH_NAMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+const BRT = 'America/Sao_Paulo'
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T12:00:00')
-  return `${DAY_NAMES[d.getDay()]}, ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]} de ${d.getFullYear()}`
+  // T15:00:00Z = meio-dia em BRT (UTC-3) — garante dia correto independente do fuso do navegador
+  const d = new Date(`${dateStr}T15:00:00Z`)
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: BRT,
+    weekday: 'long',
+    day:     'numeric',
+    month:   'long',
+    year:    'numeric',
+  }).format(d)
 }
 
 // ── Seção de hábitos do dia ───────────────────

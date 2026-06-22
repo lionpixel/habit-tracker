@@ -7,14 +7,16 @@
 import { useState, useEffect, useMemo } from 'react'
 import { DollarSign, ChevronLeft, ChevronRight, Plus, Settings } from 'lucide-react'
 import { useFinanceStore, currentMonthKey } from '@/store/financeStore'
-import { FinanceOverview }      from './FinanceOverview'
-import { IncomeChart }          from './IncomeChart'
-import { ExpenseChart }         from './ExpenseChart'
-import { SavingsGoalCard }      from './SavingsGoalCard'
-import { WealthProgress }       from './WealthProgress'
-import { FinanceInsights }      from './FinanceInsights'
-import { FinancialGoalModal }   from './FinancialGoalModal'
-import { MonthlyFinanceTable }  from './MonthlyFinanceTable'
+import { FinanceOverview }       from './FinanceOverview'
+import { IncomeChart }           from './IncomeChart'
+import { ExpenseChart }          from './ExpenseChart'
+import { SavingsGoalCard }       from './SavingsGoalCard'
+import { WealthProgress }        from './WealthProgress'
+import { FinanceInsights }       from './FinanceInsights'
+import { FinancialGoalModal }    from './FinancialGoalModal'
+import { MonthlyFinanceTable }   from './MonthlyFinanceTable'
+import { CompanyCardsSection }   from './CompanyCardsSection'
+import { MonthlyEvolutionChart } from './MonthlyEvolutionChart'
 import { FadeInUp, StaggerList, StaggerItem } from '@/components/ui/Motion'
 import { totalIncome } from '@/types/finance'
 import type { FinancialGoal } from '@/types/finance'
@@ -136,6 +138,11 @@ export function FinanceView() {
       ) : (
         /* ── Charts mode ── */
         <>
+          {/* Company A/B */}
+          <FadeInUp delay={0.04}>
+            <CompanyCardsSection month={month} />
+          </FadeInUp>
+
           {/* Stats overview */}
           <FadeInUp delay={0.05}>
             <FinanceOverview month={month} />
@@ -152,6 +159,11 @@ export function FinanceView() {
               <IncomeChart  month={month} />
               <ExpenseChart month={month} />
             </div>
+          </FadeInUp>
+
+          {/* Monthly evolution (12 months) */}
+          <FadeInUp delay={0.10}>
+            <MonthlyEvolutionChart />
           </FadeInUp>
 
           {/* Wealth/percentile */}

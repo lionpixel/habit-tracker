@@ -1,14 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ImageIcon, DollarSign, Heart, MapPin, Star, Target } from 'lucide-react'
+import { X, ImageIcon, DollarSign, Heart, MapPin, Star, Target, Upload, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 import { getBRTYear } from '@/lib/time'
 import type { Dream, DreamCategory, DreamStatus } from '@/types/dreams'
 import { DREAM_CATEGORIES } from '@/types/dreams'
 import { useDreamsStore } from '@/store/dreamsStore'
 import { useGoalsStore }  from '@/store/goalsStore'
+import { uploadDreamImage, isSupabaseConfigured } from '@/lib/supabase'
 
 interface DreamFormModalProps {
   open:    boolean
@@ -51,6 +52,9 @@ export function DreamFormModal({ open, dream, onClose }: DreamFormModalProps) {
   const { annualGoals, hydrated: gH, hydrate: gHydrate } = useGoalsStore()
   const [form, setForm] = useState<FormState>(EMPTY)
   const [error, setError] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const isEdit = !!dream
 
@@ -80,6 +84,14 @@ export function DreamFormModal({ open, dream, onClose }: DreamFormModalProps) {
 
   function set<K extends keyof FormState>(key: K, val: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: val }))
+  }
+
+  async function handleFileUpload(file: File) {
+    if (!file.type.startsWith('image/')) return
+    setUploading(true)
+    const url = await uploadDreamImage(file)
+    setUploading(false)
+    if (url) set('imageUrl', url)
   }
 
   function handleSubmit() {
@@ -207,20 +219,59 @@ export function DreamFormModal({ open, dream, onClose }: DreamFormModalProps) {
                 />
               </div>
 
-              {/* Image URL */}
-              <div className="space-y-1.5">
+              {/* Image upload */}
+              <div className="space-y-2">
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   <ImageIcon className="w-3 h-3" />
-                  Imagem (URL)
+                  Imagem
                 </label>
+
+                {/* Drag-and-drop / click area — only shown when Supabase is configured */}
+                {isSupabaseConfigured && (
+                  <div
+                    onClick={() => fileRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault(); setDragOver(false)
+                      const file = e.dataTransfer.files[0]
+                      if (file) handleFileUpload(file)
+                    }}
+                    className={cn(
+                      'flex flex-col items-center justify-center gap-2 h-20 rounded-xl border-2 border-dashed cursor-pointer transition-all',
+                      dragOver
+                        ? 'border-violet-500/60 bg-violet-500/[0.08]'
+                        : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.14] hover:bg-white/[0.04]',
+                    )}
+                  >
+                    {uploading ? (
+                      <Loader2 size={18} className="animate-spin text-violet-400" />
+                    ) : (
+                      <>
+                        <Upload size={16} className="text-slate-500" />
+                        <span className="text-[11px] text-slate-600">Arraste ou clique para enviar</span>
+                      </>
+                    )}
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f) }}
+                    />
+                  </div>
+                )}
+
+                {/* URL fallback */}
                 <input
                   value={form.imageUrl}
                   onChange={(e) => set('imageUrl', e.target.value)}
-                  placeholder="https://..."
+                  placeholder={isSupabaseConfigured ? 'ou cole uma URL...' : 'https://...'}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-200 text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50 transition-colors"
                 />
+
                 {form.imageUrl && (
-                  <div className="relative h-24 rounded-xl overflow-hidden border border-white/[0.06]">
+                  <div className="relative h-28 rounded-xl overflow-hidden border border-white/[0.06]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={form.imageUrl} alt="preview" className="w-full h-full object-cover" />
                   </div>

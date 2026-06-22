@@ -23,12 +23,16 @@ import {
   GripVertical,
   LayoutGrid,
   Plus,
+  Settings2,
   Square,
   Target,
   Trash2,
 } from 'lucide-react'
 import { useGoalsStore } from '@/store/goalsStore'
 import { useCalendarStore } from '@/store/calendarStore'
+import { NewHabitModal } from '@/components/habits/NewHabitModal'
+import { HabitEditorModal } from '@/components/habits/HabitEditorModal'
+import type { HabitKey } from '@/types/habit'
 import { useHabitsForWeek, type PlannerDayKey, type PlannerHabitItem } from '@/hooks/useHabitsForWeek'
 import { GoalCard, TaskRow } from './GoalCard'
 import { GoalFormModal } from './GoalFormModal'
@@ -199,11 +203,12 @@ function PlannerTaskItem({
 interface HabitRowProps {
   item: PlannerHabitItem
   onToggle: (done: boolean) => void
+  onEdit?: () => void
 }
 
-function HabitRow({ item, onToggle }: HabitRowProps) {
+function HabitRow({ item, onToggle, onEdit }: HabitRowProps) {
   return (
-    <div className="flex items-start gap-2 rounded-xl px-2 py-1.5 hover:bg-white/[0.03]">
+    <div className="group/hr flex items-start gap-2 rounded-xl px-2 py-1.5 hover:bg-white/[0.03]">
       <button
         type="button"
         disabled={item.locked}
@@ -236,6 +241,16 @@ function HabitRow({ item, onToggle }: HabitRowProps) {
           {item.meta}
         </div>
       </div>
+
+      {onEdit && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onEdit() }}
+          className="mt-0.5 flex-shrink-0 opacity-0 group-hover/hr:opacity-100 transition-opacity text-slate-700 hover:text-slate-400"
+        >
+          <Settings2 size={11} />
+        </button>
+      )}
     </div>
   )
 }
@@ -243,9 +258,10 @@ function HabitRow({ item, onToggle }: HabitRowProps) {
 interface HabitsSectionProps {
   items: PlannerHabitItem[]
   onToggle: (item: PlannerHabitItem, done: boolean) => void
+  onEditHabit?: (key: HabitKey) => void
 }
 
-function HabitsSection({ items, onToggle }: HabitsSectionProps) {
+function HabitsSection({ items, onToggle, onEditHabit }: HabitsSectionProps) {
   const [collapsed, setCollapsed] = useState(false)
   const done = items.filter((item) => item.done).length
   const total = items.length
@@ -281,6 +297,7 @@ function HabitsSection({ items, onToggle }: HabitsSectionProps) {
                 key={`${item.key}-${item.date}`}
                 item={item}
                 onToggle={(done) => onToggle(item, done)}
+                onEdit={onEditHabit ? () => onEditHabit(item.key as HabitKey) : undefined}
               />
             ))
           )}
@@ -434,6 +451,7 @@ interface DayCardProps {
   habits: PlannerHabitItem[]
   tasks: DailyTask[]
   onToggleHabit: (item: PlannerHabitItem, done: boolean) => void
+  onEditHabit?: (key: HabitKey) => void
   onToggleTask: (task: DailyTask) => void
   onUpdateTask: (task: DailyTask, title: string) => void
   onDeleteTask: (task: DailyTask) => void
@@ -449,6 +467,7 @@ function DayCard({
   habits,
   tasks,
   onToggleHabit,
+  onEditHabit,
   onToggleTask,
   onUpdateTask,
   onDeleteTask,
@@ -510,7 +529,7 @@ function DayCard({
 
       <div className="flex-1 divide-y divide-white/[0.04] px-1 pb-2">
         <div className="pt-1">
-          <HabitsSection items={habits} onToggle={onToggleHabit} />
+          <HabitsSection items={habits} onToggle={onToggleHabit} onEditHabit={onEditHabit} />
         </div>
         <div className="pt-1">
           <TasksSection
@@ -688,6 +707,7 @@ function MetasTab({ year, week }: { year: number; week: number }) {
           setActiveWId(null)
         }}
       />
+
     </div>
   )
 }
@@ -703,6 +723,8 @@ export function WeeklyPlannerView() {
   const [year, setYear] = useState(CURRENT_YEAR)
   const [week, setWeek] = useState(CURRENT_WEEK)
   const [tab, setTab] = useState<TabMode>('board')
+  const [newHabitOpen, setNewHabitOpen] = useState(false)
+  const [editingHabitKey, setEditingHabitKey] = useState<HabitKey | null>(null)
 
   useEffect(() => {
     if (!hydrated) hydrate()
@@ -821,6 +843,15 @@ export function WeeklyPlannerView() {
             </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setNewHabitOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-violet-500/15 text-violet-300 hover:bg-violet-500/25 border border-violet-500/20 transition-all"
+            >
+              <Plus size={12} /> Hábito
+            </button>
+
           <div className="flex gap-0.5 rounded-xl bg-white/[0.04] p-0.5">
             <button
               type="button"
@@ -842,6 +873,7 @@ export function WeeklyPlannerView() {
             >
               <Target size={12} /> Metas
             </button>
+          </div>
           </div>
         </div>
       </FadeInUp>
@@ -922,6 +954,7 @@ export function WeeklyPlannerView() {
                   habits={byDay[DAY_CONFIG[index].key]}
                   tasks={tasksByDay[DAY_CONFIG[index].key]}
                   onToggleHabit={(item, done) => toggleHabit(item.key, item.date, done)}
+                  onEditHabit={(key) => setEditingHabitKey(key)}
                   onToggleTask={toggleTask}
                   onUpdateTask={(task, title) => {
                     updateDailyTask(task.id, { title })
@@ -950,6 +983,7 @@ export function WeeklyPlannerView() {
                   habits={byDay[DAY_CONFIG[index].key]}
                   tasks={tasksByDay[DAY_CONFIG[index].key]}
                   onToggleHabit={(item, done) => toggleHabit(item.key, item.date, done)}
+                  onEditHabit={(key) => setEditingHabitKey(key)}
                   onToggleTask={toggleTask}
                   onUpdateTask={(task, title) => {
                     updateDailyTask(task.id, { title })
@@ -1010,6 +1044,18 @@ export function WeeklyPlannerView() {
         <FadeInUp delay={0.05}>
           <MetasTab year={year} week={week} />
         </FadeInUp>
+      )}
+
+      {/* FEAT-02: criar hábito direto do planner */}
+      <NewHabitModal open={newHabitOpen} onClose={() => setNewHabitOpen(false)} />
+
+      {/* FEAT-03: editar hábito pelo board */}
+      {editingHabitKey && (
+        <HabitEditorModal
+          habitKey={editingHabitKey}
+          open={true}
+          onClose={() => setEditingHabitKey(null)}
+        />
       )}
     </div>
   )

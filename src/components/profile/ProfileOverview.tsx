@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react'
 import { User, Edit2, Check, X } from 'lucide-react'
 import { useProfileStore } from '@/store/profileStore'
-import { ACTIVITY_LABELS, GOAL_LABELS } from '@/types/profile'
+import { ACTIVITY_LABELS, GOAL_LABELS, normalizeHeightCm } from '@/types/profile'
 import type { PhysicalProfile, Sex, ActivityLevel, PhysicalGoal } from '@/types/profile'
 import { cn } from '@/lib/helpers'
 
@@ -54,7 +54,7 @@ export function ProfileOverview() {
     if (name)     patch.name           = name.trim()
     if (age)      patch.age            = Number(age)
     if (sex)      patch.sex            = sex
-    if (height)   patch.height         = Number(height)
+    if (height)   patch.height         = normalizeHeightCm(Number(height))
     if (activity) patch.activityLevel  = activity
     if (goal)     patch.goal           = goal
     if (gWeight)  patch.goalWeight     = Number(gWeight)
@@ -118,7 +118,7 @@ export function ProfileOverview() {
             </div>
             <div>
               <Label>Altura (cm)</Label>
-              <Input type="number" value={height} onChange={setHeight} placeholder="ex: 175" />
+              <Input type="number" value={height} onChange={setHeight} placeholder="ex: 185 (em cm)" />
             </div>
           </div>
 

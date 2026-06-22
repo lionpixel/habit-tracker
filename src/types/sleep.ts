@@ -47,4 +47,6 @@ export interface SleepHistoryItem {
   wakeTime: string
   sleepTime: string | null
   badge: SleepHistoryBadge
+  durationMin?: number   // computed when sleepTime is available
+  wakeMinutes?: number   // HH:MM → minutes (for charting)
 }

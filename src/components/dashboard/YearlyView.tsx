@@ -361,6 +361,104 @@ function YearDetailTab({ currentYear }: { currentYear: number }) {
           </div>
         </FadeInUp>
       )}
+
+      {/* Potencial do Dia — projeção para o restante do ano */}
+      {hasAnyData && currentYear === getBRTYear() && (
+        <FadeInUp delay={0.22}>
+          <DayPotentialBlock
+            currentYear={currentYear}
+            habits={habits}
+            habitKeys={HABIT_KEYS}
+            yearTotals={yearTotals}
+          />
+        </FadeInUp>
+      )}
+    </div>
+  )
+}
+
+// ── Potencial do Dia ──────────────────────────
+
+interface DayPotentialProps {
+  currentYear: number
+  habits:      Record<string, Habit>
+  habitKeys:   string[]
+  yearTotals:  Record<string, number>
+}
+
+function DayPotentialBlock({ currentYear, habits, habitKeys, yearTotals }: DayPotentialProps) {
+  const today = new Date()
+  const jan1  = new Date(currentYear, 0, 1)
+  const daysElapsed = Math.max(1, Math.round((today.getTime() - jan1.getTime()) / 86400000))
+  const daysInYear  = 365
+
+  const rows = habitKeys.map((k) => {
+    const h          = habits[k]
+    const total      = yearTotals[k] ?? 0
+    const avgPerDay  = total / daysElapsed
+    const projected  = Math.round(avgPerDay * daysInYear)
+    // Ideal: frequency × sessions_per_week × target minutes (approx)
+    const ideal      = Math.round((h.frequency / 7) * daysInYear * (h.target ?? 60))
+    const pace       = ideal > 0 ? Math.round((projected / ideal) * 100) : null
+    return { k, h, total, avgPerDay, projected, ideal, pace }
+  }).filter((r) => r.total > 0)
+    .sort((a, b) => (b.pace ?? 0) - (a.pace ?? 0))
+
+  if (!rows.length) return null
+
+  return (
+    <div className="card p-6">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
+          <TrendingUp size={15} className="text-amber-400" />
+        </div>
+        <h3 className="text-base font-bold text-slate-100">Potencial do Dia</h3>
+      </div>
+      <p className="text-[11px] text-slate-600 ml-10 mb-5">
+        Se mantiver o ritmo dos últimos {daysElapsed} dias — projeção para {currentYear}
+      </p>
+      <div className="space-y-4">
+        {rows.map(({ k, h, total, projected, ideal, pace }) => {
+          const color     = h.color
+          const paceColor = pace == null ? '#64748b' : pace >= 90 ? '#10b981' : pace >= 70 ? '#f59e0b' : '#ef4444'
+          const paceLabel = pace == null ? '—' : pace >= 90 ? 'No ritmo ✓' : pace >= 70 ? 'Quase lá' : 'Abaixo'
+          return (
+            <div key={k}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
+                  <HabitIcon id={h.icon} size={11} style={{ color }} />
+                </div>
+                <span className="text-xs font-semibold text-slate-300 flex-1 truncate">{h.name}</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${paceColor}18`, color: paceColor }}>
+                  {paceLabel}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 ml-9 mb-2">
+                <div className="text-center">
+                  <div className="text-[10px] text-slate-600 mb-0.5">Acumulado</div>
+                  <div className="text-xs font-bold text-slate-300 tabular-nums">{formatTime(total)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-slate-600 mb-0.5">Projeção</div>
+                  <div className="text-xs font-bold tabular-nums" style={{ color }}>{formatTime(projected)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-slate-600 mb-0.5">Ideal</div>
+                  <div className="text-xs font-bold text-slate-500 tabular-nums">{formatTime(ideal)}</div>
+                </div>
+              </div>
+              {pace != null && (
+                <div className="ml-9 h-1 bg-white/[0.05] rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${Math.min(100, pace)}%`, backgroundColor: paceColor, opacity: 0.7 }}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

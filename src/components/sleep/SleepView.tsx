@@ -11,11 +11,84 @@ import { Button }      from '@/components/ui/Button'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { FadeInUp } from '@/components/ui/Motion'
 import { cn }          from '@/lib/helpers'
-import type { SleepHistoryBadge } from '@/types/sleep'
+import type { SleepHistoryBadge, SleepHistoryItem } from '@/types/sleep'
 import {
   Moon, Clock, Zap, CalendarDays, AlarmClock,
-  MonitorOff, BedDouble, CheckCircle2,
+  MonitorOff, BedDouble, CheckCircle2, TrendingUp, BarChart3,
 } from 'lucide-react'
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, ReferenceLine,
+  ResponsiveContainer, Legend,
+} from 'recharts'
+
+// ── Charts ────────────────────────────────────
+
+function minutesToHHMM(min: number): string {
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
+}
+
+function WakeTimeChart({ history, targetWake }: { history: SleepHistoryItem[]; targetWake: string }) {
+  const targetMin = history.length > 0
+    ? parseInt(targetWake.split(':')[0]) * 60 + parseInt(targetWake.split(':')[1])
+    : 0
+  const data = history.map((h) => ({
+    date:    h.date.slice(5),
+    realizado: h.wakeMinutes,
+    meta:    targetMin,
+  }))
+  if (!data.length) return null
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <LineChart data={data} margin={{ top: 4, right: 4, left: -8, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+        <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 9 }} axisLine={false} tickLine={false} />
+        <YAxis
+          tick={{ fill: '#64748b', fontSize: 9 }}
+          axisLine={false} tickLine={false}
+          tickFormatter={minutesToHHMM}
+          domain={['dataMin - 60', 'dataMax + 60']}
+        />
+        <Tooltip
+          formatter={(v: number) => minutesToHHMM(v)}
+          contentStyle={{ background: 'rgba(13,17,23,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 11 }}
+        />
+        <Legend wrapperStyle={{ fontSize: '10px', color: '#64748b', paddingTop: 8 }} />
+        <Line type="monotone" dataKey="realizado" name="Acordei" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} />
+        <Line type="monotone" dataKey="meta" name="Meta" stroke="#8b5cf6" strokeWidth={1.5} strokeDasharray="5 3" dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
+
+function SleepDurationChart({ history }: { history: SleepHistoryItem[] }) {
+  const IDEAL = 7.5 * 60 // 450 min
+  const data = history
+    .filter((h) => h.durationMin !== undefined)
+    .map((h) => ({ date: h.date.slice(5), duração: h.durationMin }))
+  if (!data.length) return null
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={data} margin={{ top: 4, right: 4, left: -8, bottom: 0 }} barCategoryGap="35%">
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+        <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 9 }} axisLine={false} tickLine={false} />
+        <YAxis
+          tick={{ fill: '#64748b', fontSize: 9 }}
+          axisLine={false} tickLine={false}
+          tickFormatter={(v) => `${Math.floor(v/60)}h`}
+        />
+        <Tooltip
+          formatter={(v: number) => minutesToHHMM(v)}
+          contentStyle={{ background: 'rgba(13,17,23,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 11 }}
+        />
+        <ReferenceLine y={IDEAL} stroke="#10b981" strokeDasharray="5 3" label={{ value: '7h30', fill: '#10b981', fontSize: 9, position: 'insideTopRight' }} />
+        <Bar dataKey="duração" name="Duração" fill="#6366f1" fillOpacity={0.8} radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
 
 const BADGE_STYLES: Record<SleepHistoryBadge, string> = {
   ok:   'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
@@ -187,6 +260,32 @@ export function SleepView() {
         </FadeInUp>
       )}
 
+      {/* Charts */}
+      {history.length > 1 && (
+        <FadeInUp delay={0.13}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-sky-500/15 flex items-center justify-center">
+                  <TrendingUp size={14} className="text-sky-400" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-100">Horário de Acordar</h3>
+              </div>
+              <WakeTimeChart history={history} targetWake={config.targetWake} />
+            </div>
+            <div className="card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-indigo-500/15 flex items-center justify-center">
+                  <BarChart3 size={14} className="text-indigo-400" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-100">Duração do Sono</h3>
+              </div>
+              <SleepDurationChart history={history} />
+            </div>
+          </div>
+        </FadeInUp>
+      )}
+
       {/* History */}
       {history.length > 0 && (
         <FadeInUp delay={0.14}>
@@ -195,7 +294,7 @@ export function SleepView() {
               <div className="w-8 h-8 rounded-lg bg-sky-500/15 flex items-center justify-center">
                 <CalendarDays size={16} className="text-sky-400" />
               </div>
-              <h3 className="text-lg font-bold text-slate-100">Últimos 7 dias</h3>
+              <h3 className="text-lg font-bold text-slate-100">Histórico</h3>
             </div>
             <div className="space-y-2">
               {history.map((item) => (

@@ -45,7 +45,7 @@ export function SavingsGoalCard({ goal, onContribute, onClick }: SavingsGoalCard
               <LucideIcon name={goal.icon ?? 'Target'} size={17} style={{ color }} />
             </div>
             <div>
-              <div className="font-bold text-slate-200 text-sm leading-tight">{goal.name}</div>
+              <div className="font-bold text-slate-200 text-sm leading-tight truncate max-w-[140px]">{goal.name}</div>
               {goal.deadline && (
                 <div className="text-[10px] text-slate-600 mt-0.5">até {goal.deadline}</div>
               )}
