@@ -9,9 +9,7 @@ import * as Icons from 'lucide-react'
 import { cn } from '@/lib/helpers'
 import type { FinancialGoal } from '@/types/finance'
 
-function fmtBRL(v: number) {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
-}
+import { formatBRL } from '@/lib/formatBRL'
 
 function LucideIcon({ name, size = 16, style }: { name: string; size?: number; style?: React.CSSProperties }) {
   const Icon = (Icons as Record<string, unknown>)[name] as React.FC<{ size?: number; style?: React.CSSProperties }> | undefined
@@ -68,9 +66,9 @@ export function SavingsGoalCard({ goal, onContribute, onClick }: SavingsGoalCard
 
         <div className="flex items-center justify-between text-xs">
           <span className="font-black tabular-nums" style={{ color: done ? '#10b981' : color }}>
-            {fmtBRL(goal.currentAmount)}
+            {formatBRL(goal.currentAmount)}
           </span>
-          <span className="text-slate-600 tabular-nums">{fmtBRL(goal.targetAmount)} · {pct}%</span>
+          <span className="text-slate-600 tabular-nums">{formatBRL(goal.targetAmount)} · {pct}%</span>
         </div>
 
         {onContribute && !done && (

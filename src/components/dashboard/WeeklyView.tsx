@@ -23,6 +23,7 @@ import {
   Timer, CheckSquare, Zap, Award,
   TrendingUp, TrendingDown, Target, CalendarCheck,
   Map, BarChart3, Trophy, AlertTriangle, Layers, Plus, Sparkles,
+  CalendarDays,
 } from 'lucide-react'
 import { cn } from '@/lib/helpers'
 import { DreamVisionMosaic }  from '@/components/home/DreamVisionMosaic'
@@ -153,6 +154,32 @@ export function WeeklyView() {
 
   return (
     <div className="space-y-8 pb-24 lg:pb-8">
+
+      {/* ── Atalhos rápidos ── */}
+      {isCurrentWeek && (
+        <div className="grid grid-cols-2 gap-3">
+          <a
+            href="/weekly"
+            className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.07] transition-all"
+          >
+            <CalendarDays className="w-5 h-5 text-violet-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-100 leading-tight">Semana Atual</p>
+              <p className="text-xs text-slate-500 mt-0.5">{avgConsistency}% concluído</p>
+            </div>
+          </a>
+          <a
+            href="/weekly"
+            className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.07] transition-all"
+          >
+            <CheckSquare className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-100 leading-tight">Hábitos</p>
+              <p className="text-xs text-slate-500 mt-0.5">{habitsOnTrack}/{HABIT_KEYS.length} no ritmo</p>
+            </div>
+          </a>
+        </div>
+      )}
 
       {/* ── Week navigator ── */}
       <FadeInUp delay={0}>

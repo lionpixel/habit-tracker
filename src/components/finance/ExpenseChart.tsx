@@ -11,9 +11,7 @@ import { EXPENSE_CATEGORIES, totalExpenses } from '@/types/finance'
 import type { MonthlyFinance } from '@/types/finance'
 import type { TooltipProps } from 'recharts'
 
-function fmtBRL(v: number) {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
-}
+import { formatBRL } from '@/lib/formatBRL'
 
 function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null
@@ -21,7 +19,7 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
   return (
     <div className="glass rounded-xl p-3 border border-white/10 shadow-card text-xs">
       <p className="font-bold mb-0.5" style={{ color: p?.color }}>{name}</p>
-      <p className="text-slate-200 font-black">{fmtBRL(value as number)}</p>
+      <p className="text-slate-200 font-black">{formatBRL(value as number)}</p>
     </div>
   )
 }
@@ -76,7 +74,7 @@ export function ExpenseChart({ month }: ExpenseChartProps) {
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-[10px] text-slate-600 uppercase tracking-wider">Total</span>
-            <span className="text-xs font-black text-slate-200 tabular-nums">{fmtBRL(total)}</span>
+            <span className="text-xs font-black text-slate-200 tabular-nums">{formatBRL(total)}</span>
           </div>
         </div>
 

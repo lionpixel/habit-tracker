@@ -11,9 +11,7 @@ import * as Icons from 'lucide-react'
 import { useFinanceStore } from '@/store/financeStore'
 import type { FinancialGoal } from '@/types/finance'
 
-function fmtBRL(v: number) {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
-}
+import { formatBRL } from '@/lib/formatBRL'
 
 function LucideIcon({ name, size = 16, style }: { name: string; size?: number; style?: React.CSSProperties }) {
   const Icon = (Icons as Record<string, unknown>)[name] as React.FC<{ size?: number; style?: React.CSSProperties }> | undefined
@@ -120,8 +118,8 @@ export function FinancialGoalModal({ open, goal, mode = 'create', onClose }: Fin
                 {isContrib ? (
                   <>
                     <div className="text-center py-2">
-                      <div className="text-2xl font-black text-slate-100">{fmtBRL(goal!.currentAmount)}</div>
-                      <div className="text-xs text-slate-500">de {fmtBRL(goal!.targetAmount)}</div>
+                      <div className="text-2xl font-black text-slate-100">{formatBRL(goal!.currentAmount)}</div>
+                      <div className="text-xs text-slate-500">de {formatBRL(goal!.targetAmount)}</div>
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Valor a Contribuir (R$)</label>

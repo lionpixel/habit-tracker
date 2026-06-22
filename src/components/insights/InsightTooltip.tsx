@@ -9,16 +9,16 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { cn } from '@/lib/helpers'
 import type { MetricContext } from '@/lib/insightsEngine'
 import { generateInsight } from '@/lib/insightsEngine'
-import { Sparkles, X } from 'lucide-react'
+import { Sparkles, X, Brain, CheckCircle, AlertTriangle, BarChart2, DollarSign, Moon, Zap } from 'lucide-react'
 
-const CATEGORY_ICON: Record<string, string> = {
-  neurociencia: '🧠',
-  beneficio:    '✅',
-  abandono:     '⚠️',
-  comparacao:   '📊',
-  financeiro:   '💰',
-  sono:         '😴',
-  corpo:        '💪',
+const CATEGORY_ICON: Record<string, React.ReactNode> = {
+  neurociencia: <Brain       size={12} />,
+  beneficio:    <CheckCircle size={12} />,
+  abandono:     <AlertTriangle size={12} />,
+  comparacao:   <BarChart2   size={12} />,
+  financeiro:   <DollarSign  size={12} />,
+  sono:         <Moon        size={12} />,
+  corpo:        <Zap         size={12} />,
 }
 
 type TooltipState = 'idle' | 'loading' | 'loaded' | 'error'
@@ -127,7 +127,7 @@ export function InsightTooltip({
             {/* Scientific fact */}
             {ctx.triggeredFact && (
               <div className="mb-3 text-[11px] text-slate-500 italic border-l-2 border-violet-500/30 pl-2">
-                <span className="mr-1">{CATEGORY_ICON[ctx.triggeredFact.category] ?? '📊'}</span>
+                <span className="mr-1 inline-flex">{CATEGORY_ICON[ctx.triggeredFact.category] ?? <BarChart2 size={12} />}</span>
                 {ctx.triggeredFact.stat}
               </div>
             )}

@@ -7,6 +7,7 @@ import { cn } from '@/lib/helpers'
 import type { Dream } from '@/types/dreams'
 import { DREAM_CATEGORIES } from '@/types/dreams'
 import { useDreamsStore } from '@/store/dreamsStore'
+import { formatBRL } from '@/lib/formatBRL'
 
 interface DreamCardProps {
   dream:   Dream
@@ -69,13 +70,13 @@ export function DreamCard({ dream, onEdit }: DreamCardProps) {
           />
         ) : (
           <div
-            className="w-full h-full flex items-center justify-center text-6xl"
+            className="w-full h-full flex items-center justify-center"
             style={{
               background: `radial-gradient(ellipse at center, ${cat.color}18 0%, transparent 70%)`,
               opacity: isPaused ? 0.5 : 1,
             }}
           >
-            {cat.emoji}
+            <div className="w-10 h-10 rounded-full" style={{ background: `${cat.color}30`, border: `2px solid ${cat.color}60` }} />
           </div>
         )}
 
@@ -101,7 +102,7 @@ export function DreamCard({ dream, onEdit }: DreamCardProps) {
           className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-sm"
           style={{ background: `${cat.color}22`, color: cat.color, border: `1px solid ${cat.color}44` }}
         >
-          <span className="text-xs">{cat.emoji}</span>
+          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: cat.color }} />
           {cat.label}
         </div>
       </div>
@@ -153,9 +154,9 @@ export function DreamCard({ dream, onEdit }: DreamCardProps) {
                 Meta financeira
               </div>
               <span className="text-[10px] font-semibold text-slate-500 tabular-nums">
-                R$ {(dream.financialCurrent ?? 0).toLocaleString('pt-BR')}
+                {formatBRL(dream.financialCurrent ?? 0)}
                 {' / '}
-                R$ {dream.financialTarget!.toLocaleString('pt-BR')}
+                {formatBRL(dream.financialTarget!)}
               </span>
             </div>
             <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden">

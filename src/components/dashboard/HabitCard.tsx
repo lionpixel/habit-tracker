@@ -11,13 +11,24 @@ import { HabitIcon } from '@/lib/habitIcons'
 import { HabitEditorModal }   from '@/components/habits/HabitEditorModal'
 import { FastingEditorModal }   from '@/components/habits/FastingEditorModal'
 import { FastingCalendarView }  from '@/components/habits/FastingCalendarView'
-import type { HabitKey } from '@/types/habit'
+import type { HabitKey, ScheduledDay } from '@/types/habit'
 import { useHabits } from '@/hooks/useHabits'
+import { useAppStore } from '@/store/appStore'
 import {
   Plus, Minus, Settings2, CheckCircle2,
   TrendingUp, Clock, Calendar,
   Pause,
 } from 'lucide-react'
+
+const DAY_LABELS: { key: ScheduledDay; label: string }[] = [
+  { key: 'seg', label: 'Seg' },
+  { key: 'ter', label: 'Ter' },
+  { key: 'qua', label: 'Qua' },
+  { key: 'qui', label: 'Qui' },
+  { key: 'sex', label: 'Sex' },
+  { key: 'sab', label: 'Sáb' },
+  { key: 'dom', label: 'Dom' },
+]
 import { ScientificPillsRow } from '@/components/insights/ScientificPill'
 import { SCIENTIFIC_FACTS, BENCHMARKS } from '@/lib/benchmarks'
 import { HabitAnalysisModal } from '@/components/openai/HabitAnalysisModal'
@@ -57,9 +68,20 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
   const isEnglish = habitKey === 'english'
   const isFasting = habitKey === 'fasting'
 
-  const [editorOpen,   setEditorOpen]   = useState(false)
-  const [fastingOpen,  setFastingOpen]  = useState(false)
-  const [analysisOpen, setAnalysisOpen] = useState(false)
+  const [editorOpen,    setEditorOpen]    = useState(false)
+  const [fastingOpen,   setFastingOpen]   = useState(false)
+  const [analysisOpen,  setAnalysisOpen]  = useState(false)
+  const [dayPickerOpen, setDayPickerOpen] = useState(false)
+  const { updateHabit } = useAppStore()
+
+  const scheduledDays: ScheduledDay[] = habit.scheduledDays ?? DAY_LABELS.map((d) => d.key)
+
+  function toggleDay(day: ScheduledDay) {
+    const next = scheduledDays.includes(day)
+      ? scheduledDays.filter((d) => d !== day)
+      : [...scheduledDays, day]
+    updateHabit(habitKey, { scheduledDays: next.length === 7 ? undefined : next })
+  }
 
   // Archived habits render minimised
   if (habit.archived) {
@@ -354,6 +376,52 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
             <TrendingUp className="w-3 h-3" />
             Analisar com IA
           </motion.button>
+
+          {/* ── Seletor de dias ── */}
+          <div className="mt-2">
+            <button
+              onClick={() => setDayPickerOpen((o) => !o)}
+              className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[10px] font-semibold text-slate-600 hover:text-slate-400 transition-colors"
+            >
+              <span>Dias ativos</span>
+              <span className="text-slate-700">
+                {scheduledDays.length === 7 ? 'Todos os dias' : `${scheduledDays.length}×/semana`}
+              </span>
+            </button>
+
+            <AnimatePresence>
+              {dayPickerOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex gap-1 mt-1 justify-between">
+                    {DAY_LABELS.map(({ key, label }) => {
+                      const active = scheduledDays.includes(key)
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => toggleDay(key)}
+                          className={cn(
+                            'flex-1 h-7 rounded-md text-[10px] font-semibold transition-all',
+                            active
+                              ? 'text-white'
+                              : 'bg-white/[0.04] text-slate-600 hover:bg-white/[0.08] hover:text-slate-400',
+                          )}
+                          style={active ? { background: habit.color + '55', color: habit.color } : undefined}
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </motion.article>
 

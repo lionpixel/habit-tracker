@@ -198,7 +198,7 @@ export function DreamFormModal({ open, dream, onClose }: DreamFormModalProps) {
                         color: cat.color,
                       } : undefined}
                     >
-                      <span>{cat.emoji}</span>
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cat.color }} />
                       <span className="truncate">{cat.label}</span>
                     </button>
                   ))}

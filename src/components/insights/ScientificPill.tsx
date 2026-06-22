@@ -8,15 +8,16 @@ import { cn } from '@/lib/helpers'
 import type { ScientificFact } from '@/lib/benchmarks'
 import type { MetricContext } from '@/lib/insightsEngine'
 import { InsightTooltip } from './InsightTooltip'
+import { Brain, CheckCircle, AlertTriangle, BarChart2, DollarSign, Moon, Zap } from 'lucide-react'
 
-const CATEGORY_ICON: Record<string, string> = {
-  neurociencia: '🧠',
-  beneficio:    '✅',
-  abandono:     '⚠️',
-  comparacao:   '📊',
-  financeiro:   '💰',
-  sono:         '😴',
-  corpo:        '💪',
+const CATEGORY_ICON: Record<string, React.ReactNode> = {
+  neurociencia: <Brain       size={11} />,
+  beneficio:    <CheckCircle size={11} />,
+  abandono:     <AlertTriangle size={11} />,
+  comparacao:   <BarChart2   size={11} />,
+  financeiro:   <DollarSign  size={11} />,
+  sono:         <Moon        size={11} />,
+  corpo:        <Zap         size={11} />,
 }
 
 const CATEGORY_STYLE: Record<string, string> = {
@@ -38,7 +39,7 @@ interface ScientificPillProps {
 
 export function ScientificPill({ fact, ctx, className, compact = false }: ScientificPillProps) {
   const style = CATEGORY_STYLE[fact.category] ?? CATEGORY_STYLE.comparacao
-  const icon  = CATEGORY_ICON[fact.category] ?? '📊'
+  const icon  = CATEGORY_ICON[fact.category] ?? <BarChart2 size={11} />
 
   const ctxWithFact: MetricContext = {
     ...ctx,

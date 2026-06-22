@@ -12,16 +12,14 @@ import { INCOME_CATEGORIES } from '@/types/finance'
 import type { MonthlyFinance } from '@/types/finance'
 import type { TooltipProps } from 'recharts'
 
-function fmtBRL(v: number) {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
-}
+import { formatBRL } from '@/lib/formatBRL'
 
 function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null
   return (
     <div className="glass rounded-xl p-3 border border-white/10 shadow-card text-xs min-w-[140px]">
       <p className="text-slate-400 font-semibold mb-1">{label}</p>
-      <p className="font-black text-emerald-400">{fmtBRL(payload[0]?.value as number ?? 0)}</p>
+      <p className="font-black text-emerald-400">{formatBRL(payload[0]?.value as number ?? 0)}</p>
     </div>
   )
 }

@@ -8,6 +8,7 @@ import { TrendingUp, AlertTriangle, PiggyBank, Award } from 'lucide-react'
 import {
   totalIncome, totalExpenses, totalSavings, netBalance, savingsRate,
 } from '@/types/finance'
+import { formatBRL } from '@/lib/formatBRL'
 import type { MonthlyFinance } from '@/types/finance'
 
 interface InsightItem {
@@ -55,14 +56,14 @@ export function FinanceInsights({ month, goals }: FinanceInsightsProps) {
     insights.push({
       icon:  <TrendingUp size={17} />,
       title: 'Saldo positivo',
-      body:  `Você tem R$${Math.round(balance).toLocaleString('pt-BR')} de sobra neste mês. Considere investir!`,
+      body:  `Você tem ${formatBRL(Math.round(balance))} de sobra neste mês. Considere investir!`,
       color: '#22d3ee',
     })
   } else if (balance < 0) {
     insights.push({
       icon:  <AlertTriangle size={17} />,
       title: 'Saldo negativo',
-      body:  `Seus gastos excedem sua renda em R$${Math.abs(Math.round(balance)).toLocaleString('pt-BR')}.`,
+      body:  `Seus gastos excedem sua renda em ${formatBRL(Math.abs(Math.round(balance)))}.`,
       color: '#ef4444',
     })
   }

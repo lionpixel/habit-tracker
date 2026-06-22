@@ -100,7 +100,8 @@ Gere um relatório semanal estruturado EXATAMENTE neste formato (com os títulos
 4. FOCO DA PRÓXIMA SEMANA
 (3 ações priorizadas e mensuráveis, formato de lista)
 
-Use os números reais do usuário. Seja direto e específico.`,
+Use os números reais do usuário. Seja direto e específico.
+Não use emojis em nenhuma parte da resposta.`,
         },
         {
           role: 'user',

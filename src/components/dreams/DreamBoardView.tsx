@@ -8,16 +8,17 @@ import { useDreamsStore } from '@/store/dreamsStore'
 import { DREAM_CATEGORIES } from '@/types/dreams'
 import type { Dream, DreamCategory } from '@/types/dreams'
 import { DreamCard } from './DreamCard'
+import { formatBRL } from '@/lib/formatBRL'
 import { DreamFormModal } from './DreamFormModal'
 
 type Filter = 'all' | DreamCategory
 
-const CATEGORY_FILTERS: { key: Filter; label: string; emoji: string }[] = [
-  { key: 'all',            label: 'Todos',          emoji: '✨' },
+const CATEGORY_FILTERS: { key: Filter; label: string; color?: string }[] = [
+  { key: 'all', label: 'Todos' },
   ...Object.entries(DREAM_CATEGORIES).map(([key, val]) => ({
     key:   key as DreamCategory,
     label: val.label,
-    emoji: val.emoji,
+    color: val.color,
   })),
 ]
 
@@ -28,8 +29,8 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       className="col-span-full flex flex-col items-center justify-center py-20 text-center"
     >
-      <div className="w-16 h-16 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-4 text-3xl">
-        🌟
+      <div className="w-16 h-16 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-4">
+        <Sparkles size={28} className="text-violet-400" />
       </div>
       <h3 className="text-slate-300 font-bold mb-1.5">Nenhum sonho aqui</h3>
       <p className="text-slate-600 text-sm max-w-xs mb-5">
@@ -99,9 +100,9 @@ export function DreamBoardView() {
             {
               icon: DollarSign,
               label: 'Meta financeira',
-              value: `R$ ${totalFinancial.toLocaleString('pt-BR')}`,
+              value: formatBRL(totalFinancial),
               sub:   doneFinancial > 0
-                ? `R$ ${doneFinancial.toLocaleString('pt-BR')} acumulado`
+                ? `${formatBRL(doneFinancial)} acumulado`
                 : undefined,
               color: '#f59e0b',
             },
@@ -128,7 +129,7 @@ export function DreamBoardView() {
 
       {/* ── Category filters ── */}
       <div className="flex gap-2 overflow-x-auto scrollable pb-1">
-        {CATEGORY_FILTERS.map(({ key, label, emoji }) => {
+        {CATEGORY_FILTERS.map(({ key, label, color }) => {
           const count = key === 'all'
             ? total
             : dreams.filter((d) => d.category === key).length
@@ -146,7 +147,7 @@ export function DreamBoardView() {
                   : 'bg-white/[0.03] border-white/[0.06] text-slate-500 hover:text-slate-300 hover:bg-white/[0.06]',
               )}
             >
-              <span>{emoji}</span>
+              {color && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />}
               {label}
               {count > 0 && (
                 <span

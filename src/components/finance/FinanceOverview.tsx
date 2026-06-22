@@ -10,10 +10,7 @@ import {
   totalIncome, totalExpenses, totalSavings, netBalance, savingsRate,
 } from '@/types/finance'
 import type { MonthlyFinance } from '@/types/finance'
-
-function fmtBRL(value: number): string {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
-}
+import { formatBRL } from '@/lib/formatBRL'
 
 interface FinanceOverviewProps {
   month: MonthlyFinance
@@ -30,26 +27,26 @@ export function FinanceOverview({ month }: FinanceOverviewProps) {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <StatCard
         icon={<TrendingUp size={18} />}
-        value={fmtBRL(income)}
+        value={formatBRL(income)}
         label="Receita Total"
         color="#10b981"
       />
       <StatCard
         icon={<TrendingDown size={18} />}
-        value={fmtBRL(expenses)}
+        value={formatBRL(expenses)}
         label="Gastos"
         color="#ef4444"
       />
       <StatCard
         icon={<PiggyBank size={18} />}
-        value={fmtBRL(savings)}
+        value={formatBRL(savings)}
         label="Poupança / Inv."
         color="#6366f1"
         meta={`${rate}% da renda`}
       />
       <StatCard
         icon={<Wallet size={18} />}
-        value={fmtBRL(balance)}
+        value={formatBRL(balance)}
         label="Saldo Livre"
         color={balance >= 0 ? '#22d3ee' : '#f97316'}
       />

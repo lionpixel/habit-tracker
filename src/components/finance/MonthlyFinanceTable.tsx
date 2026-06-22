@@ -15,9 +15,7 @@ import type { MonthlyFinance, FinanceCategory } from '@/types/finance'
 import { useFinanceStore } from '@/store/financeStore'
 import { cn } from '@/lib/helpers'
 
-function fmtBRL(v: number) {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
-}
+import { formatBRL } from '@/lib/formatBRL'
 
 function LucideIcon({ name, size = 14, style }: { name: string; size?: number; style?: React.CSSProperties }) {
   const Icon = (Icons as Record<string, unknown>)[name] as React.FC<{ size?: number; style?: React.CSSProperties }> | undefined
@@ -57,7 +55,7 @@ function Section({ title, categories, values, onChange, sectionTotal, totalColor
           {open ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
           <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">{title}</span>
         </div>
-        <span className="text-sm font-black tabular-nums" style={{ color: totalColor }}>{fmtBRL(sectionTotal)}</span>
+        <span className="text-sm font-black tabular-nums" style={{ color: totalColor }}>{formatBRL(sectionTotal)}</span>
       </button>
 
       {open && (

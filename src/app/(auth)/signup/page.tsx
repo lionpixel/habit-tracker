@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createSupabaseClient } from '@/lib/supabase/client'
-import { Activity } from 'lucide-react'
+import { Activity, CheckCircle } from 'lucide-react'
 
 export default function SignupPage() {
   const [name,     setName]     = useState('')
@@ -49,7 +49,9 @@ export default function SignupPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#080b14] px-4">
         <div className="text-center p-8 max-w-sm">
-          <div className="text-5xl mb-4">✅</div>
+          <div className="mb-4 flex justify-center">
+            <CheckCircle size={48} className="text-emerald-400" />
+          </div>
           <h2 className="text-2xl font-black text-slate-100 mb-2">Conta criada!</h2>
           <p className="text-slate-500 text-sm mb-6">
             Verifique seu email para confirmar o cadastro antes de entrar.

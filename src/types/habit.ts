@@ -102,7 +102,10 @@ export interface HabitBase {
   weeklyGoalMin?:   number             // total minutes goal per week
   monthlyGoalMin?:  number             // total minutes goal per month
   timesPerDay?:     number             // how many times per day (default 1)
+  scheduledDays?:   ScheduledDay[]     // which days the habit appears; undefined = all days
 }
+
+export type ScheduledDay = 'seg' | 'ter' | 'qua' | 'qui' | 'sex' | 'sab' | 'dom'
 
 export interface EnglishHabit extends HabitBase {
   seriesCounts: WeeklyCountMap

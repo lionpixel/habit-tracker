@@ -188,7 +188,7 @@ function buildReportHtml(
 <meta charset="UTF-8">
 <title>HabitDB Relatório — ${period}</title>
 <style>
-  body { font-family: 'Segoe UI', sans-serif; background: #020617; color: #f8fafc; padding: 32px; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #020617; color: #f8fafc; padding: 32px; }
   h1 { background: linear-gradient(90deg, #6366f1, #8b5cf6, #10b981); -webkit-background-clip: text; color: transparent; }
   table { border-collapse: collapse; width: 100%; max-width: 480px; }
   tr:nth-child(even) { background: rgba(255,255,255,0.04); }

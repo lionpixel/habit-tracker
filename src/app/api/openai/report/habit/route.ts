@@ -101,7 +101,8 @@ Estruture EXATAMENTE neste formato (com os títulos em caixa alta):
 3. RECOMENDAÇÃO
 (ajuste específico e mensurável para as próximas 2 semanas)
 
-Seja cirúrgico — use os números reais, sem generalizações.`,
+Seja cirúrgico — use os números reais, sem generalizações.
+Não use emojis em nenhuma parte da resposta.`,
         },
         {
           role: 'user',
