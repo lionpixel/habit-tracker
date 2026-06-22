@@ -3,48 +3,51 @@
 import { cn } from '@/lib/helpers'
 import { useHabits } from '@/hooks/useHabits'
 import type { RiskLevel } from '@/types/habit'
-import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AlertTriangle, AlertCircle, Info, CheckCircle2, Lightbulb } from 'lucide-react'
 
-type LevelStyle = {
-  border: string
-  bg: string
-  Icon: React.ComponentType<{ className?: string }>
-  badge: 'emerald' | 'amber' | 'red' | 'cyan'
-  label: string
-  iconColor: string
+type LevelConfig = {
+  leftBorder: string
+  bg:         string
+  Icon:       React.ComponentType<{ className?: string }>
+  label:      string
+  iconColor:  string
+  barColor:   string
+  badge:      string
 }
 
-const LEVEL_STYLES: Record<RiskLevel, LevelStyle> = {
+const LEVEL: Record<RiskLevel, LevelConfig> = {
   critical: {
-    border:    'border-red-500/20',
-    bg:        'bg-red-500/[0.06]',
-    Icon:      AlertCircle,
-    badge:     'red',
-    label:     'Crítico',
-    iconColor: 'text-red-400',
+    leftBorder: 'border-l-red-500/70',
+    bg:         'bg-red-500/[0.04]',
+    Icon:       AlertCircle,
+    label:      'Crítico',
+    iconColor:  'text-red-400',
+    barColor:   '#ef4444',
+    badge:      'bg-red-500/20 text-red-400 border-red-500/30',
   },
   high: {
-    border:    'border-amber-500/20',
-    bg:        'bg-amber-500/[0.06]',
-    Icon:      AlertTriangle,
-    badge:     'amber',
-    label:     'Alto',
-    iconColor: 'text-amber-400',
+    leftBorder: 'border-l-amber-500/70',
+    bg:         'bg-amber-500/[0.04]',
+    Icon:       AlertTriangle,
+    label:      'Alto',
+    iconColor:  'text-amber-400',
+    barColor:   '#f59e0b',
+    badge:      'bg-amber-500/20 text-amber-400 border-amber-500/30',
   },
   medium: {
-    border:    'border-cyan-500/20',
-    bg:        'bg-cyan-500/[0.05]',
-    Icon:      Info,
-    badge:     'cyan',
-    label:     'Médio',
-    iconColor: 'text-cyan-400',
+    leftBorder: 'border-l-cyan-500/60',
+    bg:         'bg-cyan-500/[0.03]',
+    Icon:       Info,
+    label:      'Médio',
+    iconColor:  'text-cyan-400',
+    barColor:   '#22d3ee',
+    badge:      'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
   },
 }
 
 export function RiskAlerts() {
-  const { risks } = useHabits()
+  const { risks, getWeekProgress } = useHabits()
 
   if (risks.length === 0) {
     return (
@@ -62,34 +65,63 @@ export function RiskAlerts() {
   return (
     <div className="space-y-3">
       {risks.map((risk, i) => {
-        const style = LEVEL_STYLES[risk.level]
-        const Icon  = style.Icon
+        const cfg       = LEVEL[risk.level]
+        const Icon      = cfg.Icon
+        const weekPct   = Math.round(getWeekProgress(risk.habitKey))
 
         return (
           <div
             key={risk.habitKey}
             className={cn(
-              'p-4 rounded-2xl border transition-all duration-200',
-              'hover:border-white/[0.12] animate-slide-in-right',
-              style.border,
-              style.bg,
+              'rounded-2xl border border-white/[0.07] border-l-4 overflow-hidden',
+              'transition-all duration-200 hover:border-white/[0.12] hover:-translate-y-px',
+              cfg.leftBorder,
+              cfg.bg,
             )}
             style={{ animationDelay: `${i * 80}ms` }}
             role="alert"
           >
-            <div className="flex gap-3 items-start">
-              <div className={cn('mt-0.5 flex-shrink-0', style.iconColor)}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className="text-sm font-bold text-slate-200">{risk.habitName}</span>
-                  <Badge variant={style.badge} size="sm" dot>{style.label}</Badge>
+            <div className="p-4">
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Icon className={cn('w-4 h-4 flex-shrink-0', cfg.iconColor)} />
+                  <span className="text-sm font-bold text-slate-100 truncate">{risk.habitName}</span>
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed mb-2">{risk.message}</p>
-                <div className="flex items-start gap-1.5">
-                  <Lightbulb className="w-3 h-3 text-slate-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-slate-500 leading-relaxed">{risk.suggestion}</p>
+                <span className={cn(
+                  'text-[10px] font-semibold px-2 py-0.5 rounded-md border flex-shrink-0',
+                  cfg.badge,
+                )}>
+                  {cfg.label}
+                </span>
+              </div>
+
+              {/* Message */}
+              <p className="text-xs text-slate-400 leading-relaxed mb-3">{risk.message}</p>
+
+              {/* Suggestion */}
+              <div className="flex items-start gap-1.5 mb-3">
+                <Lightbulb className="w-3 h-3 text-slate-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-slate-500 leading-relaxed">{risk.suggestion}</p>
+              </div>
+
+              {/* Weekly progress bar */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-600 font-medium">Progresso semana atual</span>
+                  <span className="text-[10px] font-bold tabular-nums" style={{ color: cfg.barColor }}>
+                    {weekPct}%
+                  </span>
+                </div>
+                <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${weekPct}%`,
+                      background: cfg.barColor,
+                      opacity: weekPct === 0 ? 0.3 : 1,
+                    }}
+                  />
                 </div>
               </div>
             </div>

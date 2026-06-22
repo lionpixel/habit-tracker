@@ -3,6 +3,7 @@
 import { useAppStore }            from '@/store/appStore'
 import { useHabits }              from '@/hooks/useHabits'
 import { useHistoricalInsights }  from '@/hooks/useHistoricalInsights'
+import { useAuth }                from '@/providers/AuthProvider'
 import { HabitCard }              from './HabitCard'
 import { StatCard }               from '@/components/ui/StatCard'
 import { WeeklyChart }            from '@/components/charts/WeeklyChart'
@@ -13,11 +14,12 @@ import { HeatmapSection }         from './HeatmapSection'
 import { RiskAlerts }             from './RiskAlerts'
 import { InsightCards }           from './InsightCards'
 import { FadeInUp }               from '@/components/ui/Motion'
+import { WeeklyHeatmapStrip }     from '@/components/charts/WeeklyHeatmapStrip'
 import { getWeekDates, formatDate, formatTime } from '@/lib/helpers'
-import { getBRTWeekNumber, getBRTYear } from '@/lib/time'
+import { getBRTWeekNumber, getBRTYear, getWeekDaysBRT, getTodayStr } from '@/lib/time'
 import { useActiveHabitKeys }     from '@/store/selectors'
 import { NewHabitModal }          from '@/components/habits/NewHabitModal'
-import { useState }               from 'react'
+import { useState, useMemo }      from 'react'
 import {
   ChevronLeft, ChevronRight,
   Timer, CheckSquare, Zap, Award,
@@ -29,6 +31,51 @@ import { cn } from '@/lib/helpers'
 import { DreamVisionMosaic }  from '@/components/home/DreamVisionMosaic'
 import { InsightsDashboard }  from '@/components/insights/InsightsDashboard'
 import { WeeklyReportModal }  from '@/components/openai/WeeklyReportModal'
+
+function getBRTHour(): number {
+  try {
+    const s = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo', hour: 'numeric', hour12: false,
+    }).format(new Date())
+    const n = parseInt(s)
+    return isNaN(n) ? 12 : n
+  } catch { return 12 }
+}
+
+function GreetingHeader({ name, avgConsistency }: { name: string; avgConsistency: number }) {
+  const hour     = getBRTHour()
+  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'
+  const firstName = name.split(' ')[0]
+
+  const todayLabel = useMemo(() => {
+    return new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      weekday: 'long', day: 'numeric', month: 'long',
+    }).format(new Date())
+  }, [])
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 className="text-xl font-black text-slate-100 leading-tight">
+          {greeting}{firstName ? `, ${firstName}` : ''}
+        </h1>
+        <p className="text-sm text-slate-500 mt-1 capitalize">{todayLabel}</p>
+      </div>
+      {avgConsistency > 0 && (
+        <div className="flex items-center gap-2.5 bg-violet-500/[0.08] border border-violet-500/20 rounded-2xl px-4 py-2.5 self-start sm:self-auto">
+          <div className="w-8 h-8 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+            <Zap className="w-4 h-4 text-violet-400" />
+          </div>
+          <div>
+            <div className="text-lg font-black text-violet-300 tabular-nums leading-none">{avgConsistency}%</div>
+            <div className="text-[10px] text-violet-400/70 font-semibold mt-0.5">Consistência hoje</div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function SectionTitle({
   icon, title, subtitle, className,
@@ -125,6 +172,7 @@ export function WeeklyView() {
     habits, currentWeek, currentYear,
     getWeekMinutes, getWeekCount, getWeekProgress,
   } = useHabits()
+  const { user: authUser } = useAuth()
   const HABIT_KEYS     = useActiveHabitKeys()
   const [newHabitOpen,    setNewHabitOpen]    = useState(false)
   const [reportModalOpen, setReportModalOpen] = useState(false)
@@ -143,6 +191,21 @@ export function WeeklyView() {
   const habitsOnTrack  = HABIT_KEYS.filter((k) => getWeekProgress(k) >= 80).length
   const maxSessions    = HABIT_KEYS.reduce((acc, k) => acc + habits[k].frequency, 0)
 
+  // Dados do heatmap semanal por dia
+  const weekDayHeatmap = useMemo(() => {
+    const dates     = getWeekDaysBRT(currentYear, currentWeek)
+    const todayDate = getTodayStr()
+    const labels    = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+    return dates.map((date, i) => {
+      const done = HABIT_KEYS.filter((k) => (habits[k].dailyLog?.[date] ?? 0) > 0).length
+      return {
+        label:   labels[i],
+        pct:     HABIT_KEYS.length > 0 ? (done / HABIT_KEYS.length) * 100 : 0,
+        isToday: date === todayDate,
+      }
+    })
+  }, [currentYear, currentWeek, habits, HABIT_KEYS])
+
   function navigate(dir: 'prev' | 'next') {
     const store = useAppStore.getState()
     let w = store.data.currentWeek + (dir === 'next' ? 1 : -1)
@@ -155,29 +218,55 @@ export function WeeklyView() {
   return (
     <div className="space-y-8 pb-24 lg:pb-8">
 
+      {/* ── Greeting header ── */}
+      <FadeInUp delay={0}>
+        <GreetingHeader
+          name={authUser?.displayName ?? ''}
+          avgConsistency={isCurrentWeek ? avgConsistency : 0}
+        />
+      </FadeInUp>
+
       {/* ── Atalhos rápidos ── */}
       {isCurrentWeek && (
         <div className="grid grid-cols-2 gap-3">
-          <a
-            href="/weekly"
-            className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.07] transition-all"
-          >
-            <CalendarDays className="w-5 h-5 text-violet-400 flex-shrink-0" />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-100 leading-tight">Semana Atual</p>
-              <p className="text-xs text-slate-500 mt-0.5">{avgConsistency}% concluído</p>
+          {/* Semana */}
+          <div className="flex flex-col gap-0 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] hover:border-violet-500/30 transition-all overflow-hidden">
+            <div className="flex items-center gap-3 mb-3">
+              <CalendarDays className="w-5 h-5 text-violet-400 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-100 leading-tight">Semana Atual</p>
+                <p className="text-xs text-slate-500 mt-0.5">{avgConsistency}% concluído</p>
+              </div>
             </div>
-          </a>
-          <a
-            href="/weekly"
-            className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.07] transition-all"
-          >
-            <CheckSquare className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-100 leading-tight">Hábitos</p>
-              <p className="text-xs text-slate-500 mt-0.5">{habitsOnTrack}/{HABIT_KEYS.length} no ritmo</p>
+            {/* Micro progress bar */}
+            <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${avgConsistency}%`, background: '#7c3aed' }}
+              />
             </div>
-          </a>
+          </div>
+
+          {/* Hábitos */}
+          <div className="flex flex-col gap-0 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] hover:border-emerald-500/30 transition-all overflow-hidden">
+            <div className="flex items-center gap-3 mb-3">
+              <CheckSquare className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-100 leading-tight">Hábitos</p>
+                <p className="text-xs text-slate-500 mt-0.5">{habitsOnTrack}/{HABIT_KEYS.length} no ritmo</p>
+              </div>
+            </div>
+            {/* Micro progress bar */}
+            <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${HABIT_KEYS.length > 0 ? (habitsOnTrack / HABIT_KEYS.length) * 100 : 0}%`,
+                  background: '#10b981',
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
 
@@ -263,6 +352,15 @@ export function WeeklyView() {
             meta="≥80% da meta"
             color="#22d3ee"
           />
+        </div>
+
+        {/* Heatmap semanal */}
+        <div className="mt-4 card p-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold text-slate-400 mb-0.5">Dias da semana</p>
+            <p className="text-[10px] text-slate-600">Completude diária de hábitos</p>
+          </div>
+          <WeeklyHeatmapStrip days={weekDayHeatmap} />
         </div>
       </FadeInUp>
 

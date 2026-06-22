@@ -217,7 +217,13 @@ export function HabitCard({ habitKey, index = 0 }: HabitCardProps) {
                 style={{
                   background: isFull
                     ? 'linear-gradient(135deg, #10b981, #34d399)'
-                    : `linear-gradient(135deg, #f1f5f9, ${habit.color})`,
+                    : progress >= 75
+                    ? `linear-gradient(135deg, #f1f5f9, ${habit.color})`
+                    : progress >= 40
+                    ? `linear-gradient(135deg, #f59e0b88, ${habit.color}aa)`
+                    : progress > 0
+                    ? `linear-gradient(135deg, #94a3b8, ${habit.color}66)`
+                    : '#475569',
                   WebkitBackgroundClip: 'text',
                   backgroundClip:       'text',
                   color: 'transparent',
