@@ -81,10 +81,15 @@ export function getWeekDatesBRT(year: number, week: number): { start: Date; end:
 /** Array de 7 strings "YYYY-MM-DD" (Seg → Dom) da semana ISO */
 export function getWeekDaysBRT(year: number, week: number): string[] {
   const { start } = getWeekDatesBRT(year, week)
+  // `start` é UTC midnight — NÃO passar por getTodayStr() porque BRT (UTC-3)
+  // converteria para o dia anterior. Usar UTC date parts diretamente.
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(start)
-    d.setUTCDate(start.getUTCDate() + i)
-    return getTodayStr(d)
+    const ms = start.getTime() + i * 86_400_000
+    const d  = new Date(ms)
+    const y  = d.getUTCFullYear()
+    const m  = String(d.getUTCMonth() + 1).padStart(2, '0')
+    const dy = String(d.getUTCDate()).padStart(2, '0')
+    return `${y}-${m}-${dy}`
   })
 }
 

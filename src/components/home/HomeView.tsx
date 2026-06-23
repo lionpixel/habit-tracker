@@ -15,12 +15,13 @@ import { useHabits } from '@/hooks/useHabits'
 import { useHistoricalInsights } from '@/hooks/useHistoricalInsights'
 import { useActiveHabitKeys } from '@/store/selectors'
 import { useDreamsStore } from '@/store/dreamsStore'
+import { useGoalsStore } from '@/store/goalsStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useFinanceStore, currentMonthKey } from '@/store/financeStore'
 import { buildSleepHistory } from '@/services/sleepService'
 import { shouldRemindBigFive } from '@/types/profile'
 import { totalIncome, savingsRate } from '@/types/finance'
-import { addDaysToStr, diffInDays, getTodayStr, formatDisplayBRT } from '@/lib/time'
+import { addDaysToStr, diffInDays, getTodayStr, formatDisplayBRT, getBRTMonth, getBRTYear } from '@/lib/time'
 import { cn, formatDate, formatTime } from '@/lib/helpers'
 import { FadeInUp } from '@/components/ui/Motion'
 import { MiniSparkline } from '@/components/charts/MiniSparkline'
@@ -29,6 +30,7 @@ import { WeeklyHeatmapStrip } from '@/components/charts/WeeklyHeatmapStrip'
 import { StatusBadge, type StatusBadgeKind } from '@/components/ui/StatusBadge'
 import { DreamVisionMosaic } from '@/components/home/DreamVisionMosaic'
 import { NoteDrawerFAB } from '@/components/notes/NoteBlock'
+import { MonthlyGoalLines } from '@/components/goals/MonthlyGoalLines'
 import { useAppStore } from '@/store/appStore'
 import { getWeekDates } from '@/lib/helpers'
 import { CHART_THEME, CHART_TOOLTIP_STYLE, CHART_AXIS_TICK, CHART_MARGIN } from '@/components/charts/chartTheme'
@@ -271,6 +273,14 @@ export function HomeView() {
   const profile        = useProfileStore((s) => s.profile)
   const bigFiveHistory = useProfileStore((s) => s.bigFiveHistory)
   const { dreams } = useDreamsStore()
+  const monthlyGoals = useGoalsStore((s) => s.monthlyGoals)
+  const currentMonthGoals = useMemo(() => {
+    const y = getBRTYear()
+    const m = getBRTMonth()
+    return monthlyGoals
+      .filter((g) => g.year === y && g.month === m && g.status !== 'cancelled')
+      .slice(0, 5)
+  }, [monthlyGoals])
 
   const display = formatDisplayBRT(now)
   const hour = getBRTHour(now)
@@ -549,6 +559,19 @@ export function HomeView() {
           </div>
         </section>
       </FadeInUp>
+
+      {/* Metas do Mês — compacto */}
+      {currentMonthGoals.length > 0 && (
+        <FadeInUp delay={0.12}>
+          <section className="card p-5">
+            <MonthlyGoalLines
+              goals={currentMonthGoals}
+              month={`${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][getBRTMonth() - 1]}`}
+              variant="home"
+            />
+          </section>
+        </FadeInUp>
+      )}
 
       <FadeInUp delay={0.14}>
         <section className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-4">

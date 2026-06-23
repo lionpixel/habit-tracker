@@ -21,6 +21,7 @@ import {
   Briefcase,
   RotateCcw,
   Star,
+  Settings,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -55,6 +56,7 @@ const NAV_ITEMS = [
       { href: '/profile',    label: 'Perfil',      icon: User,        color: '#8b5cf6', description: 'Evolução física' },
       { href: '/finance',    label: 'Finanças',    icon: DollarSign,  color: '#10b981', description: 'Controle financeiro' },
       { href: '/dreams',     label: 'Sonhos',      icon: Star,        color: '#f59e0b', description: 'Quadro dos Sonhos 2026' },
+      { href: '/settings',   label: 'Config.',     icon: Settings,    color: '#64748b', description: 'IA, personalidade, conta' },
     ],
   },
   {
@@ -83,20 +85,19 @@ export function Sidebar({ className, onClose }: SidebarProps) {
       )}
     >
       {/* Logo area */}
-      <div className="flex items-center gap-3 px-5 h-16 border-b border-white/[0.05] flex-shrink-0">
+      <Link href="/" className="flex items-center gap-3 px-5 h-16 border-b border-white/[0.05] flex-shrink-0">
         <div className="relative w-8 h-8 flex-shrink-0">
           <div className="absolute inset-0 rounded-xl bg-violet-gradient opacity-90" />
           <div className="absolute inset-0 rounded-xl flex items-center justify-center">
             <Activity className="w-4 h-4 text-white" strokeWidth={2.5} />
           </div>
-          {/* Glow */}
           <div className="absolute inset-0 rounded-xl bg-violet-500/30 blur-md -z-10 scale-125" />
         </div>
         <div>
           <div className="text-sm font-bold text-white tracking-tight">HabitDB</div>
           <div className="text-[10px] text-slate-500 font-medium">2026</div>
         </div>
-      </div>
+      </Link>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto scrollable px-3 py-4 space-y-6">

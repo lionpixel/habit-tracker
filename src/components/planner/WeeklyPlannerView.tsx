@@ -19,7 +19,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
-  Flame,
   GripVertical,
   LayoutGrid,
   Plus,
@@ -38,8 +37,14 @@ import { GoalCard, TaskRow } from './GoalCard'
 import { GoalFormModal } from './GoalFormModal'
 import { FadeInUp } from '@/components/ui/Motion'
 import { cn } from '@/lib/helpers'
-import { getBRTWeekNumber, getBRTYear, getTodayStr, getWeekInfoFromDateStr } from '@/lib/time'
+import { getBRTWeekNumber, getBRTYear, getBRTMonth, getTodayStr, getWeekInfoFromDateStr } from '@/lib/time'
 import type { WeeklyGoal, DailyTask } from '@/types/goals'
+import { WeekRhythmBlock } from '@/components/dashboard/WeekRhythmBlock'
+import { NoteBlock } from '@/components/notes/NoteBlock'
+import { MonthlyGoalLines } from '@/components/goals/MonthlyGoalLines'
+
+const MONTH_LONG = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
 const CURRENT_YEAR = getBRTYear()
 const CURRENT_WEEK = getBRTWeekNumber()
@@ -715,7 +720,7 @@ function MetasTab({ year, week }: { year: number; week: number }) {
 type TabMode = 'board' | 'metas'
 
 export function WeeklyPlannerView() {
-  const { hydrated, hydrate, dailyTasks, addDailyTask, updateDailyTask, completeDailyTask, uncompleteDailyTask, deleteDailyTask } = useGoalsStore()
+  const { hydrated, hydrate, dailyTasks, monthlyGoals, addDailyTask, updateDailyTask, completeDailyTask, uncompleteDailyTask, deleteDailyTask } = useGoalsStore()
   const calendarHydrated = useCalendarStore((state) => state.hydrated)
   const hydrateCalendar = useCalendarStore((state) => state.hydrate)
   const updateCalendarEvent = useCalendarStore((state) => state.updateEvent)
@@ -725,6 +730,13 @@ export function WeeklyPlannerView() {
   const [tab, setTab] = useState<TabMode>('board')
   const [newHabitOpen, setNewHabitOpen] = useState(false)
   const [editingHabitKey, setEditingHabitKey] = useState<HabitKey | null>(null)
+  const [goalFormOpen, setGoalFormOpen] = useState(false)
+
+  const currentMonthGoals = useMemo(() => {
+    const y = getBRTYear()
+    const m = getBRTMonth()
+    return monthlyGoals.filter((g) => g.year === y && g.month === m && g.status !== 'cancelled')
+  }, [monthlyGoals])
 
   useEffect(() => {
     if (!hydrated) hydrate()
@@ -884,43 +896,25 @@ export function WeeklyPlannerView() {
         </div>
       </FadeInUp>
 
+      {/* Ritmo da Semana */}
       <FadeInUp delay={0.02}>
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="card flex items-center gap-3 px-4 py-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/15">
-              <Flame size={18} className="text-violet-300" />
-            </div>
-            <div>
-              <div className="text-sm font-black text-slate-100">
-                Hábitos sincronizados
-              </div>
-              <div className="text-xs text-slate-500">Checklist real via `habitsStore`</div>
-            </div>
-          </div>
+        <div className="card p-4">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+            Ritmo da Semana
+          </p>
+          <WeekRhythmBlock year={year} week={week} />
+        </div>
+      </FadeInUp>
 
-          <div className="card flex items-center gap-3 px-4 py-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15">
-              <CalendarDays size={18} className="text-blue-300" />
-            </div>
-            <div>
-              <div className="text-sm font-black text-slate-100">
-                Tarefas conectadas
-              </div>
-              <div className="text-xs text-slate-500">Itens do calendário entram aqui automaticamente</div>
-            </div>
-          </div>
-
-          <div className="card flex items-center gap-3 px-4 py-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
-              <Target size={18} className="text-emerald-300" />
-            </div>
-            <div>
-              <div className="text-sm font-black text-slate-100">
-                LifeScore em cascata
-              </div>
-              <div className="text-xs text-slate-500">Hábitos, tarefas e calendário afetam o sistema</div>
-            </div>
-          </div>
+      {/* Metas do Mês */}
+      <FadeInUp delay={0.03}>
+        <div className="card p-4">
+          <MonthlyGoalLines
+            goals={currentMonthGoals}
+            month={`${MONTH_LONG[(getBRTMonth() - 1)]} ${getBRTYear()}`}
+            variant="board"
+            onNewGoal={() => setGoalFormOpen(true)}
+          />
         </div>
       </FadeInUp>
 
@@ -1052,6 +1046,15 @@ export function WeeklyPlannerView() {
         </FadeInUp>
       )}
 
+      {/* Notas da Semana */}
+      {tab === 'board' && (
+        <FadeInUp delay={0.08}>
+          <div className="card p-4">
+            <NoteBlock year={year} week={week} />
+          </div>
+        </FadeInUp>
+      )}
+
       {/* FEAT-02: criar hábito direto do planner */}
       <NewHabitModal open={newHabitOpen} onClose={() => setNewHabitOpen(false)} />
 
@@ -1063,6 +1066,13 @@ export function WeeklyPlannerView() {
           onClose={() => setEditingHabitKey(null)}
         />
       )}
+
+      {/* Modal nova meta mensal */}
+      <GoalFormModal
+        open={goalFormOpen}
+        create={{ level: 'monthly' }}
+        onClose={() => setGoalFormOpen(false)}
+      />
     </div>
   )
 }
