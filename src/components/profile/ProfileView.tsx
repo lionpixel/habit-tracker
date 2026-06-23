@@ -17,7 +17,7 @@ import { WeeklyCheckinModal }     from './WeeklyCheckinModal'
 import { ProgressPhotoTracker }   from './ProgressPhotoTracker'
 import { PersonalRulesSection }   from './PersonalRulesSection'
 import { BigFiveSection }          from './BigFiveSection'
-import { ApiKeysSettings }         from './ApiKeysSettings'
+import { AiSettings }              from './AiSettings'
 import { FadeInUp } from '@/components/ui/Motion'
 import { StatCard }  from '@/components/ui/StatCard'
 import { todayStr }  from '@/lib/helpers'
@@ -159,7 +159,7 @@ export function ProfileView() {
 
       {/* Configurações de IA */}
       <FadeInUp delay={0.175}>
-        <ApiKeysSettings />
+        <AiSettings />
       </FadeInUp>
 
       {/* History table */}

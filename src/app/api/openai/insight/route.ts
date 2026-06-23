@@ -67,6 +67,10 @@ export async function POST(req: NextRequest) {
       ].filter(Boolean).join(' | ')
     : null
 
+  const bigFiveBlock = snap?.bigFive
+    ? `\nPersonalidade (Big Five ${snap.bigFive.quarter}): O=${snap.bigFive.openness} C=${snap.bigFive.conscientiousness} E=${snap.bigFive.extraversion} A=${snap.bigFive.agreeableness} N=${snap.bigFive.neuroticism}${snap.bigFive.personalityProfile ? ` — ${snap.bigFive.personalityProfile.slice(0, 120)}` : ''}`
+    : null
+
   const benchmarkLine = ctx.benchmarks
     ? [
         ctx.benchmarks.national  !== undefined && `Nacional: ${ctx.benchmarks.national}`,
@@ -103,7 +107,8 @@ Valor atual: ${ctx.currentValue} ${ctx.unit}
 Tendência: ${ctx.trend ?? 'estável'}${ctx.trendValue !== undefined ? ` (${ctx.trendValue > 0 ? '+' : ''}${ctx.trendValue})` : ''}
 ${ctx.triggeredFact ? `Dado científico: "${ctx.triggeredFact.stat}" — ${ctx.triggeredFact.source}` : ''}
 ${benchmarkLine ? `Benchmarks (${ctx.unit}): ${benchmarkLine}` : ''}
-${snapLines ? `Contexto do usuário: ${snapLines}` : ''}`.trim(),
+${snapLines ? `Contexto do usuário: ${snapLines}` : ''}
+${bigFiveBlock ?? ''}`.trim(),
         },
       ],
     })
